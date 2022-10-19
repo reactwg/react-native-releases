@@ -76,4 +76,4 @@ Reports for security issues on unsupported versions will handed on case by case 
 
 ### Licence
 
-React Native is open-source software distributed under the **MIT license**. Software is provided "as is" without warranty.
+React Native is open-source software distributed under the [**MIT license**](https://github.com/facebook/react-native/blob/main/LICENSE).
