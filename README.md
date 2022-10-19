@@ -71,6 +71,6 @@ Please note that each cherry-pick request will be assessed and approved individu
 Security issues should follow our issue report policy [described here](https://reactnative.dev/contributing/overview#security-bugs).
 Reports for security issues on unsupported versions will handed on case by case basis when deciding if a new version needs to be released.
 
-### Licence
+### License
 
 React Native is open-source software distributed under the [**MIT license**](https://github.com/facebook/react-native/blob/main/LICENSE).
