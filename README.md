@@ -4,9 +4,6 @@
 This is a discussion focussed repository for coordinating React Native releases.
 
 
-## Contents
-- [React Native Version and Lifecycle support](#-react-native-version-and-lifecycle-support)
-
 
 
 ## React Native Version and Lifecycle support
