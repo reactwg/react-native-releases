@@ -28,6 +28,8 @@ Below we are defining terms used in this document:
 - **next version** - The next version that hasn’t been fully released yet, and is currently in development/testing (e.g. 0.69.0-RC1).
 - **minor series** - A collection of versions (either stable or not stable) sharing the same minor version (e.g. **0.68**.0-RC0, **0.68**.0, **0.68**.1 are all part of the **0.68** minor series).
 
+*Note: Stable versions are fully tested versions that are stable at the moment of release. These versions can potentially contain experimental features but only behind experimental feature flags, which need to be explicitly enabled to become active.*
+
 ### Which versions are currently supported?
 
 We’re supporting the **latest version**, and the latest versions from the **two previous minor series.**
