@@ -14,11 +14,11 @@ Current versions supported:
 
 | Version    | Type                  | Status           |
 | ---------- | --------------------- | ---------------- |
-| 0.72.x     | Next version          | Not started      |
-| 0.71.x     | Latest stable         | In support       |
+| 0.73.x     | Next version          | Not started      |
+| 0.72.x     | Latest stable         | In support       |
+| 0.71.x     | Previous minor series | In support       |
 | 0.70.x     | Previous minor series | In support       |
-| 0.69.x     | Previous minor series | In support       |
-| <=0.68.x   | Old minor series      | Unsupported      |
+| <=0.69.x   | Old minor series      | Unsupported      |
 
 ### What level of support can be expected?
 
