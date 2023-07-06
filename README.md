@@ -26,11 +26,11 @@ After a [new version branch gets cut](https://reactnative.dev/contributing/relea
 
 * `Active`
 
-Stable releases in active support receive frequent updates, up to a few every month. Latest stable has the highest priority, and at the start of its stable cycle (right after [.0 is released](https://reactnative.dev/contributing/release-stable-minor)) multiple patches will be done as soon as possible to stabilize the version and ensure a good upgrade experience to the community.
+Stable releases in active support receive frequent updates. Latest stable has the highest priority, and at the start of its stable cycle (right after [.0 is released](https://reactnative.dev/contributing/release-stable-minor)) multiple patches will be done as soon as possible to stabilize the version and ensure a good upgrade experience to the community.
 
 * `End of Cycle`
 
-A version in this support bracket will receive no more than one new patch every month, unless some important regressions need to be addressed. Once a next version becomes the new latest stable, before the version in EoC moves over into `Unsupported` one last patch released will be produced to honor the open "Should we release X.Y.Z?" discussion.
+A version in this support bracket will receive less patches, unless some important regressions need to be addressed. Once a next version becomes the new latest stable, before the version in EoC moves over into `Unsupported` one last patch released will be produced to honor the open "Should we release X.Y.Z?" discussion.
 
 * `Unsupported`
 
