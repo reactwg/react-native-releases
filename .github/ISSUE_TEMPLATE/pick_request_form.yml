@@ -1,0 +1,37 @@
+name: 🍒⛏️ Cherry-pick Request
+description: Do you need a commit cherry-picked into the release branch? Start here.
+labels: ["Needs: Triage :mag:", "Type: Pick Request"]
+
+body:
+  - type: markdown
+    attributes:
+      value: "## Cherry-pick Request"
+  - type: dropdown
+    id: target-branch
+    attributes:
+      label: Target Branch(es)
+      description: Please select which Release Branch(es) need this pick. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy).
+      multiple: true
+      options:
+        - 0.74
+        - 0.73
+        - 0.72
+        - 0.71
+    validations:
+      required: true
+  - type: input
+    id: commit-link
+    attributes:
+      label: Link to commit or PR to be picked
+      description: Provide the commit or Pull Request that needs to be picked. We prefer to merge picks that are already in `main`, exceptions apply only when this is not possible due to merge conflicts.
+      placeholder: https://github.com/facebook/react-native/pulls/<pull-request-id> or https://github.com/facebook/react-native/commit/<commit-hash>
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe why you believe this change needs to be picked. The Release Crew will evaluate the pick request, generally only accepting hotfixes for breaking issues.
+    validations:
+      required: true
+

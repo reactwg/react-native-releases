@@ -1,0 +1,56 @@
+name: 📝 Test Report
+description: Are you testing the release and are submitting a test report? Start here!
+labels: ["Type: Test Report"]
+
+body:
+  - type: markdown
+    attributes:
+      value: "## Test Report"
+  - type: dropdown
+    id: release-branch
+    attributes:
+      label: For which release is this report?
+      description: If you are testing multiple releases, please file a separate issue for each one for easier tracking.
+      options:
+        - 0.74
+        - 0.73
+        - 0.72
+        - 0.71
+    validations:
+      required: true
+  - type: input
+    id: exact-version
+    attributes:
+      label: What specific version of React Native did you test?
+      description: Please provide the exact React Native version you used for this test
+      placeholder: 0.74-rc0
+    validations:
+      required: true
+  - type: input
+    id: system-configuration
+    attributes:
+      label: Under what system configuration was the test run?
+      description: Please provide the host platform + version, as well as the versions of tools such as Xcode
+      placeholder: MacOS 14.31, Xcode 15.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: configurations-covered
+    attributes:
+      label: Tested configurations
+      options:
+        - label: RNTester + iOS + Hermes
+        - label: RNTester + iOS + JSC
+        - label: RNTester + Android + Hermes
+        - label: RNTester + Android + JSC
+        - label: RNTestProject + iOS + Hermes
+        - label: RNTestProject + iOS + JSC
+        - label: RNTestProject + Android + Hermes
+        - label: RNTestProject + Android + JSC
+  - type: textarea
+    id: notes
+    attributes:
+      label: Testing Notes
+      description: Please provide any notable observations, 
+    validations:
+      required: true

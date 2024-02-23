@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Main React Native Repository
+      url: https://github.com/facebook/react-native
+      about: |
+        Looking for the React Native repository itself? Follow this link.
+    - name: React Native Releases FAQ
+      url: https://reactnative.dev/contributing/release-faq
+      about: |
+        Any questions about the release? Check our FAQ on the website.
+
