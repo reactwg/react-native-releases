@@ -1,0 +1,54 @@
+name: 📝 Test Report
+description: Are you testing the release and are submitting a test report? Start here!
+labels: ["Type: Test Report"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Test Report
+        Test reports are used to evaluate new React Native releases across a number of test configurations. They serve as logged summaries, jumping off points for regression investigations, and generally as a structured validation. Generally, these Test Reports are filled out by Release Crew members. Note: This is not the correct form to report generic issues or upgrade regressions. Start at https://github.com/facebook/react-native/issues/new/choose for those.
+  - type: input
+    id: release-branch
+    attributes:
+      label: For which release is this report?
+      description: If you are testing multiple releases, please file separate Test Report issues for each of them for easier handling.
+      placeholder: 0.74
+    validations:
+      required: true
+  - type: input
+    id: exact-version
+    attributes:
+      label: What specific version of React Native did you test?
+      description: Please provide the exact React Native version you used for this test
+      placeholder: 0.74-rc0
+    validations:
+      required: true
+  - type: textarea
+    id: system-configuration
+    attributes:
+      label: Under what system configuration was the test run?
+      description: Please provide the host platform + version, as well as the versions of tools such as Xcode. You can easily generate a standardised version of this information by running `npx react-native@<exact-version< info`.
+      placeholder: cd your/project/root && npx react-native@<exact-version> info
+    validations:
+      required: true
+  - type: textarea
+    id: configurations-covered
+    attributes:
+      label: Tested configurations
+      value: |
+        RNTester + iOS + Hermes: ✅/⚠️/❌
+        RNTester + iOS + JSC:  ✅/⚠️/❌
+        RNTester + Android + Hermes: ✅/⚠️/❌
+        RNTester + Android + JSC: ✅/⚠️/❌
+        RNTestProject + iOS + Hermes: ✅/⚠️/❌
+        RNTestProject + iOS + JSC: ✅/⚠️/❌
+        RNTestProject + Android + Hermes: ✅/⚠️/❌
+        RNTestProject + Android + JSC: ✅/⚠️/❌
+  - type: textarea
+    id: notes
+    attributes:
+      label: Testing Notes
+      description: Please provide any notable observations, issues encountered or fixes for regressions validated.
+    validations:
+      required: true
