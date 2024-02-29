@@ -13,7 +13,7 @@ body:
     attributes:
       label: For which release is this report?
       description: If you are testing multiple releases, please file separate Test Report issues for each of them for easier handling.
-      placeholder: 0.74
+      placeholder: "0.74"
     validations:
       required: true
   - type: input
@@ -21,7 +21,7 @@ body:
     attributes:
       label: What specific version of React Native did you test?
       description: Please provide the exact React Native version you used for this test
-      placeholder: 0.74-rc0
+      placeholder: "0.74-rc0"
     validations:
       required: true
   - type: textarea

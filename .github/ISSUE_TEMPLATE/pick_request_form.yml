@@ -13,7 +13,7 @@ body:
     attributes:
       label: Target Branch(es)
       description: Please input which Release Branch(es) need this pick, eg `0.74, 0.73`. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy).
-      placeholder: 0.74
+      placeholder: "0.74"
     validations:
       required: true
   - type: input
@@ -21,7 +21,7 @@ body:
     attributes:
       label: Link to commit or PR to be picked
       description: Provide the commit or Pull Request that needs to be picked. We prefer to merge picks that are already in `main`, exceptions apply only when this is not possible due to merge conflicts.
-      placeholder: https://github.com/facebook/react-native/pulls/<pull-request-id> or https://github.com/facebook/react-native/commit/<commit-hash>
+      placeholder: "https://github.com/facebook/react-native/pulls/<pull-request-id> or https://github.com/facebook/react-native/commit/<commit-hash>"
     validations:
       required: true
   - type: textarea
