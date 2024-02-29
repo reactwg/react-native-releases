@@ -1,0 +1,34 @@
+name: 🍒⛏️ Cherry-pick Request
+description: Do you need a commit cherry-picked into the release branch? Start here.
+labels: ["Type: Pick Request"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Cherry-pick Request
+        Do you want to request a pick into one or multiple release branches? Please refer to the [Support table](https://github.com/reactwg/react-native-releases?tab=readme-ov-file#which-versions-are-currently-supported) to ensure all versions you are requesting a pick for are in a valid release window.
+  - type: input
+    id: target-branch
+    attributes:
+      label: Target Branch(es)
+      description: Please input which Release Branch(es) need this pick, eg `0.74, 0.73`. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy).
+      placeholder: 0.74
+    validations:
+      required: true
+  - type: input
+    id: commit-link
+    attributes:
+      label: Link to commit or PR to be picked
+      description: Provide the commit or Pull Request that needs to be picked. We prefer to merge picks that are already in `main`, exceptions apply only when this is not possible due to merge conflicts.
+      placeholder: https://github.com/facebook/react-native/pulls/<pull-request-id> or https://github.com/facebook/react-native/commit/<commit-hash>
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe why you believe this change needs to be picked. The Release Crew will evaluate the pick request, generally only accepting hotfixes for breaking issues.
+    validations:
+      required: true
+
