@@ -1,6 +1,6 @@
 # React Native Releases
 
-This repository is dedicated to coordinating React Native releases; if you want to learn more about _how_ a release is worked on, please refer to the [releases documentation](https://reactnative.dev/contributing/release-roles-responsibilities).
+This repository is dedicated to coordinating React Native releases; if you want to learn more about _how_ a release is worked on, please refer to our documentation.
 
 ## Releases Support Policy
 
@@ -74,3 +74,18 @@ For further clarity, here's a glossary of the terms used for releases:
 * **minor series** - A collection of versions (either stable or not stable) sharing the same minor version (e.g. **0.68**.0-RC0, **0.68**.0, **0.68**.1 are all part of the **0.68** minor series).
 
 _Note: Stable versions are fully tested versions that are stable at the moment of release. These versions can potentially contain experimental features but only behind experimental feature flags, which need to be explicitly enabled to become active._
+
+## Release Documentation
+
+This documentation is for members of our release crew to release patches and cut new release candidates for React Native
+
+* [Guide: How to cut a release candidate](./docs/guide-release-candidate-cut.md)
+* [Guide: Release patch on release candidate](./docs/guide-release-candidate-patch.md)
+* [Guide: Release a new stable](./docs/guide-release-stable.md)
+* [Guide: How to release a patch on stable](./docs/guide-release-patch.md)
+* [Guide: How to test a release](./docs/guide-release-testing.md)
+* [Roles & Responsibilities of Release Crew](./docs/roles-and-responsibilities.md)
+* [Reference: Upgrade Helper](./docs/upgrade-helper.md)
+<!-- Move these FAQs either to this readme, or readme to dedicated faq-->
+* [Reference: FAQ](./docs/faq.md)
+* [Reference: Release Dependencies](./docs/dependencies.md)
