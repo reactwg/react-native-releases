@@ -61,7 +61,7 @@ There may be exceptional cases where we can bypass 2 release tests or only do se
 > [!Warning]
 > Only if you are releasing for versions >= 0.74
 
-[Publish monorepo packages](#publish-monorepo-packages).
+[Publish monorepo packages](./guide-publish-monorepo.md).
 
 ### Step 7. Publish `react-native`
 ```bash

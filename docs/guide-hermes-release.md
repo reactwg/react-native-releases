@@ -1,6 +1,6 @@
 # Publish and Pick a Hermes Release
 
-> [!Warning]
+> [!Important]
 > Only Meta release crew should publish Hermes releases. If you are a community releaser that is picking a Hermes pick request, ping a Meta release crew member to publish the Hermes release.
 
 Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebook/hermes). You can give yourself permission via the Meta Internal OSS dashboard.
@@ -14,10 +14,13 @@ Create a Hermes release branch of the form `rn/<major>.<minor>-stable` from late
 
 Check out the Hermes release branch for your minor. It should be of the form `rn/<major>.<minor>-stable`.
 
-> [!Note]
+> [!Tip]
 > If one doesn't exist and you are not releasing a release candidate, use the [latest tag](https://github.com/facebook/hermes/tags) for your minor. Check out that tag, and create the branch of the form `rn/<major>.<minor>-stable`. We should be creating these during release candidate cuts.
 
 ## Step 2: Cherry-pick
+
+> [!Important]
+> If you cutting a release candidate, skip this step
 
 Pick the relevant commits onto that branch. The pick requests should be from `main` and no other branch on Hermes.
 
