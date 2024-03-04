@@ -31,7 +31,7 @@ body:
       description: Please provide the host platform + version, as well as the versions of tools such as Xcode. You can easily generate a standardised version of this information by running `npx react-native@<exact-version< info`.
       placeholder: cd your/project/root && npx react-native@<exact-version> info
     validations:
-      required: true
+      required: false
   - type: textarea
     id: configurations-covered
     attributes:
@@ -51,4 +51,4 @@ body:
       label: Testing Notes
       description: Please provide any notable observations, issues encountered or fixes for regressions validated.
     validations:
-      required: true
+      required: false
