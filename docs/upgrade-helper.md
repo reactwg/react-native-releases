@@ -1,6 +1,6 @@
 # How to Update Upgrade Helper
 
-From the readme of [its dedicated repo](https://github.com/react-native-community/upgrade-helper#-how-it-works):
+From the readme of [its dedicated repo](https://github.com/react-native-community/upgrade-helper#-how-it-works)
 
 > [!Note]
 >

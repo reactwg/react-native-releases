@@ -50,3 +50,22 @@ We have a dedicated [release discussions repo](https://github.com/reactwg/react-
 
 - Is there an existing release blocking issue?
   - If no, [create a release blocking issue via this form](https://github.com/reactwg/react-native-releases/issues/new/choose).
+
+### What defines which issues and PRs are worked on?
+
+Due to support bandwidth, the React Native team, with the community's help, looks into issues & PRs opened against the supported versions.
+
+Issues & PRs opened against older versions would be considered only in exceptional cases, so we recommend to [update](https://reactnative.dev/docs/upgrading) your applications and libraries to one of the supported versions.
+
+Issues should contain a [**reproducer**](https://stackoverflow.com/help/minimal-reproducible-example) project regardless of which version they target, for them to be considered.
+Issues without a reproducer will require more effort to understand and fix, and are less likely to receive attention.
+
+At this point in time, we are prioritizing issues that are related to:
+
+* Latest version of React Native and two previous minor series.
+* Use of the New Architecture
+* Use of the Hermes Engine
+
+### Security Issues
+
+Meta has [a bounty program](https://www.facebook.com/whitehat/) for the safe disclosure of security bugs. In those cases, please go through the process outlined on that page and do not file a public issue.

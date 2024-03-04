@@ -1,7 +1,6 @@
 # Cutting a Release Candidate
 
-> [!Note]
-> Documents in this section go over steps to run different types of React Native release updates. Its intended audience is those in [relevant release roles](./release-roles-responsibilites.md).
+> [!Note] Release Candidates will primarily handled by Meta release crew. Community releasers can aid in testing and triaging issues.
 
 ### Pre-requisites
 
@@ -10,7 +9,7 @@
 - Write access to [releases](https://github.com/reactwg/react-native-releases) repository.
 - One CircleCI personal API token - see [here](https://circleci.com/docs/managing-api-tokens#creating-a-personal-api-token) how to set one.
 
-### 1. Creating a new release branch
+### 1. Create a new release branch
 
 - Create the release branch in `react-native` repo with the appropriate name (usually `0.XX-stable`).
 
@@ -30,10 +29,9 @@
   # Replace <the_hermes_tag> with the tag that will look like 'hermes-2022-07-20-RNv0.70.0-bc97c5399e0789c0a323f8e1431986e207a9e8ba'
   ./packages/react-native/scripts/hermes/bump-hermes-version.js -t <the_hermes_tag>
   ```
-
 - Add and commit the extra file that got created at `packages/react-native/sdks/hermes/.hermesversion`.
 
-### 3. Push the branch and test the current changes
+### 3. Push the branch and wait for artifacts to build
 
 You can now push the branch you created so that others can also start testing:
 
