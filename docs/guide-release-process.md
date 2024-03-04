@@ -10,6 +10,7 @@ When the release crew has decided to ship a patch release, a release crew member
 ### Step 1: Check out the relevant release branch
 
 From your `facebook/react-native` clone, update `main` and check out the relevant [release-branch](./glossary.md#release-branch) and tags.
+Make sure you're using the right [dependency versions](./support.md#external-dependencies-supported) for the release. Ex. you may need to switch Node versions
 
 ```bash
 # Update `main` and tags, to prep for any cherry-picks
@@ -175,6 +176,8 @@ npx @rnx-kit/rn-changelog-generator --base v0.68.2 --compare v0.68.3 \
 
 This will update the CHANGELOG.md file your repo. You'll probably need to reformat this and re-order the heading to keep the reverse-latest releases ordering.
 
+Once you've completed formatting, create a PR with your changes against `main`.
+
 ### Step 10: Create the Github Release
 
 Create a new [Github release](https://github.com/facebook/react-native/releases).
@@ -223,7 +226,26 @@ Template for announcing release
 📝 https://github.com/facebook/react-native/pull/<your-changelog-pr>
 ```
 
-### Step 12: Update Github Project
+### Step 12: Update Podfile.lock on the release branch
+
+Everytime we release a new version, there is a new `hermes-engine` version published. We need to update `packages/rn-tester` to use this new version. This is in preparation for the next patch release on this release minor.
+
+```bash
+# Check out the release branch you just released
+git co <release-branch>
+
+# Update it, there will be some commits from the CI when it was published
+git pull origin <release-branch> --ff-only
+
+# Head to rn-tester package and update pods
+cd packages/rn-tester
+bundle exec pod update hermes-engine --no-repo-update
+```
+
+It should update your podfile.lock
+Commit this change to the release branch
+
+### Step 13: Update Github Project
 
 Make sure you've updated what tasks you've completed, or what you're blocked on in the relevant [Github Project](https://github.com/reactwg/react-native-releases/projects?query=is%3Aopen)
 
