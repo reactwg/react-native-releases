@@ -240,10 +240,17 @@ git pull origin <release-branch> --ff-only
 # Head to rn-tester package and update pods
 cd packages/rn-tester
 bundle exec pod update hermes-engine --no-repo-update
+
+# It should update the Podfile.lock under packages/rn-tester
+git st
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   Podfile.lock
 ```
 
-It should update your podfile.lock
-Commit this change to the release branch
+Commit this change to the release branch and push to remote
 
 ### Step 13: Update Github Project
 
