@@ -25,7 +25,7 @@ Push the local commit to the remote release branch. This will trigger CI to publ
 <figcaption>Pushing the `yarn bump-all-updated-packages` commit to CircleCI on the 0.73 branch will trigger the `find_and_publish_bumped_packages` job which handles the npm publish.</figcaption>
 </figure>
 
-**Wait for this to complete, [see gotcha](./guide-release-process.md#circleci-only-runs-1-workflow-at-a-time).**
+**Wait for this to complete, [see gotcha](./gotchas.md#circleci-only-runs-1-workflow-at-a-time).**
 
 You can verify it is completed for all monorepo versions by running `print-packages` on your release branch and filtering by the minor of your release. The `--minor` flag will pull the latest version on npm registry of that minor.
 

@@ -11,9 +11,12 @@ This documentation is for members of our release crew to release patches and cut
     * Promote release candidate to stable
 * [Guide: General Release Process](./docs/guide-release-process.md)
     * Releasing patches on stable
+* [Guide: Hermes Release](./docs/guide-hermes-release.md)
+* [Guide: Monorepo Packages Release](./docs/guide-publish-monorepo.md)
 * [Guide: Release Testing](./docs/guide-release-testing.md)
 * [Roles & Responsibilities of Release Crew](./docs/roles-and-responsibilities.md)
 * [Release Escalation & Support Policy](./docs/support.md)
+* [Notable Call-outs / Gotchas](./docs/gotchas.md)
 * [FAQ](./docs/faq.md)
 * [Glossary](./docs/glossary.md)
 
