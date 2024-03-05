@@ -1,6 +1,9 @@
 # How to Update Upgrade Helper
 
-From the readme of [its dedicated repo](https://github.com/react-native-community/upgrade-helper#-how-it-works):
+> [!WARNING]
+> As of React Native > 0.68, Upgrade Helper is automatically updated when publishing a release. These instructions remain mostly for reference.
+
+From the readme of [its dedicated repo](https://github.com/react-native-community/upgrade-helper#-how-it-works)
 
 > [!Note]
 >
