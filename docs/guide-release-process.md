@@ -46,10 +46,23 @@ Follow the steps to [publish monorepo packages](./guide-publish-monorepo.md). Yo
 
 ### Step 4: Build artifacts on CircleCI
 > [!Warning]
-> Only do this once all monorepo packages have been published (if relevant and for versions < 0.74) and once the Hermes release has been published and updated on this branch.
+> Only do this once all monorepo packages have been published (for versions < 0.74) and once the Hermes release has been published and updated on this branch.
 
-Push the changes to CircleCI to start building the [artifacts](./gotchas.md#circleci-artifacts).
-Wait for the `build_npm_package` job to complete successfully. See [gotcha](./gotchas.md#circleci-only-runs-1-workflow-at-a-time).
+- Push any changes on your release branch to remote
+  ```bash
+  ex.
+  git push origin 0.71-stable
+  ```
+- CI will build relevant artifacts (Hermes pre-builts, RNTester.apk) that will expedite your testing.
+- You can view CI here: https://app.circleci.com/pipelines/github/facebook/react-native
+  - Filter to your release branch
+- Wait for the `build_npm_package` job to complete successfully. If the job fails, try and fix to get the artifacts to build. This will greatly speed up your testing.
+- See [CircleCI artifacts](./gotchas.md#circleci-artifacts) for more details.
+
+> [!Important]
+> Release testing will only use the artifacts from the last workflow that ran on your release branch! This means that if you push more changes to your release branch, you must wait for it to complete the `build_npm_package` job again to use those artifacts in testing.
+>
+> The takeaway here is to try and **avoid pushing more commits to CI at this point**. Otherwise, you'll have to wait for CI to build the assets again to use them in your testing.
 
 ### Step 5: Test the release
 See [release testing](./guide-release-testing.md).
@@ -77,7 +90,7 @@ yarn trigger-react-native-release --to-version <YOUR_RELEASE_VERSION> --token <Y
 The script will verify there are no changes to monorepo packages just to confirm you have [published monorepo packages](./guide-publish-monorepo.md).
 
 > [!Warning]
-> **Only for <0.74**: If the script detects there are unpublished monorepo packages, this means your release testing didn't test picks to those monorepo packages :warning: You may need to publish and re-test.
+> **Only for < 0.74**: If the script detects there are unpublished monorepo packages, this means your release testing didn't test picks to those monorepo packages :warning: You may need to publish the missing monorepo packages and re-test.
 
 The script will ask what npm tag you want to use
 - Select `latest` if you are publishing a patch on the [latest version](./glossary.md#latest-version).
@@ -98,9 +111,12 @@ Once `package_release` workflow is complete, it will trigger a workflow on the r
 <figcaption>"1" workflow will commit the tag "v0.73.5" which will then trigger workflow "2" to actually publish the release to npm and relevent assets to Maven.</figcaption>
 </figure>
 
+> [!Tip]
+> Look under "All Branches" filter to find the publish job. It is not run on any "branch". CircleCI does not give a way to search for these jobs.
+
 ### Step 8: Verify Release
 
-Once the `publish_release` workflow is complete, verify the following 
+Once the `publish_release` workflow is complete, verify the following:
 
 #### Verify NPM publishes
 
@@ -209,8 +225,10 @@ To help you upgrade to this version, you can use the [upgrade helper](https://re
 
 You can find the whole changelog history in the [changelog.md file](https://github.com/facebook/react-native/blob/main/CHANGELOG.md).
 ```
-- Select "Set as a pre-release" only if you releasing a release candidate
-- Select "Set as the latest release" only if you releasing a patch for the [latest version](./glossary.md#latest-version)
+
+> [!Important]
+> Select "Set as a pre-release" if you releasing a release candidate
+> Select "Set as the latest release" if you releasing a patch for the [latest version](./glossary.md#latest-version)
 
 <img alt="Github Release" src="../assets/github_release.png" width="400" />
 

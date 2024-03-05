@@ -1,32 +1,16 @@
-# How to Test a Release
+# Release Testing
 
 These steps needs to be followed by the release crew as part of the release process, to ensure that new versions published have a good level of stability.
 
 > [!Note]
 >An important element of testing source in the release branch is that this process needs to be preferably be done twice, on two separate machines - there are multiple scenarios in which something might fail on a machine but not on another. By running tests on two computers, we want to reach a step of double confirmation that everything works fine.
 
-## Pre-requisites
-
-> [!Note]
+> [!Important]
 > Currently, this flow can only be done on macOS machines.
 
-- One CircleCI personal API token - see [here](https://circleci.com/docs/managing-api-tokens#creating-a-personal-api-token) how to set one.
-- Have a clone of `react-native` repo and be on the release branch (`0.XX-stable`).
+> [!Important]
+> Make sure you have the right access/tokens set up. See [onboarding](./roles-and-responsibilities.md#onboarding-to-release-crew).
 
-  ```bash
-  # Checkout relevant branch
-  git checkout 0.72-stable
-
-  # Optional: you might need a .watchmanconfig because `npm start` would fail without it.
-  echo '{}' > .watchmanconfig
-  ```
-
-- Have Android and iOS development environment set-up. Follow instructions for `React Native CLI quickstart` for macOS/iOS and macOS/Android from the [Environment Setup](/docs/environment-setup) guide.
-
-#### Additional steps for Android
-
-  - Gradle should now install [the appropriate NDK](https://github.com/facebook/react-native/blob/main/template/android/build.gradle). Verify that you have in your path the `ANDROID_NDK` variable, pointing to it.
-  - In case you are on macOS Catalina (or higher), you might also need to run `sudo xattr -r -d com.apple.quarantine /path/to/ndk` to avoid the e2e script to fail. (_That said, this should not happen anymore since from NDK 21 and higher the Android team started signing the NDK._)
 
 ## Steps
 
@@ -86,16 +70,6 @@ After completing testing, clean up your local repository state using the followi
 yarn test-e2e-local-clean
 git reset HEAD --hard
 ```
-
-#### Versions older than 71
-
-You need to use the interactive script run you through the different variants in [Test Dimensions](#test-dimensions):
-
-```bash
-./scripts/test-manual-e2e.sh
-```
-
-This script will ask you to select which platform and which project you want to test, and then to execute a series of extra steps during the process. Bear in mind, when testing RNTester on Android, you need to start the Android emulator ahead of time or it will fail.
 
 ## What to test?
 
@@ -170,3 +144,13 @@ To help provide the relevant information, we have prepared this template they ca
 | Chrome remote debugger (Android/iOS) | ✅/🚨/🙅‍♂️                 |
 | Flipper debugger (Android/iOS)       | ✅/🚨/🙅‍♂️                 |
 ```
+
+## Versions older than 71
+
+You need to use the interactive script run you through the different variants in [Test Dimensions](#test-dimensions):
+
+```bash
+./scripts/test-manual-e2e.sh
+```
+
+This script will ask you to select which platform and which project you want to test, and then to execute a series of extra steps during the process. Bear in mind, when testing RNTester on Android, you need to start the Android emulator ahead of time or it will fail.

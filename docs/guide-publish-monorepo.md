@@ -3,7 +3,12 @@
 > [!Warning]
 > For < 0.74, you'll need to publish any picks to monorepo packages **BEFORE** release testing. For >=0.74, you can test first but will need to complete these steps **BEFORE** final `react-native` release.
 
-## Step 1: Check if there are any monorepo changes
+* [See instructions for < 0.74](#publishing-monorepo-packages-for-react-native-versions--074)
+* [See instructions for >= 0.74](#publishing-monorepo-packages-for-react-native-versions--074-1)
+
+## Publishing Monorepo Packages for React Native Versions < 0.74
+
+### Step 1: Check if there are any monorepo changes
 
 ```bash
 # Run in react-native repo on your release branch
@@ -17,7 +22,7 @@ If there are changes to monorepo packages, this script will ask you to confirm a
 
 If there are no detected changes, then there are no monorepo packages to update. You are done here and can continue with the general release.
 
-## Step 2: Publish packages
+### Step 2: Publish packages
 Push the local commit to the remote release branch. This will trigger CI to publish these packages.
 
 <figure>
@@ -36,15 +41,39 @@ This means that if your `main` (on your release branch) and the minor column mat
 <figcaption>Running `yarn print-packages` in your release branch.</figcaption>
 </figure>
 
-> [!Note]
-> If you are releasing for version >=0.74, you are done here.
+### Step 3. Repeat
 
-## Step 3. Repeat
-
-> [!Warning]
-> Only do this if you are releasing for versions < 0.74
-
-Once CI completes publishing those packages, *repeat steps 1-3* until `yarn bump-all-updated-packages` no longer reports any changes to monorepo packages.
+*Repeat steps 1-3* until `yarn bump-all-updated-packages` no longer reports any changes to monorepo packages. Make sure to wait for the publish job to complete each time.
 
 > [!Note]
-> The reason why we need to repeat steps 1-3 is because for React Native < 0.74, the `yarn bump-all-updated-packages` script does not identify transitive dependencies on first run. This has been fixed for 0.74+
+> The reason why we need to repeat steps 1-3 is because `yarn bump-all-updated-packages` script does not identify transitive dependencies on first run.
+
+## Publishing Monorepo Packages for React Native Versions >= 0.74
+
+### Step 1: Check if there are any monorepo changes
+
+Run
+```bash
+# Run in react-native repo on your release branch
+yarn bump-all-updated-packages
+```
+
+If there are changes to monorepo packages, confirm and commit those changes.
+If there are no detected changes, then there are no monorepo packages to update. You are done here.
+
+### Step 2: Repeatedly `bump-all-updated-packages`, then push to publish
+
+Continue to run `yarn bump-all-updated-packages` and commit changes until the script reports no more changes.
+Then, push to remote branch for CI to publish those monorepo packages.
+
+You can verify all the monorepo packages have been published by running `print-packages` on your release branch and filtering by the minor of your release. The `--minor` flag will pull the latest version on npm registry of that minor.
+
+This means that if your `main` (on your release branch) and the minor column match versions, then everything has been published.
+
+<figure>
+<img alt="yarn print-packages" src="../assets/yarn_print_packages.png" width="400" />
+<figcaption>Running `yarn print-packages` in your release branch.</figcaption>
+</figure>
+
+> [!Note]
+> The reason why we need to repeat running`yarn bump-all-updated-packages` is because it does not identify transitive dependencies. 0.74 makes the improvement that the publish job only needs to run once but in future updates we hope to remove this repeated "bump" step.

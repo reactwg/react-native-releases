@@ -74,3 +74,36 @@ Member of the React Native Core Contributor community. There are usually 2 Commu
         - Help decide when to promote pre-release to stable
         - Help decide when to release a patch on stable
         - Help decide which commits are part of which release
+
+
+## Onboarding to Release Crew
+
+If you are joining as a release crew member you'll need the following:
+
+### Pre-requisites
+
+#### Write access to `react-native`
+    - Ask Meta release crew to give you. They'll need your Github username
+
+#### Access to Github Projects
+    - Ask Meta release crew to add you to the reactwg/react-native-release-crew team
+    - https://github.com/orgs/reactwg/teams/react-native-release-crew
+
+#### CircleCI Personal Token
+    - [Instructions to obtain](https://circleci.com/docs/managing-api-tokens/#creating-a-personal-api-token)
+
+### Prepare your setup
+
+- Git clone the [react-native repo](https://github.com/facebook/react-native)
+- Ensure you have your environment set up for Android and iOS development
+    - Follow instructions for `React Native CLI quickstart` for macOS/iOS and macOS/Android from the [Environment Setup](https://reactnative.dev/docs/environment-setup).
+    - Gradle should now install [the appropriate NDK](https://github.com/facebook/react-native/blob/main/template/android/build.gradle). Verify that you have in your path the `ANDROID_NDK` variable, pointing to it.
+    - In case you are on macOS Catalina (or higher), you might also need to run `sudo xattr -r -d com.apple.quarantine /path/to/ndk` to avoid the e2e script to fail. (_That said, this should not happen anymore since from NDK 21 and higher the Android team started signing the NDK._)
+- Try running a release test on an existing release branch for RNTester on both iOS/Android
+    ```bash
+    # In your react-native checkout
+    git co 0.73-stable
+    yarn
+    yarn test-e2e-local -p iOS -t RNTester --hermes true -c <YOUR_CIRCLE_CI_TOKEn>
+    ```
+    - See [release testing](./guide-release-testing.md) for more information.

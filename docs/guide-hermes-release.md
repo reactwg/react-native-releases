@@ -7,10 +7,10 @@ Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebo
 
 ## Step 1: Check-out or create the Hermes release branch
 
-#### For cutting a release candidate
+### If you are cutting a release candidate
 Create a Hermes release branch of the form `rn/<major>.<minor>-stable` from latest `main`.
 
-#### For stable patch releases
+### For stable patch releases
 
 Check out the Hermes release branch for your minor. It should be of the form `rn/<major>.<minor>-stable`.
 

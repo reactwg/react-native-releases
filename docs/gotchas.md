@@ -9,7 +9,7 @@ If you there has been an error in publishing, you'll need to flag to Meta releas
 
 CircleCI builds artifacts, like `RNTester.apk` or Hermes binaries, that we can use in release testing to avoid building locally ourselves. This significantly speeds up release testing.
 
-To use these CircleCI artifacts, you'll pass your [CircleCI token](todo) to the [testing script](todo).
+To use these CircleCI artifacts, you'll pass your [CircleCI token](./roles-and-responsibilities.md#circleci-personal-token) to the [testing script](./guide-release-testing.md#generating-the-projects).
 The artifacts are built under the `build_npm_package` job and the job must be successful us to be able to use the artifacts.
 
 <figure>

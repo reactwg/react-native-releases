@@ -6,11 +6,11 @@ This repository is dedicated to coordinating React Native releases; if you want 
 
 This documentation is for members of our release crew to release patches and cut new release candidates for React Native
 
-* [Guide: Release Candidates](./docs/guide-release-candidate-cut.md)
-    * How to cut a release candidate
-    * Promote release candidate to stable
-* [Guide: General Release Process](./docs/guide-release-process.md)
-    * Releasing patches on stable
+* [Guide: Running a Release](./docs/guide-release-process.md)
+* [Guide: Release Candidates](./docs/guide-release-candidate.md)
+    * [How to cut a release candidate](./docs/guide-release-candidate.md#cut-a-release-candidate)
+    * [Release Candidate patches](./docs/guide-release-candidate.md#release-patches-on-release-candidate)
+    * [Promote release candidate to stable](./docs/guide-release-candidate.md#promote-release-candidate-to-stable)
 * [Guide: Hermes Release](./docs/guide-hermes-release.md)
 * [Guide: Monorepo Packages Release](./docs/guide-publish-monorepo.md)
 * [Guide: Release Testing](./docs/guide-release-testing.md)
