@@ -2,10 +2,9 @@
 
 These steps needs to be followed by the release crew as part of the release process, to ensure that new versions published have a good level of stability.
 
-> [!Note]
->An important element of testing source in the release branch is that this process needs to be preferably be done twice, on two separate machines - there are multiple scenarios in which something might fail on a machine but not on another. By running tests on two computers, we want to reach a step of double confirmation that everything works fine.
+In most cases we should have 2 release crew members running release testing, on two separate machines.
 
-> [!Important]
+> [!Caution]
 > Currently, this flow can only be done on macOS machines.
 
 > [!Important]
@@ -60,7 +59,10 @@ There are a couple of extra requirements to make this flow work:
     - if you are testing RNTester on Android, it has to download the right APK (JSC or Hermes). So the job that produces the APKs must have finished successfully.
     - if you are testing RNTestProject, it has to download the maven prebuilts and the Hermes engine for iOS. So the jobs that produce those artifacts must have finished successfully.
 
-Anyway, if any of those prerequisites is not met, the script should output a proper error message.
+If any of those prerequisites is not met, the script should output a proper error message.
+
+> [!Warning]
+> CI artifacts are only taken from the _last_ commit. This means everytime you push to your release branch, you'll have to wait for the artifacts to build again. You cannot release test using artifacts from an "older" commit. Plan accordingly.
 
 If you need to build React Native from source, you can skip the `-c` parameter. By not passing the CircleCI token, the script falls back to the previous flow, building everything locally.
 
@@ -91,7 +93,7 @@ To ensure that we cover the most use cases, we need to ensure we test all these 
 - RNTestProject + Android + JSC
 
 > [!Note]
-> Bear in mind that RNTester project is already onboarded in the new architecture. `RNTestProject` is not - new architecture mode needs to be [enabled](/docs/the-new-architecture/use-app-template#enable-the-new-architecture) and tested separately.
+> Bear in mind that RNTester project is already onboarded in the new architecture. `RNTestProject` is not - new architecture mode needs to be [enabled](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md#enable-the-new-architecture-for-apps) and tested separately.
 
 ### Test Notes
 
