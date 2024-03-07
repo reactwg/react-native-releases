@@ -101,7 +101,7 @@ The script will then output a link to the CI workflow `package_release`
 
 <figure>
 <img src="../assets/package_release.png" width="400" />
-<figcaption>CircleCI workflow "package_release". This workflow will then trigger another workflow that actually publishes the release.</figcaption>
+<figcaption>CircleCI workflow <code>package_release</code>. This workflow will then trigger another workflow that actually publishes the release.</figcaption>
 </figure>
 
 Once `package_release` workflow is complete, it will trigger a workflow on the release branch to bump the version number (see "1" in figure), commit and tag the commit with the version. This new tag will then trigger a workflow to publish the release (see "2" in figure).
@@ -132,10 +132,10 @@ You should expect the `main` and `minor` column versions to match.
 
 <figure>
 <img alt="yarn print-packages" src="../assets/yarn_print_packages.png" width="400" />
-<figcaption>Running `yarn print-packages` in your release branch.</figcaption>
+<figcaption>Running <code>yarn print-packages</code> in your release branch.</figcaption>
 </figure>
 
-#### Sanity-check by `init`-ing a new template app
+#### Sanity-check by init-ing a new template app
 
 Sanity check by init-ing a new project and running for iOS/Android
 
