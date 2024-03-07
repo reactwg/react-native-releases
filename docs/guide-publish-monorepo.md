@@ -27,7 +27,7 @@ Push the local commit to the remote release branch. This will trigger CI to publ
 
 <figure>
 <img alt="CircleCI publishing monorepo packages" src="../assets/find_and_publish_bumped_packages.png" width="400" />
-<figcaption>Pushing the `yarn bump-all-updated-packages` commit to CircleCI on the 0.73 branch will trigger the `find_and_publish_bumped_packages` job which handles the npm publish.</figcaption>
+<figcaption>Pushing the <code>yarn bump-all-updated-packages</code> commit to CircleCI on the 0.73 branch will trigger the <code>find_and_publish_bumped_packages</code> job which handles the npm publish.</figcaption>
 </figure>
 
 **Wait for this to complete, [see gotcha](./gotchas.md#circleci-only-runs-1-workflow-at-a-time).**
@@ -38,7 +38,7 @@ This means that if your `main` (on your release branch) and the minor column mat
 
 <figure>
 <img alt="yarn print-packages" src="../assets/yarn_print_packages.png" width="400" />
-<figcaption>Running `yarn print-packages` in your release branch.</figcaption>
+<figcaption>Running <code>yarn print-packages</code> in your release branch.</figcaption>
 </figure>
 
 ### Step 3. Repeat
@@ -72,7 +72,7 @@ This means that if your `main` (on your release branch) and the minor column mat
 
 <figure>
 <img alt="yarn print-packages" src="../assets/yarn_print_packages.png" width="400" />
-<figcaption>Running `yarn print-packages` in your release branch.</figcaption>
+<figcaption>Running <code>yarn print-packages</code> in your release branch.</figcaption>
 </figure>
 
 > [!Note]

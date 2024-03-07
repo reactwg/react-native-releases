@@ -104,7 +104,7 @@ To ensure that we cover the most use cases, we need to ensure we test all these 
 
 - **Debugger launch flow**
   - Use Dev Menu > Open Debugger.
-  - **0.73 and later**: Use `npx react-native-start --experimental-debugger`. Should connect to Hermes debugger in experimental new debugger frontend.
+  - **0.73 and later**: Use `npx react-native start --experimental-debugger`. Should connect to Hermes debugger in experimental new debugger frontend.
   - **Pre-0.73**: Should connect to Hermes debugger in Flipper.
 - **Console tab**
   - **All versions**: Should display all logs.
