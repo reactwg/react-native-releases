@@ -1,14 +1,15 @@
 # Release Testing
 
-These steps needs to be followed by the release crew as part of the release process, to ensure that new versions published have a good level of stability.
+Release testing is manual testing the release crew does to sanity check that our new releases build and run and don't regress core experiences.
 
-In most cases we should have 2 release crew members running release testing, on two separate machines.
+> [!Important]
+> Make sure you have the right access/tokens set up. See [onboarding](./roles-and-responsibilities.md#onboarding-to-release-crew).
 
 > [!Caution]
 > Currently, this flow can only be done on macOS machines.
 
-> [!Important]
-> Make sure you have the right access/tokens set up. See [onboarding](./roles-and-responsibilities.md#onboarding-to-release-crew).
+> [!Note]
+> In most cases we should have 2 release crew members running release testing, on two separate machines.
 
 
 ## Steps
@@ -32,7 +33,29 @@ When testing locally, we want to ensure that we start from a clean slate to avoi
 
 ### Generating the projects
 
-The local testing for a release consist of running the [test project](https://github.com/facebook/react-native/tree/main/packages/rn-tester) of the react-native repository, `RNTester`, which contains an in-depth list of components implementations, and generating a fresh new project based on the local code, `RNTestProject`, that will simulate accurately how a `react-native init` project will behave.
+We test on two apps
+
+- RNTester, a demonstration app that higlights the APIs and core components of React Native
+- `RNTestProject`, a project built from the React Native [template]()
+
+| App | New Architecture enabled |
+| --- | ------------------------ |
+| RNTester | true |
+| RNTestProject | false |
+
+> [!Note]
+> If you need to enable New Architecture on `RNTestProject`, follow the instructions [here](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md#enable-the-new-architecture-for-apps).
+
+Here are the dimensions we cover in manual testing:
+
+- RNTester + iOS + Hermes
+- RNTester + iOS + JSC
+- RNTester + Android + Hermes
+- RNTester + Android + JSC
+- RNTestProject + iOS + Hermes
+- RNTestProject + iOS + JSC
+- RNTestProject + Android + Hermes
+- RNTestProject + Android + JSC
 
 To generate the the right project with the specific configuration desired, you can use the command
 
@@ -40,7 +63,7 @@ To generate the the right project with the specific configuration desired, you c
 yarn test-e2e-local [options]
 ```
 
-Followed by the wanted options:
+Followed by the options:
 
 ```bash
   --help          Show help                                            [boolean]
@@ -66,85 +89,94 @@ If any of those prerequisites is not met, the script should output a proper erro
 
 If you need to build React Native from source, you can skip the `-c` parameter. By not passing the CircleCI token, the script falls back to the previous flow, building everything locally.
 
-After completing testing, clean up your local repository state using the following commands.
-
-```sh
-yarn test-e2e-local-clean
-git reset HEAD --hard
-```
-
 ## What to test?
 
-Aside from verifying that the building process is successful, once the app spawn by the script is up and running, we want to run a series of manual tests to ensure that some core functionalities work, like Fast Refresh and the Flipper debugger.
+* Depending on the nature of what is being picked in, you may only test very specific workflows.
+* At Meta, we have internal e2e tests but they don't capture interactive capabilities or developer experience workflows.
+* General rule of thumb is to prioritize
+  * debugging
+  * developer menu
+  * TextInput
+  * Lists
+  * Keyboard interactions
 
-In the `RNTester` you want to also play around with the app and try different components: some important onces are `Flatlist`, `Image` and the "New Architecture Component" (should be the very last one in the list).
+## How to test?
 
-### Test Dimensions
+- Create a [Test Report](https://github.com/reactwg/react-native-releases/issues/new?assignees=&labels=Type%3A+Test+Report&projects=&template=test_report.yml)
+- Fill out the table of test dimensions
+- Refer to the [spreadsheet of test cases](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing)
 
-To ensure that we cover the most use cases, we need to ensure we test all these different combination of configurations:
 
-- RNTester + iOS + Hermes
-- RNTester + iOS + JSC
-- RNTester + Android + Hermes
-- RNTester + Android + JSC
-- RNTestProject + iOS + Hermes
-- RNTestProject + iOS + JSC
-- RNTestProject + Android + Hermes
-- RNTestProject + Android + JSC
+### Recommended Sequence for testing
 
-> [!Note]
-> Bear in mind that RNTester project is already onboarded in the new architecture. `RNTestProject` is not - new architecture mode needs to be [enabled](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md#enable-the-new-architecture-for-apps) and tested separately.
+> [!Tip]
+> Make sure the remote assets are built on your release branch to use the `-c` option (highly recommended)
 
-### Test Notes
+```bash
+react-native$ yarn test-e2e-local-clean # alias this command to make your life easier to something like `clean`
 
-<details>
-<summary>Debugging</summary>
+react-native$ yarn test-e2e-local -p iOS -t RNTester -c <your-circle-ci-token>`
+react-native$ cd packages/rn-tester && yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTester from your iOS sim
+react-native/packages/rn-tester$ cd ../../
 
-### Basic checks
+react-native$ yarn test-e2e-local -p iOS -t RNTester --hermes false -c <your-circle-ci-token>`
+react-native$ cd packages/rn-tester && yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTester from your iOS sim
+react-native/packages/rn-tester$ cd ../../
 
-- **Debugger launch flow**
-  - Use Dev Menu > Open Debugger.
-  - **0.73 and later**: Use `npx react-native start --experimental-debugger`. Should connect to Hermes debugger in experimental new debugger frontend.
-  - **Pre-0.73**: Should connect to Hermes debugger in Flipper.
-- **Console tab**
-  - **All versions**: Should display all logs.
-- **Sources tab**
-  - **All versions**:
-    - Should allow viewing of source files (<kbd>Cmd ⌘</kbd> + <kbd>P</kbd> search in Chrome DevTools).
-    - Should support setting a breakpoint that is hit during app lifetime. **Note**: Will have broken behaviour across app reloads, excluding via `debugger;` statement.
+react-native$ yarn test-e2e-local -p Android -t RNTester -c <your-circle-ci-token>`
+react-native$ cd packages/rn-tester && yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTester from your Android emulator
+react-native/packages/rn-tester$ cd ../../
 
-</details>
+react-native$ yarn test-e2e-local -p Android -t RNTester --hermes false -c <your-circle-ci-token>`
+react-native$ cd packages/rn-tester && yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTester from your Android emulator
+react-native/packages/rn-tester$ cd ../../
 
-## Testing pre-releases (RC) on production apps
+# by default, RNTestProject will use Hermes for iOS and Android
+react-native$ yarn test-e2e-local -p iOS -t RNTestProject -c <your-circle-ci-token>`
+react-native$ cd /tmp/RNTestProject
+tmp/RNTestProject$ yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTestProject from your iOS sim
 
-During the Release Candidate (RC) phase of a release cycle, we ask for the community to set as dependency in their apps the latest RC available and report in the related "Road to 0.XX" how it performs ([example](https://github.com/reactwg/react-native-releases/discussions/26)).
+# test RNTestProject on Android with Hermes
+tmp/RNTestProject$ yarn run android # this should build the Android app and run on your emulator
+tmp/RNTestProject$ yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTestProject from your Android emulator
 
-To help provide the relevant information, we have prepared this template they can use as blueprint for what is important to test - they can copy/pasted it in a comment and fill it accordingly.
+# test RNTestProject with JSC for iOS
+tmp/RNTestProject$ cd ios && bundle install && USE_HERMES=0 bundle exec pod install --ansi
+tmp/RNTestProject/ios$ cd ../
+tmp/RNTestProject$ yarn run ios
+tmp/RNTestProject$ yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTestProject from your iOS sim
 
-```markdown
-| Link to branch:                      |                         |
-| -----------------------------------  | :---------------------- |
-| **Project info**                     |                         |
-| Name                                 |                         |
-| Starting RN version                  | <add me, ex. RN 0.65.1> |
-| Hermes on iOS                        | yes/no                  |
-| Hermes on Android                    | yes/no                  |
-| **Tested - iOS**                     |                         |
-| Fast Refresh                         | ✅/🚨/🙅‍♂️                 |
-| Debug/dev build on Simulator         | ✅/🚨/🙅‍♂️                 |
-| Debug/dev build on Device            | ✅/🚨/🙅‍♂️                 |
-| Production build                     | ✅/🚨/🙅‍♂️                 |
-| Debugger (Hermes)                    | ✅/🚨/🙅‍♂️                 |
-| Deploy to TestFlight                 | ✅/🚨/🙅‍♂️                 |
-| **Tested - Android**                 |                         |
-| Fast Refresh                         | ✅/🚨/🙅‍♂️                 |
-| Debug/dev build on Emulator          | ✅/🚨/🙅‍♂️                 |
-| Debug/dev build on Device            | ✅/🚨/🙅‍♂️                 |
-| Production build                     | ✅/🚨/🙅‍♂️                 |
-| Debugger (Hermes)                    | ✅/🚨/🙅‍♂️                 |
-| **Optional - Deprecated in 0.73**    |                         |
-| Chrome remote debugger (Android/iOS) | ✅/🚨/🙅‍♂️                 |
-| Flipper debugger (Android/iOS)       | ✅/🚨/🙅‍♂️                 |
+# update RNTestProject with JSC forAndroid
+tmp/RNTestProject$ cd android
+tmp/RNTestProject$ vim gradle.properties # update `hermesEnabled` to false
+tmp/RNTestProject$ ./gradlew clean
+tmp/RNTestProject/ios$ cd ../
+tmp/RNTestProject$ yarn run android # This should re-build Android app
+tmp/RNTestProject$ yarn start
+# verify tests "what to test"
+# kill metro
+# delete RNTestProject from your Android sim
 ```
 
 ## Versions older than 71
