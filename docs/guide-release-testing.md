@@ -12,9 +12,7 @@ Release testing is manual testing the release crew does to sanity check that our
 > In most cases we should have 2 release crew members running release testing, on two separate machines.
 
 
-## Steps
-
-### Clean up the local state
+## Clean up the local state
 
 When testing locally, we want to ensure that we start from a clean slate to avoid caches polluting our testing.
 
@@ -31,11 +29,11 @@ When testing locally, we want to ensure that we start from a clean slate to avoi
     yarn install
    ```
 
-### Generating the projects
+## Generating projects to test
 
 We test on two apps
 
-- RNTester, a demonstration app that higlights the APIs and core components of React Native
+- `RNTester`, a demonstration app that higlights the APIs and core components of React Native
 - `RNTestProject`, a project built from the React Native [template]()
 
 | App | New Architecture enabled |
@@ -102,9 +100,10 @@ If you need to build React Native from source, you can skip the `-c` parameter. 
 
 ## How to test?
 
-- Create a [Test Report](https://github.com/reactwg/react-native-releases/issues/new?assignees=&labels=Type%3A+Test+Report&projects=&template=test_report.yml)
-- Fill out the table of test dimensions
-- Refer to the [spreadsheet of test cases](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing)
+1. Create a [Test Report](https://github.com/reactwg/react-native-releases/issues/new?assignees=&labels=Type%3A+Test+Report&projects=&template=test_report.yml)
+2. Fill out the table of test dimensions
+3. Refer to the [spreadsheet of test cases](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing), make any outstanding notes in the Test Report
+4. Close the Test Report issue if the release passes testing
 
 
 ### Recommended Sequence for testing
