@@ -1,0 +1,36 @@
+name:  📋 Release Checklist
+title: "Release 0.XX.Y"
+description: "Attn: Release Crew - Release checklist"
+labels: ["Type: Release Crew"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Release Checklist
+
+        > Note: This is for React Native release crew usage
+
+        Create this issue for your release and fill out the checklist.
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Release Checklist
+      value: |
+
+        See [Release Process](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md) documentation
+
+        - [ ] [Complete picks](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-2-cherry-pick-or-merge-requests-against-release-branch)
+          - See [framework to evaluate priority of picks](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md#release-issues-and-pick-request-escalation)
+        - [ ] (If < 0.74) [Publish monorepo packages](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-3-publish-monorepo-packages)
+        - [ ] [Push things remote to get assets (like Hermes) ready](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-4-build-artifacts-on-circleci)
+        - [ ] Test release (create [Test Report](https://github.com/reactwg/react-native-releases/issues/new/choose))
+        - [ ] (If > 0.74) [Publish monorepo packages](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-6-publish-monorepo-packages)
+        - [ ] [Publish `react-native`](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-7-publish-react-native)
+        - [ ] [Verify release](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-8-verify-release)
+        - [ ] [Update Changelog](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-9-generate-the-changelog-pr)
+        - [ ] [Create Github Release](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-10-create-the-github-release)
+        - [ ] [Announce it](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-11-communicate-release)
+        - [ ] [Update podfile.lock](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-12-update-podfilelock-on-the-release-branch)
+        - [ ] Update any Github Projects

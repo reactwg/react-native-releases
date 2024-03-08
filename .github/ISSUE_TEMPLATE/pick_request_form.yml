@@ -1,4 +1,5 @@
 name: 🍒⛏️ Cherry-pick Request
+title: "[0.XX] Title"
 description: Do you need a commit cherry-picked into the release branch? Start here.
 labels: ["Type: Pick Request"]
 
