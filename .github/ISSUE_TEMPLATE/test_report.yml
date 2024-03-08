@@ -13,6 +13,15 @@ body:
 
         Create this issue and fill out the template for your test report
 
+  - type: input
+    id: target-minor
+    attributes:
+      label: Target Minor
+      description: Release Minor (for auto-triaging).
+      placeholder: "0.74"
+    validations:
+      required: true
+
   - type: textarea
     id: system-configuration
     attributes:

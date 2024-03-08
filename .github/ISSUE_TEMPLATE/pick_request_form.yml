@@ -29,7 +29,9 @@ body:
     id: description
     attributes:
       label: Description
-      description: Please describe why you believe this change needs to be picked. The Release Crew will evaluate the pick request, generally only accepting hotfixes for breaking issues.
+      description: |
+        Please describe why you believe this change needs to be picked. The Release Crew will evaluate the pick request, generally only accepting hotfixes for breaking issues.
+        See our [support policy](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md).
     validations:
       required: true
 
