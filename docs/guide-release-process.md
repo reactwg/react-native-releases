@@ -1,7 +1,11 @@
 # General Release Process
 
 > [!Note]
-> This document is to give an overview of how to release a React Native release and specifically calls out gotchas. Releasing a release candidate generally follows the same flow but has some variation and is covered in detail in its own [guide](./guide-release-candidate-cut.md)
+> This documents the steps to releasing a stable React Native release.
+> 
+> Release candidates will generally follow the same steps but have some pre- and post- work, depending on if you're cutting, doing a patch, or promoting a release candidate to stable.
+> 
+> Follow the dedicated release candidate [guide](./guide-release-candidate-cut.md) for more detail. Generally only Meta releasers will be doing release candidate releases.
 
 ## Release Steps
 
