@@ -1,8 +1,14 @@
 # Release Roles & Responsibilities
 
-Here we set guidelines to apply the "dividi et impera" approach to React Native releases: it is an involved process and we need to clarify the work to allow for easier rotations of folks in various positions.
+We have a  "dividi et impera" approach to React Native releases. The "release crew" is composed of generally 2 folks from Meta and 2+ from the community.
 
-In a standard situation, we expect that the Release Crew is composed of 2+2 releasers (two people from the community, two from Meta).
+General division of work is
+- Meta releasers handle any active release candidate / latest stable
+    - These often need more internal coordination
+- Community releasers handle older stable release patches
+    - These often don't need as many patches
+
+Below we outline more specifics of each role
 
 ---
 
@@ -18,7 +24,7 @@ Owner for release coordination
 
 ### Role Responsibilities
 
-- Drives weekly release status sync
+- Drives weekly release status sync, ([meeting notes](https://docs.google.com/document/d/1g1DM2vrB-jld9C3n30iuI9Pf0oVyBIyqXtTMSexYhz0/edit?usp=sharing))
     - Responsible for communicating status and keeping communication up to date
     - Triage/answer incoming concerns
     - If public holiday for the primary releaser, may cancel the meeting or delegate to another release crew member to run
