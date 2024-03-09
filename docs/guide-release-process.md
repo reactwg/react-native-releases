@@ -5,7 +5,7 @@
 > 
 > Release candidates will generally follow the same steps but have some pre- and post- work, depending on if you're cutting, doing a patch, or promoting a release candidate to stable.
 > 
-> Follow the dedicated release candidate [guide](./guide-release-candidate-cut.md) for more detail. Generally only Meta releasers will be doing release candidate releases.
+> Follow the dedicated release candidate [guide](./guide-release-candidate.md) for more detail. Generally only Meta releasers will be doing release candidate releases.
 
 ## Release Steps
 
