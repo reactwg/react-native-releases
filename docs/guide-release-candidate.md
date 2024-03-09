@@ -1,6 +1,7 @@
 # Releasing Release Candidate
 
-> [!Note] Release Candidates will primarily handled by Meta release crew. Community releasers can aid in testing and triaging issues.
+> [!Note]
+> Release Candidates will primarily handled by Meta release crew. Community releasers can aid in testing and triaging issues.
 
 The general stages for handling a release candidate:
 
