@@ -1,6 +1,6 @@
 # Release Roles & Responsibilities
 
-We have a  "dividi et impera" approach to React Native releases. The "release crew" is composed of generally 2 folks from Meta and 2+ from the community.
+We have a  "dividi et impera" approach to React Native releases. The "release crew" is composed of generally 2 folks from Meta and 2+ from the community (core contributors, framework developers, etc.).
 
 General division of work is
 - Meta releasers handle any active release candidate / latest stable
@@ -58,7 +58,8 @@ Back-up for Primary Meta Releaser
 
 ## Role: Community Releaser
 
-Member of the React Native Core Contributor community. There are usually 2 Community Releasers per release.
+Member of the React Native Core Contributor community or Frameworks developers.
+There are usually 2+ Community Releasers per release.
 
 ### Role Responsibilities
 - Attends 30 minute weekly release sync meeting
@@ -80,6 +81,14 @@ Member of the React Native Core Contributor community. There are usually 2 Commu
         - Help decide when to promote pre-release to stable
         - Help decide when to release a patch on stable
         - Help decide which commits are part of which release
+
+### Frameworks developers in the Release Crew
+
+With [RFC0759 - React Native Frameworks #759](https://github.com/react-native-community/discussions-and-proposals/pull/759), we're requiring each recommended framework to join the release crew.
+This will ensure that the framework developers are aware of the changes that are about to ship in the upcoming release.
+
+Moreover, the framework developer member of the release crew will have the responsibility to verify that the framework works well with the upcoming release of React Native.
+This will ensure that React Native core and framework releases don't have a big time gap between them.
 
 
 ## Onboarding to Release Crew
