@@ -58,8 +58,7 @@ Back-up for Primary Meta Releaser
 
 ## Role: Community Releaser
 
-Member of the React Native Core Contributor community or Frameworks developers.
-There are usually 2+ Community Releasers per release.
+Member of the React Native Core Contributor community or Frameworks developers. There are usually 2+ Community Releasers per release.
 
 ### Role Responsibilities
 - Attends 30 minute weekly release sync meeting
