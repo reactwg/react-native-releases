@@ -7,6 +7,7 @@ This repository is dedicated to coordinating React Native releases; if you want 
 This documentation is for members of our release crew to release patches and cut new release candidates for React Native
 
 * [Guide: Running a Release](./docs/guide-release-process.md)
+* [Guide: Running a Release (0.74 and later)](./docs/guide-release-process-0.74.md)
 * [Guide: Release Candidates](./docs/guide-release-candidate.md)
     * [How to cut a release candidate](./docs/guide-release-candidate.md#cut-a-release-candidate)
     * [Release Candidate patches](./docs/guide-release-candidate.md#release-patches-on-release-candidate)

@@ -2,10 +2,13 @@
 
 > [!Note]
 > This documents the steps to releasing a stable React Native release.
-> 
+>
 > Release candidates will generally follow the same steps but have some pre- and post- work, depending on if you're cutting, doing a patch, or promoting a release candidate to stable.
-> 
+>
 > Follow the dedicated release candidate [guide](./guide-release-candidate.md) for more detail. Generally only Meta releasers will be doing release candidate releases.
+
+> [!Important]
+> **If you are releasing for `0.74-stable` and later**, please use the [updated release process](./guide-release-process-0.74.md).
 
 ## Release Steps
 
@@ -43,14 +46,10 @@ git cherry-pick <commit-on-main>
 ```
 
 ### Step 3: Publish monorepo packages
-> [!Warning]
-> Only if you are releasing for versions < 0.74. For versions >= 0.74, you'll do this later.
 
 Follow the steps to [publish monorepo packages](./guide-publish-monorepo.md). You'll need to do this **BEFORE** testing the release. Release testing will use these published versions.
 
 ### Step 4: Build artifacts on CircleCI
-> [!Warning]
-> Only do this once all monorepo packages have been published (for versions < 0.74) and once the Hermes release has been published and updated on this branch.
 
 - Push any changes on your release branch to remote
   ```bash
@@ -76,8 +75,6 @@ Ideally, we should have 2 release crew members test the release. Coordinate with
 There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. Ensure Meta release crew is aware and approves.
 
 ### Step 6: Publish monorepo packages
-> [!Warning]
-> Only if you are releasing for versions >= 0.74
 
 [Publish monorepo packages](./guide-publish-monorepo.md).
 
@@ -92,9 +89,6 @@ yarn trigger-react-native-release --to-version <YOUR_RELEASE_VERSION> --token <Y
 ```
 
 The script will verify there are no changes to monorepo packages just to confirm you have [published monorepo packages](./guide-publish-monorepo.md).
-
-> [!Warning]
-> **Only for < 0.74**: If the script detects there are unpublished monorepo packages, this means your release testing didn't test picks to those monorepo packages :warning: You may need to publish the missing monorepo packages and re-test.
 
 The script will ask what npm tag you want to use
 - Select `latest` if you are publishing a patch on the [latest version](./glossary.md#latest-version).
