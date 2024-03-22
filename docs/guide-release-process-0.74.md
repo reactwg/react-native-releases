@@ -66,7 +66,7 @@ Follow the [Release Testing guide](./guide-release-testing.md). Ideally, we shou
 
 There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. Ensure a Meta Release Crew member is aware and approves.
 
-### Step 5. Create release (WIP update images)
+### Step 5. Create release
 
 ```sh
 yarn trigger-react-native-release \
@@ -90,7 +90,7 @@ The script will then output a link to the created CI workflow.
 > [!Tip]
 > Look under "All Branches" filter to find the `publish_release` job. CircleCI locates this job outside of a given branch.
 
-### Step 6: Verify Release (WIP update images)
+### Step 6: Verify Release
 
 Once all workflows above are complete, verify the following:
 
