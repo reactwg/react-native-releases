@@ -36,18 +36,19 @@ body:
     attributes:
       label: Tested configurations
       value: |
-        Refer to this [spreadsheet](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) for test cases
+        Refer to this [spreadsheet](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) for test cases.
 
-        - [ ] RNTestProject + iOS + Hermes
-        - [ ] RNTester + iOS + JSC
-        - [ ] RNTester + Android + Hermes
-        - [ ] RNTester + Android + JSC
+        - [ ] RNTester + iOS + Hermes (Bridgeless)
+        - [ ] RNTester + iOS + JSC (Bridgeless)
+        - [ ] RNTester + Android + Hermes (Bridgeless)
+        - [ ] RNTester + Android + JSC (Bridgeless)
         - [ ] RNTestProject + iOS + Hermes
         - [ ] RNTestProject + iOS + JSC
         - [ ] RNTestProject + Android + Hermes
         - [ ] RNTestProject + Android + JSC
 
-        Close this issue if there are no blocking issues
+        Close this issue if there are no blocking issues.
 
         ### Blocking Issues?
-        - 
+
+        -
