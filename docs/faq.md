@@ -6,11 +6,20 @@ We are supporting the latest version, and the two previous minor series. We also
 
 You can learn more about the [release support policy](https://github.com/reactwg/react-native-releases#releases-support-policy) in the releases repository.
 
+### What is a pick request?
+
+A **pick request** is a request for the React Native Release Crew to include a commit into a specific React Native release.
+As the development of React Native happens on `main`, you can request for a specific commit or Pull Request to be included in one of the previous version of React Native.
+
+### How to open a pick request?
+
+Everyone can open a pick request by [filing a GitHub issue via this link](https://github.com/reactwg/react-native-releases/issues/new?assignees=&labels=Type%3A+Pick+Request&projects=&template=pick_request_form.yml&title=%5B0.XX%5D+Title). 
+
 ### What is a qualified pick request?
 
 Judgement call, but using these dimensions to evaluate:
 
-- Is it a fix for a regression introduced by the current release (for example, did it work in `v0.67.0` but it's broken in `v0.68.0`)?
+- Is it a fix for a regression introduced by the current release (for example, did it work in `v0.73.0` but it's broken in `v0.74.0`)?
 - Is it a fix for a critical developer workflow?
 
 ### What is release blocking?
@@ -22,7 +31,7 @@ Judgement call, but using these dimensions to evaluate:
 
 ### When will my fix make it into a release?
 
-We follow a release cycle that is not strictly monthly - you can read more [about it here](https://github.com/react-native-community/discussions-and-proposals/issues/17). When creating a new release, we cut a new branch from `main` (e.g. `0.67-stable`), with all the merged commits up to this point. After this initial cut, new commits on `main` will only be included on this release if they get manually cherry picked. Otherwise, they will be included in the next stable version (when a new cut from `main` will happen). This means that once a pull request is merged to the [core `react-native` repo](https://github.com/facebook/react-native), it may take one or two months for the changes to make it into a stable React Native release.
+We follow a release cycle that is not strictly monthly - you can read more [about it here](https://github.com/react-native-community/discussions-and-proposals/issues/17). When creating a new release, we cut a new branch from `main` (e.g. `0.74-stable`), with all the merged commits up to this point. After this initial cut, new commits on `main` will only be included on this release if they get manually cherry picked. Otherwise, they will be included in the next stable version (when a new cut from `main` will happen). This means that once a pull request is merged to the [core `react-native` repo](https://github.com/facebook/react-native), it may take one or two months for the changes to make it into a stable React Native release.
 
 ### How do I know if my fix/feature is in a certain release?
 
@@ -41,10 +50,9 @@ If the commit is only present in `main` (i.e. has no tags), then the commit has 
 
 ### How can I find the status of the current release?
 
-We have a dedicated [release discussions repo](https://github.com/reactwg/react-native-releases/discussions). We have a category for [new releases](https://github.com/reactwg/react-native-releases/discussions/categories/releases) and one for [patches](https://github.com/reactwg/react-native-releases/discussions/categories/patches).
+We have a dedicated [release discussions repo](https://github.com/reactwg/react-native-releases/discussions).
 
-- For a new release version, we track the status of each new release candidate patch with any ongoing blocking issues and checklist of work. [Example of releasing 0.67](https://github.com/reactwg/react-native-releases/discussions/1)
-- For patches, a discussion is opened asking whether there are picks that qualify to run a patch (see qualifying picks). People can comment and share any picks from main and the release captain will run a patch when necessary and subsequently open a new discussion for the next patch version. Example of [discussion for 0.66.4](https://github.com/reactwg/react-native-releases/discussions/6), once it was released, the discussion is locked and a discussion for 0.66.5 is opened.
+Currently we track the progress for the upcoming & supported version of React Native [using GitHub Projects here](https://github.com/reactwg/react-native-releases/projects?query=is%3Aopen).
 
 ### What if I find a release blocker that needs escalation?
 
