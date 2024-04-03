@@ -133,7 +133,7 @@ Note, this may take a moment to update. Later, we will link to some of these art
 
 ### Step 7: Generate the changelog PR
 
-Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-native/blob/main/CHANGELOG.md) file at the `react-native` repo root. This is generated using [`@rnx-kit/rn-changelog-generator`](https://github.com/microsoft/rnx-kit/tree/main/incubator/rn-changelog-generator).
+Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-native/blob/main/CHANGELOG.md) file at the `react-native` repo root.
 
 > [!Note]
 > Changelog commits must be submitted to the `main` branch.
