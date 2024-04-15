@@ -215,8 +215,9 @@ git pull
 cd packages/rn-tester
 bundle exec pod update hermes-engine --no-repo-update
 
-# Should contain updated packages/rn-tester/Podfile.lock
-git commit -a -m "Update Podfile.lock" -m "Changelog: [Internal]"
+# Commit only changes to packages/rn-tester/Podfile.lock
+git add packages/rn-tester/Podfile.lock
+git commit -m "Update Podfile.lock" -m "Changelog: [Internal]"
 git push
 ```
 
