@@ -14,7 +14,7 @@ body:
     attributes:
       label: Target Branch(es)
       description: Please input which Release Branch(es) need this pick, eg `0.74, 0.73`. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy).
-      placeholder: "0.74"
+      placeholder: "0.XX"
     validations:
       required: true
   - type: input
