@@ -20,7 +20,7 @@ The general stages for handling a release candidate:
 
 ### 0. Update External Dependencies
 
-Add a new column for this release candidate in the [External Dependencies Supported table](./support.md#external-dependencies-supported). Follow up internally if unsure. 
+Add a new column for this release candidate in the [External Dependencies Supported table](./support.md#external-dependencies-supported). Follow up internally if unsure.
 
 
 ### 1. Create a new release branch
@@ -32,7 +32,7 @@ Add a new column for this release candidate in the [External Dependencies Suppor
 ```bash
 git checkout main
 git pull origin main
-git checkout -b 0.69-stable
+git checkout -b 0.76-stable
 ```
 
 ### 2. Create a Hermes Release
@@ -77,11 +77,11 @@ In `fbsource` run
 ```bash
 js1 publish react-native 0.<your-release-candidate-minor+1>.0-main
 
-# ex. if you just released 0.74.0-rc.0, then
-js1 publish react-native 0.75.0-main
+# ex. if you just released 0.75.0-rc.0, then
+js1 publish react-native 0.76.0-main
 ```
 
-This will update all the relevant packages to `0.75.0-main`
+This will update all the relevant packages to `0.76.0-main`
 
 ## Release patches on release candidate
 You can follow the general release process for patches. The only thing to note is that your versioning scheme should be increasing the prerelease version.

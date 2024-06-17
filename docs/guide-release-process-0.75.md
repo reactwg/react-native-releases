@@ -1,4 +1,4 @@
-# Release Process (0.74)
+# Release Process (0.75 and later)
 
 > [!Note]
 > This documents the steps to releasing a stable React Native release.
@@ -20,7 +20,7 @@ From your local `facebook/react-native` clone, check out the relevant [release b
 git fetch --all --tags
 
 # Check out release branch
-git switch <release-branch> # e.g. 0.74-stable
+git switch <release-branch> # e.g. 0.75-stable
 
 # OR, if checking out a release branch for the first time
 git switch -c <release-branch> upstream/<release-branch>
@@ -41,7 +41,7 @@ git cherry-pick <commit-on-main>
 > [!Warning]
 > For any pick requests or merge requests for Hermes, notify a Meta Release Crew member. They'll need to publish and pick the [Hermes release](./guide-hermes-release.md) into the release branch. Do not proceed past step 3 until the the branch has been updated with the Hermes release.
 
-### Step 3: Wait for CircleCI artifacts to build
+### Step 3: Wait for Github Actions artifacts to build
 
 Once all picks are complete, push your changes to the remote release branch.
 
@@ -49,16 +49,16 @@ Once all picks are complete, push your changes to the remote release branch.
 git push
 ```
 
-This will kick off a CircleCI workflow that will build relevant artifacts (Hermes prebuilts, `RNTester.apk`) that will expedite local testing.
+This will kick off a Github Action workflow called "Test All" that will build relevant artifacts (Hermes prebuilts, `RNTester.apk`) that will expedite local testing.
 
-[Navigate to CircleCI](https://app.circleci.com/pipelines/github/facebook/react-native) and wait for the `build_npm_package` job to complete successfully. If the job fails, try and fix the issue so that artifacts build.
+[Navigate to Github Actions](https://github.com/facebook/react-native/actions/workflows/test-all.yml) and wait for the `build_npm_package` job to complete successfully. If the job fails, try and fix the issue so that artifacts build.
 
 > [!Important]
 > Release testing will only use the artifacts from the last workflow that ran on your release branch! This means that if you push more changes to your release branch, you must wait for it to complete the `build_npm_package` job again to use those artifacts in testing.
 >
 > The takeaway here is to try and **avoid pushing more commits to CI at this point**. Otherwise, you'll have to wait for CI to build the assets again to use them in your testing.
 >
-> See [CircleCI Artifacts](./gotchas.md#circleci-artifacts) for more details.
+> See [Github Actions Artifacts](./gotchas.md#github-artifacts) for more details.
 
 ### Step 4: Test the release
 
@@ -68,27 +68,23 @@ There may be exceptional cases where we can bypass 2 release tests or only do se
 
 ### Step 5. Create release
 
-```sh
-yarn trigger-react-native-release \
-  --to-version <YOUR_RELEASE_VERSION> # e.g. 0.74.1, 0.75.0-rc.1
-  --token <YOUR_CIRCLE_CI_TOKEN>
-```
+Starting from React Native 0.75, a new release is created using a Github Action workflow called [Create Release](https://github.com/facebook/react-native/actions/workflows/create-release.yml).
 
-The script will ask what npm tag you want to use:
-- Select `latest` if you are publishing a patch on the [latest version](./glossary.md#latest-version).
-- Select `<your-version>-stable` if publishing a patch on any other [stable version](./glossary.md#stable-version).
-- The script should use `next` if you publishing a [release candidate](./glossary.md#release-candidate).
+<img src="../assets/create_release.png" width="600" />
+
+The workflow requires 4 parameters:
+- the `branch` we need to use to cut the release. Make sure to set it to your stable branch. e.g.: `0.75-stable`
+- the `version` we want to publish. For example, `0.75.0-rc.0`.
+- check the `latest` checkbox, if you are publishing a patch on the [latest version](./glossary.md#latest-version).
+- The last checkbox is for a dry-run. If you need to run a release, keep it unchecked.
 
 The script will then output a link to the created CI workflow.
 
-<img src="../assets/release_process_jobs.png" width="600" />
+<img src="../assets/release_process_jobs_gha.png" width="600" />
 
 1. `create_release` – Writes a release commit and tag, which will trigger the `publish_release` and `publish_bumped_packages` workflows.
 3. `publish_bumped_packages` – Publishes all workspace packages (excluding `react-native`) to npm.
 2. `publish_release` – Builds `react-native` package artifacts and publishes to npm.
-
-> [!Tip]
-> Look under "All Branches" filter to find the `publish_release` job. CircleCI locates this job outside of a given branch.
 
 ### Step 6: Verify Release
 
