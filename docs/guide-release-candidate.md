@@ -35,6 +35,20 @@ git pull origin main
 git checkout -b 0.76-stable
 ```
 
+**Create a similar branch in the [@react-native-community/template](https://github.com/react-native-community/template) project**
+
+- Check-out a clone of `@react-native-community/template` repo
+- Pull `main`
+- Create a release branch. It must be of the form `<major>.<minor>-stable`
+- Push the branch up to `origin`.
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b 0.76-stable
+git push --set-upstream origin 0.76-stable
+```
+
 ### 2. Create a Hermes Release
 
 - Follow instructions to [publish a Hermes release tag](./guide-hermes-release.md)
