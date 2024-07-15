@@ -90,35 +90,35 @@ Here are the 8 dimensions we cover in manual testing:
 
 **1. RNTester + iOS + Hermes:**
 ```bash
-yarn test-e2e -local -t "RNTester" -p "iOS" -h true -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTester" -p "iOS" -h true -c $GITHUB_TOKEN
 ```
 **2. RNTester + iOS + JSC:**
 ```bash
-yarn test-e2e -local -t "RNTester" -p "iOS" -h false -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTester" -p "iOS" -h false -c $GITHUB_TOKEN
 ```
 **3. RNTester + Android + Hermes:**
 ```bash
-yarn test-e2e -local -t "RNTester" -p "Android" -h true -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTester" -p "Android" -h true -c $GITHUB_TOKEN
 ```
 **4. RNTester + Android + JSC:**
 ```bash
-yarn test-e2e -local -t "RNTester" -p "Android" -h false -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTester" -p "Android" -h false -c $GITHUB_TOKEN
 ```
 **5. RNTestProject + iOS + Hermes:**
 ```bash
-yarn test-e2e -local -t "RNTestProject" -p "iOS" -h true -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTestProject" -p "iOS" -h true -c $GITHUB_TOKEN
 ```
 **6. RNTestProject + iOS + JSC:**
 ```bash
-yarn test-e2e -local -t "RNTestProject" -p "iOS" -h false -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTestProject" -p "iOS" -h false -c $GITHUB_TOKEN
 ```
 **7. RNTestProject + Android + Hermes:**
 ```bash
-yarn test-e2e -local -t "RNTestProject" -p "Android" -h true -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTestProject" -p "Android" -h true -c $GITHUB_TOKEN
 ```
 **8. RNTestProject + Android + JSC:**
 ```bash
-yarn test-e2e -local -t "RNTestProject" -p "Android" -h false -c $GITHUB_TOKEN
+yarn test-e2e-local -t "RNTestProject" -p "Android" -h false -c $GITHUB_TOKEN
 ```
 
 ## What to test?
