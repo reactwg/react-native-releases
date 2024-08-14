@@ -4,11 +4,11 @@
 
 | Version  | Type                       | Support level |
 | -------- | -------------------------- | ------------- |
-| 0.75.x   | Next version               | Future        |
-| 0.74.x   | Latest stable              | Active        |
-| 0.73.x   | Previous (-1) minor series | Active        |
-| 0.72.x   | Previous (-2) minor series | End of Cycle  |
-| <=0.71.x | Old minor series           | Unsupported   |
+| 0.76.x   | Next version               | Future        |
+| 0.75.x   | Latest stable              | Active        |
+| 0.74.x   | Previous (-1) minor series | Active        |
+| 0.73.x   | Previous (-2) minor series | End of Cycle  |
+| <=0.72.x | Old minor series           | Unsupported   |
 
 ### What level of support can be expected?
 
@@ -33,14 +33,13 @@ A version in this support bracket will receive less patches, unless some importa
 When a version is in the unsupported stage, no new released are to be expected. Only very important regressions might create exceptions to this rule; it is recommended that codebases using an unsupported version upgrade as soon as possible.
 
 ## External Dependencies Supported
-
-| External Dep          |  0.74                  | 0.73                  | 0.72                  | 0.71                  |
-| --------------------- |  -                     | -                     | -                     | --                    |
-| Android SDK minimum   |  Android 6.0           | Android 5.0           | Android 5.0           | Android 5.0           |
-| JDK version           |  JDK 17                | JDK 17                | JDK 11                | JDK 11                |
-| Xcode Version min.    |  15.1                  | 15.1                  | 15.1                  | 15.1                  |
-| Cocoapods             |  1.13.x/1.14.x/1.15.2  | 1.13.x/1.14.x/1.15.2  | 1.13.x/1.14.x/1.15.2  | 1.13.x/1.14.x/1.15.2  |
-| Node min.             |  18                    | 18                    | 16                    | 16                    |
+| Version               | Android SDK minimum   | JDK version           | Xcode Version min.    | Cocoapods             | Node min.             |
+| --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| 0.75                  | Android 6.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
+| 0.74                  | Android 6.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
+| 0.73                  | Android 5.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
+| 0.72                  | Android 5.0           | JDK 11                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 16                    |
+| 0.71                  | Android 5.0           | JDK 11                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 16                    |
 
 ## Cherry-Pick Requests
 
@@ -63,7 +62,7 @@ The following is how we escalate release issues and pick requests.
 
 ### Escalation Framework
 
-| Regression Area                                       | Default   | 0.74 (RC) | 0.73      | 0.72      | 0.71      |
+| Regression Area                                       | Default   | 0.76 (RC) | 0.75      | 0.74      | 0.73      |
 | ----------------------------------------------------- | -         | -         | -         | -         | -         |
 | Build regression for recommended workflows | P0 |
 | Publishing to App/Play Store | P0 |
