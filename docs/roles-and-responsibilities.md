@@ -103,8 +103,9 @@ If you are joining as a release crew member you'll need the following:
     - Ask Meta release crew to add you to the reactwg/react-native-release-crew team
     - https://github.com/orgs/reactwg/teams/react-native-release-crew
 
-#### CircleCI Personal Token
-    - [Instructions to obtain](https://circleci.com/docs/managing-api-tokens/#creating-a-personal-api-token)
+#### GitHub Personal Token
+    - Create a GitHub personal access token with read/write access for the `Actions` and `Workflow` permissions
+    - [Instructions to obtain](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token)
 
 ### Prepare your setup
 
