@@ -79,6 +79,7 @@ There may be exceptional cases where we can bypass 2 release tests or only do se
 [Publish monorepo packages](./guide-publish-monorepo.md).
 
 ### Step 7. Publish `react-native`
+Before running the command, make sure to ping the team in the `#release-crew` discord channel and get a thumbs up.
 ```bash
 # Run
 yarn trigger-react-native-release --to-version <YOUR_RELEASE_VERSION> --token <YOUR_CIRCLE_CI_TOKEN>
