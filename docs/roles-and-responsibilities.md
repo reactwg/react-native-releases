@@ -104,7 +104,7 @@ If you are joining as a release crew member you'll need the following:
     - https://github.com/orgs/reactwg/teams/react-native-release-crew
 
 #### GitHub Personal Token
-    - Create a GitHub personal access token with read/write access for the `Actions` and `Workflow` permissions
+    - Create a GitHub fine-grained personal access token with read/write access for the `Actions` and `Workflow` permissions. This will be used to run the local e2e tests.
     - [Instructions to obtain](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token)
 
 ### Prepare your setup
@@ -119,6 +119,6 @@ If you are joining as a release crew member you'll need the following:
     # In your react-native checkout
     git co 0.73-stable
     yarn
-    yarn test-e2e-local -p iOS -t RNTester --hermes true -c <YOUR_CIRCLE_CI_TOKEn>
+    yarn test-e2e-local -p iOS -t RNTester --hermes true -c <YOUR_GITHUB_TOKEN>
     ```
     - See [release testing](./guide-release-testing.md) for more information.
