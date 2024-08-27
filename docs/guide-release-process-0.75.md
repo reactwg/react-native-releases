@@ -106,7 +106,7 @@ npm view @react-native/codegen
 Sanity check by initializing a new project and running for Android and iOS.
 
 ```
-npx react-native@next init ReactNative<YOUR_VERSION> --version <YOUR_VERSION>
+npx @react-native-community/cli@latest init ReactNative<YOUR_VERSION> --version <YOUR_VERSION>
 ```
 
 > [!Tip]
