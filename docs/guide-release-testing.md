@@ -58,7 +58,7 @@ Followed by the options:
   -t, --target      [choices: "RNTester", "RNTestProject"] [default: "RNTester"]
   -p, --platform                    [choices: "iOS", "Android"] [default: "iOS"]
   -h, --hermes                                         [boolean] [default: true]
-  -c, --circleciToken                                                   [string]
+  -c, --ciToken                                                         [string]
 ```
 
 Using the `-c <your-token>` option is recommended, as the script will download the required artifacts from Github, instead of having to build from source reducing the testing time.  It's suggested to store your [Github Personal Access Token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#personal-access-tokens-classic) using:
@@ -66,6 +66,10 @@ Using the `-c <your-token>` option is recommended, as the script will download t
 ```bash
 export GITHUB_TOKEN=<token>
 ```
+
+> [!Warning]
+> If you are testing versions of React Native that are < 0.75, you need a CircleCI token rather than a Github Token.
+> Follow [these instruction](https://circleci.com/docs/managing-api-tokens/) to learn how to create one.
 
 Use [this link](https://github.com/settings/tokens/new?description=React%20Native%20Releases&scopes=repo) to generate a token with the Repo scope.
 
