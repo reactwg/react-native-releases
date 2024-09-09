@@ -54,6 +54,19 @@ git push --set-upstream origin 0.76-stable
 - Follow instructions to [publish a Hermes release tag](./guide-hermes-release.md)
   - Make sure to have [committed the Hermes tag](./guide-hermes-release.md#step-4-bump-the-hermes-version-on-the-react-native-release-branch) to your release branch.
 
+### 3. Trigger a nightly
+
+Some partners are integrating with the nightlies jobs, so it's a good idea to trigger a nightly right before cutting the branch so that they can integrate with it before we push some release specific fixes in the Release branch.
+
+To trigger a nightly:
+1. Navigate to https://github.com/facebook/react-native/actions/workflows/nightly.yml
+2. Select the `Nighly` action.
+2. Click on `Run workflow`.
+3. Keep the branch on `main`.
+4. Click on `Run workflow`.
+
+<img src="../assets/trigger-nightly.png" width="600" />
+
 ### 3. Follow the steps in the general release process
 
 At this point, you'll follow the general release process from steps 4-13
