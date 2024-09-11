@@ -12,6 +12,14 @@ Release testing is manual testing the release crew does to sanity check that our
 > In most cases we should have 2 release crew members running release testing, on two separate machines.
 
 
+## Checkout the version to test
+
+When testing locally, first checkout and pull from the stable branch for the version you wish to test. For example, if testing 0.75.x:
+
+1. `git checkout 0.75-stable`
+2. `git pull`
+
+
 ## Clean up the local state
 
 When testing locally, we want to ensure that we start from a clean slate to avoid caches polluting our testing.
