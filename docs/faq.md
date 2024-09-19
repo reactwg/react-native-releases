@@ -4,7 +4,7 @@
 
 We are supporting the latest version, and the two previous minor series. We also work on the next version being developed, which will become the new stable after its 0.Y.0 release.
 
-You can learn more about the [release support policy](https://github.com/reactwg/react-native-releases#releases-support-policy) in the releases repository.
+You can learn more about the [release support policy](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md#what-versions-are-currently-supported) in the releases repository.
 
 ### What is a pick request?
 
