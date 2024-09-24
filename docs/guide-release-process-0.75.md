@@ -209,8 +209,7 @@ git reset --hard origin
 
 # Head to rn-tester package and update pods
 rm -rf packages/react-native-codegen/lib
-cd packages/rn-tester
-bundle exec pod update hermes-engine --no-repo-update
+(cd packages/rn-tester && bundle exec pod update hermes-engine --no-repo-update)
 
 # Commit only changes to packages/rn-tester/Podfile.lock
 git add packages/rn-tester/Podfile.lock
