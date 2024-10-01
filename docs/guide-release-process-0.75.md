@@ -240,7 +240,7 @@ Everytime we release a new version, there is a new `hermes-engine` version publi
 git switch <release-branch>
 
 # Pull new changes (should include release commit from CI)
-git reset --hard origin
+git reset --hard origin/<release-branch>
 
 # Head to rn-tester package and update pods
 rm -rf packages/react-native-codegen/lib
