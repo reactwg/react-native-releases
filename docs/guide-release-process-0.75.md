@@ -73,18 +73,18 @@ Starting from React Native 0.75, a new release is created using a Github Action 
 <img src="../assets/create_release.png" width="600" />
 
 The workflow requires 4 parameters:
-- the `branch` we need to use to cut the release. Make sure to set it to your stable branch. e.g.: `0.75-stable`
-- the `version` we want to publish. For example, `0.75.0-rc.0`.
-- check the `latest` checkbox, if you are publishing a patch on the [latest version](./glossary.md#latest-version).
-- The last checkbox is for a dry-run. If you need to run a release, keep it unchecked.
+1. The `branch` we need to use to cut the release. Make sure to set it to your stable branch. e.g.: `0.75-stable`
+1. The `version` we want to publish. For example, `0.75.0-rc.0`.
+1. Check the `latest` checkbox, if you are publishing a patch on the [latest version](./glossary.md#latest-version).
+1. The last checkbox is for a dry-run. If you need to run a release, keep it unchecked.
 
-The script will then output a link to the created CI workflow.
+This runs the *Create Release* workflow.  It'll sync package versions ([publish-bumped-packages.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-bumped-packages.yml)), commit and publish a tag ([create-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/create-release.yml)):
+
+<img src="https://github.com/user-attachments/assets/d39492bf-0cc3-40da-befd-d1e81855e328" width="600" />
+
+The new tag will then launch a **Publish Release** ([publish-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-release.yml#L2-L6)) workflow which builds and publishes the `react-native` npm package artifact:
 
 <img src="../assets/release_process_jobs_gha.png" width="600" />
-
-1. `create_release` – Writes a release commit and tag, which will trigger the `publish_release` and `publish_bumped_packages` workflows.
-3. `publish_bumped_packages` – Publishes all workspace packages (excluding `react-native`) to npm.
-2. `publish_release` – Builds `react-native` package artifacts and publishes to npm.
 
 ### Step 6: Verify Release
 
