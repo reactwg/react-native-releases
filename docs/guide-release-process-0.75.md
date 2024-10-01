@@ -118,6 +118,20 @@ The `publish_release` job should also trigger the `rn-diff-purge` GitHub action 
 
 <img alt="Upgrade helper" src="../assets/upgrade_helper.png" width="600" />
 
+<details>
+  <summary>How do I trigger this manually?</summary>
+  If there is a failure and you manually want to add your new tag to the `upgrade helper`, use:
+
+```bash
+export GITHUB_TOKEN=<your token>
+export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
+curl -X POST https://api.github.com/repos/react-native-community/rn-diff-purge/dispatches \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d "{\"event_type\": \"publish\", \"client_payload\": { \"version\": \"$NEW_VERSION\" }}"
+```
+</details>
+
 #### Verify assets have been uploaded to Maven
 
 Verify release assets are uploaded to [Maven](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts) for your release.
@@ -127,6 +141,17 @@ Note, this may take a moment to update. Later, we will link to some of these art
 - `https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-debug.tar.gz`
 - `https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-release.tar.gz`
 
+<details>
+  <summary>Script to do this quickly</summary>
+
+```bash
+export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
+export VERSION=${NEW_VERSION#v}
+curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz
+curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz
+```
+</details>
+
 ### Step 7: Generate the changelog PR
 
 Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-native/blob/main/CHANGELOG.md) file at the `react-native` repo root.
@@ -135,6 +160,7 @@ Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-nat
 > Changelog commits must be submitted to the `main` branch.
 
 ```sh
+export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
 # Check out `main` branch
 git switch main
 
@@ -144,7 +170,7 @@ git fetch --all --tags
 # Generate the changelog
 npx @rnx-kit/rn-changelog-generator \
   --base v<LATEST_STABLE_OR_RC>\
-  --compare v<YOUR_NEW_VERSION> \
+  --compare $NEW_VERSION \
   --repo . \
   --changelog ./CHANGELOG.md
 ```
