@@ -112,6 +112,14 @@ npx @react-native-community/cli@latest init ReactNative<YOUR_VERSION> --version 
 > [!Tip]
 > Keep this project around somewhere incase you need to repro something on this version.
 
+<details>
+  <summary>**Backup:** How do I manually create a template for this version?</summary>
+
+Run the [Release](https://github.com/react-native-community/template/actions/workflows/release.yaml) workflow, making sure you use the correct branch.  For example with the `0.76.*` releases you would use the [0.76-stable](https://github.com/react-native-community/template/tree/0.76-stable) branch:
+<img src="https://github.com/user-attachments/assets/b97f2dcb-430f-4b4d-88d6-ef7e482c01c5" width="600" />
+
+</details>
+
 #### Verify Upgrade Helper is updated
 
 The `publish_release` job should also trigger the `rn-diff-purge` GitHub action ([link](https://github.com/react-native-community/rn-diff-purge/actions/workflows/new_release.yml)). This action will update the [Upgrade Helper](https://react-native-community.github.io/upgrade-helper/) with a diff of your latest release patch. Verify your release is visible in the dropdown.
@@ -119,7 +127,7 @@ The `publish_release` job should also trigger the `rn-diff-purge` GitHub action 
 <img alt="Upgrade helper" src="../assets/upgrade_helper.png" width="600" />
 
 <details>
-  <summary>How do I trigger this manually?</summary>
+  <summary>**Backup:** How do I add an entry in the Upgrade Helper for this version?</summary>
   If there is a failure and you manually want to add your new tag to the `upgrade helper`, use:
 
 ```bash
@@ -142,7 +150,7 @@ Note, this may take a moment to update. Later, we will link to some of these art
 - `https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-release.tar.gz`
 
 <details>
-  <summary>Script to do this quickly</summary>
+  <summary>**Backup:** Script to do verify this?</summary>
 
 ```bash
 export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
@@ -150,6 +158,7 @@ export VERSION=${NEW_VERSION#v}
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz
 ```
+
 </details>
 
 ### Step 7: Generate the changelog PR
