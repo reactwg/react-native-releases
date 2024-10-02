@@ -150,7 +150,8 @@ npx @rnx-kit/rn-changelog-generator \
   --base v<LATEST_STABLE_OR_RC>\
   --compare v<YOUR_NEW_VERSION> \
   --repo . \
-  --changelog ./CHANGELOG.md
+  --changelog ./CHANGELOG.md \
+  --token <YOUR_GITHUB_TOKEN>
 ```
 
 You'll likely need to reformat the generated `CHANGELOG.md` changes and reorder the heading to keep the latest release ordering. Once done, create a PR with your changes against `main`.
