@@ -126,8 +126,29 @@ The `publish_release` job should also trigger the `rn-diff-purge` GitHub action 
 
 <img alt="Upgrade helper" src="../assets/upgrade_helper.png" width="600" />
 
+**Common Issues:**
 <details>
-  <summary><b>Backup:</b> How do I add an entry in the Upgrade Helper for this version?</summary>
+  <Summary>Why can't I see the upgrade helper diff between last set of releases, e.g. 0.75.4 → 0.76.0-rc.3?</Summary>
+  
+  ### Cause:
+  <code>rn-diff-purge</code> has to be run in order.  That means 0.75.4 must be run before 0.76.0-rc.3.
+  
+  ### Fix:
+  I'm going to use the above versions as examples, replace with your affected versions.
+  1. Delete the tags:
+  
+  ```bash
+  git push --delete origin 0.75.4
+  git push --delete origin 0.76.0-rc.3
+  ```
+  
+  2. Delete the versions from [RELEASES](https://github.com/react-native-community/rn-diff-purge/commit/1a42eedbd830ca3c2e0ae62247ad992df69bf16f)
+  3. Manually <em>publish</em> by calling the Github action in order: 0.75.4 first then 0.76.0-rc.3
+  4. Confirm this is fixed: [https://react-native-community.github.io/upgrade-helper/?from=0.75.4&to=0.76.0-rc.3](https://react-native-community.github.io/upgrade-helper/?from=0.75.4&to=0.76.0-rc.3)
+</details>
+
+<details>
+  <summary><b>Manually Publish:</b> How do I add an entry in the Upgrade Helper for this version?</summary>
   If there is a failure and you manually want to add your new tag to the `upgrade helper`, use:
 
 ```bash
