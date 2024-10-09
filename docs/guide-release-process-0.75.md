@@ -196,6 +196,7 @@ git switch main
 
 # Pull new tags
 git fetch --all --tags
+git pull
 
 # Generate the changelog
 npx @rnx-kit/rn-changelog-generator \
@@ -203,6 +204,7 @@ npx @rnx-kit/rn-changelog-generator \
   --compare $NEW_VERSION \
   --repo . \
   --changelog ./CHANGELOG.md
+  --token $GITHUB_TOKEN
 ```
 
 You'll likely need to reformat the generated `CHANGELOG.md` changes and reorder the heading to keep the latest release ordering. Once done, create a PR with your changes against `main`.
