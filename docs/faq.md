@@ -13,7 +13,7 @@ As the development of React Native happens on `main`, you can request for a spec
 
 ### How to open a pick request?
 
-Everyone can open a pick request by [filing a GitHub issue via this link](https://github.com/reactwg/react-native-releases/issues/new?assignees=&labels=Type%3A+Pick+Request&projects=&template=pick_request_form.yml&title=%5B0.XX%5D+Title). 
+Everyone can open a pick request by [filing a GitHub issue via this link](https://github.com/reactwg/react-native-releases/issues/new?assignees=&labels=Type%3A+Pick+Request&projects=&template=pick_request_form.yml&title=%5B0.XX%5D+Title).
 
 ### What is a qualified pick request?
 
@@ -70,10 +70,18 @@ Issues without a reproducer will require more effort to understand and fix, and 
 
 At this point in time, we are prioritizing issues that are related to:
 
-* Latest version of React Native and two previous minor series.
-* Use of the New Architecture
-* Use of the Hermes Engine
+- Latest version of React Native and two previous minor series.
+- Use of the New Architecture
+- Use of the Hermes Engine
 
 ### Security Issues
 
 Meta has [a bounty program](https://www.facebook.com/whitehat/) for the safe disclosure of security bugs. In those cases, please go through the process outlined on that page and do not file a public issue.
+
+## Testing FAQ
+
+### Why is the Hermes version incorrect when testing Android?
+
+Android uses the version of hermes that is built in CI in the maven-local repository. It is expected to see `Engine: Hermes for RN 1000.0.0-zyx`, for example.
+
+<img src="https://cdn.discordapp.com/attachments/1168682018943541429/1295746089625849927/image.png?ex=670fc515&is=670e7395&hm=a062425e4468fc64b77c6e98d6d36c428f549b31f9cb7d87f3e9ff93e3a68c8a&" width="600" />
