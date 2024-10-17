@@ -1,5 +1,9 @@
 blank_issues_enabled: false
 contact_links:
+    - name: ⬆️ Upgrade - Build Regression
+      url: https://github.com/facebook/react-native/issues/new?assignees=&labels=Needs%3A+Triage+%3Amag%3A&projects=&template=bug_report.yml
+      about: |
+        If you are upgrading to a new React Native version (stable or pre-release) and encounter a build regression.
     - name: 🏠 Main React Native Repository
       url: https://github.com/facebook/react-native
       about: |
