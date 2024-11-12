@@ -11,7 +11,7 @@
 
 These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).  Here is the template used for the 0.76.1 release:
 
-```
+```md
 # 0.76.1: Releasing
 
 Testing: @blakefuk + @frankcalise 
