@@ -221,17 +221,20 @@ Create a new [GitHub release](https://github.com/facebook/react-native/releases)
 - Set release type:
   - Select "Set as a pre-release" if you releasing a release candidate.
   - Select "Set as the latest release" if you releasing a patch for the [latest version](./glossary.md#latest-version).
-- Copy and paste the following template and update TODOs.
+- Run the below template generation from the changelog commit, pasting it in the release description:
 
-```md
+```bash
+
+cat <<EOF | pbcopy
 <!-- TODO Copy and paste your formatted Changelog generated here. -->
+$(git show --patch | grep '^+[^+]' | sed 's/^\+//')
 
 ---
 
 <!-- TODO Update these links for your release version -->
 Hermes dSYMS:
-- [Debug](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-debug.tar.gz)
-- [Release](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-release.tar.gz)
+- [Debug](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz)
+- [Release](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz)
 
 ---
 
@@ -244,6 +247,7 @@ To help you upgrade to this version, you can use the [Upgrade Helper](https://re
 ---
 
 View the whole changelog in the [CHANGELOG.md file](https://github.com/facebook/react-native/blob/main/CHANGELOG.md).
+EOF
 ```
 
 ### Step 9: Communicate Release
