@@ -105,10 +105,11 @@ npm view @react-native/codegen
 
 #### Init a new template app
 
-Sanity check by initializing a new project and running for Android and iOS.  We suggest setting the version as an environmental variable to make it easy to copy-pasta these verifications:
+Sanity check by initializing a new project and running for Android and iOS.  We suggest setting the version as an environmental variable, having a [GitHub personal token](https://github.com/settings/tokens/new?description=React%20Native%20Releases&scopes=repo) and the [Github CLI tools](https://cli.github.com/) installed to make it easy to copy-pasta these verifications:
 
 ```
 export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
+export GITHUB_TOKEN=<your token>
 ```
 
 Verify the `template`:
@@ -164,7 +165,6 @@ The `publish_release` job should also trigger the `rn-diff-purge` GitHub action 
   If there is a failure and you manually want to add your new tag to the `upgrade helper`, use:
 
 ```bash
-export GITHUB_TOKEN=<your token>
 curl -X POST https://api.github.com/repos/react-native-community/rn-diff-purge/dispatches \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
@@ -179,7 +179,6 @@ Verify release assets are uploaded to [Maven](https://repo1.maven.org/maven2/com
 Note, this may take a moment to update. Later, we will link to some of these artifacts in the release notes.
 
 ```bash
-export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
 export VERSION=${NEW_VERSION#v}
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz
