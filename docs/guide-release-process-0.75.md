@@ -49,9 +49,12 @@ Once all picks are complete, push your changes to the remote release branch.
 git push
 ```
 
-This will kick off a Github Action workflow called "Test All" that will build relevant artifacts (Hermes prebuilts, `RNTester.apk`) that will expedite local testing.
+This will kick off a Github Action workflow called [Test All](https://github.com/facebook/react-native/actions/workflows/test-all.yml) that will build relevant artifacts (Hermes prebuilts, `RNTester.apk`) that will expedite local testing.
 
-[Navigate to Github Actions](https://github.com/facebook/react-native/actions/workflows/test-all.yml) and wait for the `build_npm_package` job to complete successfully. If the job fails, try and fix the issue so that artifacts build.
+[Navigate to Github Actions](https://github.com/facebook/react-native/actions/workflows/test-all.yml) and wait for the `build_npm_package` job to complete successfully (~30min into the `test-all` workflow). If the job fails, try and fix the issue so that the artifacts build.
+
+<img src="https://github.com/user-attachments/assets/d1226a8d-2215-4580-aa98-3c9d3b630059" width="600" />
+
 
 > [!Important]
 > Release testing will only use the artifacts from the last workflow that ran on your release branch! This means that if you push more changes to your release branch, you must wait for it to complete the `build_npm_package` job again to use those artifacts in testing.
@@ -64,10 +67,9 @@ This will kick off a Github Action workflow called "Test All" that will build re
 
 Follow the [Release Testing guide](./guide-release-testing.md). Ideally, we should have 2 Release Crew members test the release. Coordinate with another Release Crew member to do a second pass.
 
-There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. Ensure a Meta Release Crew member is aware and approves.
+There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. **Ensure a Meta Release Crew member is aware and approves**.
 
 ### Step 5. Create release
-
 Starting from React Native 0.75, a new release is created using a Github Action workflow called [Create Release](https://github.com/facebook/react-native/actions/workflows/create-release.yml).
 
 <img src="../assets/create_release.png" width="600" />
@@ -103,10 +105,17 @@ npm view @react-native/codegen
 
 #### Init a new template app
 
-Sanity check by initializing a new project and running for Android and iOS.
+Sanity check by initializing a new project and running for Android and iOS.  We suggest setting the version as an environmental variable to make it easy to copy-pasta these verifications:
 
 ```
-npx @react-native-community/cli@latest init ReactNative<YOUR_VERSION> --version <YOUR_VERSION>
+export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
+```
+
+Verify the `template`:
+
+```
+export VERSION=${NEW_VERSION#v}
+npx @react-native-community/cli@latest init "ReactNative$VERSION" --version "$VERSION"
 ```
 
 > [!Tip]
@@ -131,7 +140,7 @@ The `publish_release` job should also trigger the `rn-diff-purge` GitHub action 
   <Summary>Why can't I see the upgrade helper diff between last set of releases, e.g. 0.75.4 → 0.76.0-rc.3?</Summary>
   
   ### Cause:
-  <code>rn-diff-purge</code> has to be run in order.  That means 0.75.4 must be run before 0.76.0-rc.3.
+  <code>rn-diff-purge</code> has to be run in order.  That means 0.75.4 must be run before 0.76.0-rc.3.  Sometimes during releases this can happen out of order when people don't anticipate having to coordinate.
   
   ### Fix:
   I'm going to use the above versions as examples, replace with your affected versions.
@@ -153,7 +162,6 @@ The `publish_release` job should also trigger the `rn-diff-purge` GitHub action 
 
 ```bash
 export GITHUB_TOKEN=<your token>
-export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
 curl -X POST https://api.github.com/repos/react-native-community/rn-diff-purge/dispatches \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
@@ -167,20 +175,12 @@ Verify release assets are uploaded to [Maven](https://repo1.maven.org/maven2/com
 
 Note, this may take a moment to update. Later, we will link to some of these artifacts in the release notes.
 
-- `https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-debug.tar.gz`
-- `https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/<YOUR_VERSION>/react-native-artifacts-<YOUR_VERSION>-hermes-framework-dSYM-release.tar.gz`
-
-<details>
-  <summary><b>Backup:</b> Script to verify this?</summary>
-
 ```bash
 export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
 export VERSION=${NEW_VERSION#v}
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz
 ```
-
-</details>
 
 ### Step 7: Generate the changelog PR
 
@@ -189,8 +189,7 @@ Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-nat
 > [!Note]
 > Changelog commits must be submitted to the `main` branch.
 
-```sh
-export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
+```bash
 # Check out `main` branch
 git switch main
 
@@ -198,9 +197,11 @@ git switch main
 git fetch --all --tags
 git pull
 
+BASE_VERSION=$(git tag --sort=-creatordate  | grep -E '^v0\.' | head -n2 | tail -n1)
+
 # Generate the changelog
 npx @rnx-kit/rn-changelog-generator \
-  --base v<LATEST_STABLE_OR_RC>\
+  --base $BASE_VERSION
   --compare $NEW_VERSION \
   --repo . \
   --changelog ./CHANGELOG.md
@@ -247,11 +248,14 @@ View the whole changelog in the [CHANGELOG.md file](https://github.com/facebook/
 
 Send a message in the Core Contributors Discord `#release-coordination` channel about the new release.
 
-```md
-📢 0.X.Y release is out!
+```bash
+PULL_REQUEST=$(gh pr view --json url --jq '.url')
+cat <<EOF | pbcopy
+📢 $VERSION release is out!
 
-📦 https://github.com/facebook/react-native/releases/tag/v0.X.Y
-📝 https://github.com/facebook/react-native/pull/<your-changelog-pr>
+📦 https://github.com/facebook/react-native/releases/tag/v$VERSION
+📝 https://github.com/facebook/react-native/pull/$PULL_REQUEST
+EOF
 ```
 
 ### Step 10: Update Podfile.lock on the release branch
