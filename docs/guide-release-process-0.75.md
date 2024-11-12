@@ -125,7 +125,10 @@ npx @react-native-community/cli@latest init "ReactNative$VERSION" --version "$VE
   <summary><b>Backup:</b> How do I manually create a template for this version?</summary>
 
 Run the [Release](https://github.com/react-native-community/template/actions/workflows/release.yaml) workflow, making sure you use the correct branch.  For example with the `0.76.*` releases you would use the [0.76-stable](https://github.com/react-native-community/template/tree/0.76-stable) branch:
+
 <img src="https://github.com/user-attachments/assets/b97f2dcb-430f-4b4d-88d6-ef7e482c01c5" width="600" />
+
+You will need separate additional permissions to do this, reach out to the **release crew** on Discord for help.
 
 </details>
 
