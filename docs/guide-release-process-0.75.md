@@ -9,7 +9,27 @@
 
 ## Release steps
 
-These steps apply when making a patch release or an incremental release candidate.
+These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).  Here is the template used for the 0.76.1 release:
+
+```
+# 0.76.1: Releasing
+
+Testing: @blakefuk + @frankcalise 
+
+- Waiting for `build_npm_package` to complete: @frankcalise ready to test https://github.com/facebook/react-native/actions/runs/11556038238
+- Publish release job.
+- Verify release: npx @react-native-community/cli init + build for iOS + Android
+- Manually trigger template publication for 0.76.1 → iOS + Android → mostly worked from publish job
+- Init a new template
+- Manually trigger rn-diff-purge → upgrade-helper
+- Verify Upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.76.0&to=0.76.1
+- Verify Maven assets
+- Generate Changelog PR → https://github.com/facebook/react-native/pull/47288
+- Create GitHub Release → Draft, publish when we release.
+- Communicate Release → Discord
+- Update Podfile.lock
+- Update GitHub Project
+```
 
 ### Step 1: Check out release branch locally
 
