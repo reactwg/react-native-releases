@@ -172,28 +172,28 @@ yarn test-e2e-local -t "RNTestProject" -p "Android" -h false -c $GITHUB_TOKEN
 ```bash
 react-native$ yarn test-e2e-local-clean # alias this command to make your life easier to something like "clean"
 
-react-native$ yarn test-e2e-local -p iOS -t RNTester -c <your-circle-ci-token>
+react-native$ yarn test-e2e-local -p iOS -t RNTester -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
 # delete RNTester from your iOS sim
 react-native/packages/rn-tester$ cd ../../
 
-react-native$ yarn test-e2e-local -p iOS -t RNTester --hermes false -c <your-circle-ci-token>
+react-native$ yarn test-e2e-local -p iOS -t RNTester --hermes false -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
 # delete RNTester from your iOS sim
 react-native/packages/rn-tester$ cd ../../
 
-react-native$ yarn test-e2e-local -p Android -t RNTester -c <your-circle-ci-token>
+react-native$ yarn test-e2e-local -p Android -t RNTester -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
 # delete RNTester from your Android emulator
 react-native/packages/rn-tester$ cd ../../
 
-react-native$ yarn test-e2e-local -p Android -t RNTester --hermes false -c <your-circle-ci-token>
+react-native$ yarn test-e2e-local -p Android -t RNTester --hermes false -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
@@ -201,7 +201,7 @@ react-native$ cd packages/rn-tester && yarn start
 react-native/packages/rn-tester$ cd ../../
 
 # by default, RNTestProject will use Hermes for iOS and Android
-react-native$ yarn test-e2e-local -p iOS -t RNTestProject -c <your-circle-ci-token>
+react-native$ yarn test-e2e-local -p iOS -t RNTestProject -c $GITHUB_TOKEN
 react-native$ cd /tmp/RNTestProject
 tmp/RNTestProject$ yarn start
 # verify tests "what to test"
