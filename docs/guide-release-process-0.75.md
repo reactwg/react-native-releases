@@ -281,7 +281,7 @@ cat <<EOF | pbcopy
 📢 $VERSION release is out!
 
 📦 https://github.com/facebook/react-native/releases/tag/v$VERSION
-📝 https://github.com/facebook/react-native/pull/$PULL_REQUEST
+📝 $PULL_REQUEST
 EOF
 ```
 
