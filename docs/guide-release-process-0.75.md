@@ -190,6 +190,7 @@ curl -X POST https://api.github.com/repos/react-native-community/rn-diff-purge/d
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -d "{\"event_type\": \"publish\", \"client_payload\": { \"version\": \"$NEW_VERSION\" }}"
 ```
+Confirm the [publish action](https://github.com/react-native-community/rn-diff-purge/actions) completes before verifying the upgrade helper has been updated.
 </details>
 
 #### Verify assets have been uploaded to Maven
