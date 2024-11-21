@@ -224,10 +224,10 @@ BASE_VERSION=$(git tag --sort=-creatordate  | grep -E '^v0\.' | head -n2 | tail 
 
 # Generate the changelog
 npx @rnx-kit/rn-changelog-generator \
-  --base $BASE_VERSION
+  --base $BASE_VERSION \
   --compare $NEW_VERSION \
   --repo . \
-  --changelog ./CHANGELOG.md
+  --changelog ./CHANGELOG.md \
   --token $GITHUB_TOKEN
 ```
 
