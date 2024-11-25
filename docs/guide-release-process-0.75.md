@@ -18,6 +18,7 @@ Testing: @blakefuk + @frankcalise
 
 - Waiting for `build_npm_package` to complete: @frankcalise ready to test https://github.com/facebook/react-native/actions/runs/11556038238
 - Publish release job.
+- Test the release.
 - Verify release: npx @react-native-community/cli init + build for iOS + Android
 - Manually trigger template publication for 0.76.1 → iOS + Android → mostly worked from publish job
 - Init a new template
