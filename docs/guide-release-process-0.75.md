@@ -1,7 +1,7 @@
-# Release Process (0.75 and later)
+# Release Process (>-= 0.75)
 
 > [!Note]
-> This documents the steps to releasing a stable React Native release.
+> This documents the steps to releasing a **stable** React Native release.
 >
 > Release candidates will generally follow the same steps but have some pre and post work, depending on if you're cutting, doing a patch, or promoting a release candidate to stable.
 >
@@ -14,18 +14,15 @@ These steps apply when making a patch release or an incremental release candidat
 ```md
 # 0.76.1: Releasing
 
-Testing: @blakefuk + @frankcalise 
+Testing: <github usernames>
 
-- Waiting for `build_npm_package` to complete: @frankcalise ready to test https://github.com/facebook/react-native/actions/runs/11556038238
+- Waiting for `build_npm_package` to complete: <url>
 - Publish release job.
-- Test the release.
-- Verify release: npx @react-native-community/cli init + build for iOS + Android
-- Manually trigger template publication for 0.76.1 → iOS + Android → mostly worked from publish job
-- Init a new template
-- Manually trigger rn-diff-purge → upgrade-helper
+- Test the release: testers please confirm here once they're finished
+- Verify release: `npx @react-native-community/cli init + build for iOS + Android`
 - Verify Upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.76.0&to=0.76.1
 - Verify Maven assets
-- Generate Changelog PR → https://github.com/facebook/react-native/pull/47288
+- Generate Changelog PR → <pull request url>
 - Create GitHub Release → Draft, publish when we release.
 - Communicate Release → Discord
 - Update Podfile.lock
