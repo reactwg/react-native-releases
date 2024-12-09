@@ -46,11 +46,18 @@ git switch -c <release-branch> upstream/<release-branch>
 
 ### Step 2: Action cherry-picks and pull requests
 
-New changes targeting a given release need to be replicated from `main` onto the release branch, via either a cherry-pick or pull request. See also [Releases Support Policy](./support.md#release-issues-and-pick-request-escalation).
+New changes targeting a given release need to be replicated from `main` onto the release branch, via either a cherry-pick or pull request. See also [Releases Support Policy](./support.md#release-issues-and-pick-request-escalation).  New change **MUST** be reflected on the [release minor version project](https://github.com/orgs/reactwg/projects) before picking / merging:
+
+![CleanShot 2024-12-09 at 11 08 50@2x](https://github.com/user-attachments/assets/5fe54818-230d-4ab6-b6fd-0a576a32008f)
+
+Once the project is up to date, you can pick these locally:
 
 ```bash
 # Make sure to update the release branch
 git pull
+
+# [Optionally] Use this tool to help order the cherry-picks and identify PRs
+npx rn-release-info 0.76.5
 
 # Cherry-pick relevant commits
 git cherry-pick <commit-on-main>
