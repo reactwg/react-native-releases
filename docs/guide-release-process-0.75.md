@@ -141,7 +141,7 @@ Verify the `template`:
 
 ```
 export VERSION=${NEW_VERSION#v}
-npx @react-native-community/cli@latest init "ReactNative${VERSION//./_}" --version "$VERSION"
+npx @react-native-community/cli@latest init "ReactNative${VERSION//[.-]/_}" --version "$VERSION"
 ```
 
 > [!Tip]
