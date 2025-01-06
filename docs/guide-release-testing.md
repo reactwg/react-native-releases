@@ -176,28 +176,28 @@ react-native$ yarn test-e2e-local -p iOS -t RNTester -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTester from your iOS sim
+xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS sim
 react-native/packages/rn-tester$ cd ../../
 
 react-native$ yarn test-e2e-local -p iOS -t RNTester --hermes false -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTester from your iOS sim
+xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS sim
 react-native/packages/rn-tester$ cd ../../
 
 react-native$ yarn test-e2e-local -p Android -t RNTester -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTester from your Android emulator
+com.facebook.react.uiapp # delete RNTester from your Android emulator
 react-native/packages/rn-tester$ cd ../../
 
 react-native$ yarn test-e2e-local -p Android -t RNTester --hermes false -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTester from your Android emulator
+com.facebook.react.uiapp # delete RNTester from your Android emulator
 react-native/packages/rn-tester$ cd ../../
 
 # by default, RNTestProject will use Hermes for iOS and Android
@@ -206,14 +206,14 @@ react-native$ cd /tmp/RNTestProject
 tmp/RNTestProject$ yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTestProject from your iOS sim
+xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS sim
 
 # test RNTestProject on Android with Hermes
 tmp/RNTestProject$ yarn run android # this should build the Android app and run on your emulator
 tmp/RNTestProject$ yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTestProject from your Android emulator
+adb uninstall com.rntestproject # delete RNTestProject from your Android emulator
 
 # test RNTestProject with JSC for iOS
 tmp/RNTestProject$ cd ios && bundle install && USE_HERMES=0 bundle exec pod install --ansi
@@ -222,7 +222,7 @@ tmp/RNTestProject$ yarn run ios
 tmp/RNTestProject$ yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTestProject from your iOS sim
+xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS sim
 
 # update RNTestProject with JSC forAndroid
 tmp/RNTestProject$ cd android
@@ -233,7 +233,7 @@ tmp/RNTestProject$ yarn run android # This should re-build Android app
 tmp/RNTestProject$ yarn start
 # verify tests "what to test"
 # kill metro
-# delete RNTestProject from your Android sim
+adb uninstall com.rntestproject # delete RNTestProject from your Android sim
 ```
 
 ## Versions older than 71
