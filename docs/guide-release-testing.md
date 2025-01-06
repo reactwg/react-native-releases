@@ -190,14 +190,14 @@ react-native$ yarn test-e2e-local -p Android -t RNTester -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
-com.facebook.react.uiapp # delete RNTester from your Android emulator
+adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
 react-native/packages/rn-tester$ cd ../../
 
 react-native$ yarn test-e2e-local -p Android -t RNTester --hermes false -c $GITHUB_TOKEN
 react-native$ cd packages/rn-tester && yarn start
 # verify tests "what to test"
 # kill metro
-com.facebook.react.uiapp # delete RNTester from your Android emulator
+adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
 react-native/packages/rn-tester$ cd ../../
 
 # by default, RNTestProject will use Hermes for iOS and Android
