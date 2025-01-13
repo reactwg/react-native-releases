@@ -33,8 +33,11 @@ A version in this support bracket will receive less patches, unless some importa
 When a version is in the unsupported stage, no new released are to be expected. Only very important regressions might create exceptions to this rule; it is recommended that codebases using an unsupported version upgrade as soon as possible.
 
 ## External Dependencies Supported
+
 | Version               | Android SDK minimum   | JDK version           | Xcode Version min.    | Cocoapods             | Node min.             |
 | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| 0.78                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
+| 0.77                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.76                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.75                  | Android 6.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.74                  | Android 6.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
