@@ -1,7 +1,7 @@
 name: 📝 Test Report Template
 title: "[0.XX.Y] Test Report: 1"
 description: "Attn: Release Crew - Create a test report template"
-labels: ["Type: Release Crew"]
+labels: ["Type Release Crew"]
 
 body:
   - type: markdown

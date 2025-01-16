@@ -1,7 +1,7 @@
 name: 🍒⛏️ Cherry-pick Request
 title: "[0.XX] Title"
 description: Do you need a commit cherry-picked into the release branch? Start here.
-labels: ["Type: Pick Request"]
+labels: ["Type Pick Request"]
 
 body:
   - type: markdown
@@ -34,4 +34,3 @@ body:
         See our [support policy](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md).
     validations:
       required: true
-

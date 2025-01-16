@@ -1,7 +1,7 @@
-name:  📋 Release Checklist
+name: 📋 Release Checklist
 title: "Release 0.XX.Y"
 description: "Attn: Release Crew - Release checklist"
-labels: ["Type: Release Crew"]
+labels: ["Type Release Crew"]
 
 body:
   - type: markdown
