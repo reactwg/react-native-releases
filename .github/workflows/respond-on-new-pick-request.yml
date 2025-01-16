@@ -4,12 +4,10 @@ on:
   issues:
     types: [labeled]
 
-permissions:
-  contents: read
-
 jobs:
   publish-message:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest]
+    permissions: write-all
     steps:
       - name: Publish Message
         uses: actions/github-script@v7
