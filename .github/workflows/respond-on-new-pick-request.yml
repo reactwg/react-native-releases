@@ -1,21 +1,22 @@
 name: Respond on New Pick Request
 on:
   issues:
-    types: [opened]
-    labels: ["Type: Pick Request"]
+    types: [labeled]
 jobs:
   publish-message:
     runs-on: ubuntu-latest
     steps:
       - name: Publish Message
         uses: actions/github-script@v6
+        if: github.event.label.name == 'Type Pick Request'
         env:
           GITHUB_TOKEN: ${{ secrets.REACT_NATIVE_BOT_REACT_WG_REACT_NATIVE_RELEASES_TOKEN }}
           MESSAGE: $(cat ./pick-request-hello-message.md)
-        run: |
-          github.issues.createComment({
-            issue_number: github.context.issue.number,
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            body: "${MESSAGE}"
-          })
+        with: 
+          script: |
+            github.issues.createComment({
+              issue_number: github.context.issue.number,
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              body: "${MESSAGE}"
+            })
