@@ -47,16 +47,7 @@ When a version is in the unsupported stage, no new released are to be expected. 
 
 ## Cherry-Pick Requests
 
-We’re **accepting cherry-pick requests** for the currently supported versions. A cherry-pick request is the request to include a fix in one of the supported versions and release a new point release with it.
-
-Cherry-Pick requests should be submitted as a [cherry-pick issue](https://github.com/reactwg/react-native-releases/issues/new/choose) in this repo. It will be triaged by the release crew.
-
-Please note that each cherry-pick request will be assessed and approved individually. Cherry-Pick requests against unsupported versions will be rejected unless they involve security issues.
-
-
-## Cherry-pick Requests
-
-A cherry-pick request is the request to include a fix in one of the **supported versions**.
+A **cherry-pick request** is the request to include a fix in one of the **supported versions**.
 
 Cherry-Pick requests should be submitted as a [cherry-pick issue](https://github.com/reactwg/react-native-releases/issues/new/choose) in this repo. It will be triaged by the release crew.
 
