@@ -24,7 +24,7 @@ In those docs you can find clarification about the roles of the various members 
 In those docs instead you can find step-by-step guides on how to run a React Native release
 
 * Guide: Running a Release
-  * [Version <= 0.73](./docs/guide-release-process.md)
+  * [Version <= 0.73](./docs/guide-release-process-0.73.md)
   * [Version == 0.74](./docs/guide-release-process-0.74.md)
   * [Version >= 0.75](./docs/guide-release-process-0.75.md)
 * [Guide: Release Candidates](./docs/guide-release-candidate.md)
@@ -41,5 +41,3 @@ In those docs instead you can find step-by-step guides on how to run a React Nat
 These docs are not relevant for most releases but keeping them around in case of needing to patch an older release.
 * [Deprecated: Upgrade Helper](./docs/upgrade-helper.md)
 * [Deprecated: Release Dependencies](./docs/dependencies.md)
-
-
