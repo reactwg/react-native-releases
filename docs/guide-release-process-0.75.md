@@ -12,21 +12,22 @@
 These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).  Here is the template used for the 0.76.1 release:
 
 ```md
-# 0.76.1: Releasing
+# 0.78.0-rc.0
 
-Testing: <github usernames>
-
-- Waiting for `build_npm_package` to complete: <url>
-- Publish release job.
-- Test the release: testers please confirm here once they're finished
-- Verify release: `npx @react-native-community/cli init + build for iOS + Android`
-- Verify Upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.76.0&to=0.76.1
-- Verify Maven assets
-- Generate Changelog PR → <pull request url>
-- Create GitHub Release → Draft, publish when we release.
-- Communicate Release → Discord
-- Update Podfile.lock
-- Update GitHub Project
+* ✅ Push picks to `0.78-stable`
+* ✅ Wait for `test_ios_rntester` (if <0.78) or `test_ios_rntester` (if >=0.78) to complete → https://github.com/facebook/react-native/actions/runs/12870884886
+* ✅ Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
+  * ✅ Rob: https://github.com/reactwg/react-native-releases/issues/723
+  * ✅ Vojtech: https://github.com/reactwg/react-native-releases/issues/724
+* ✅ Publish release job → https://github.com/facebook/react-native/actions/runs/12784528348
+* ✅ Verify template: npx @react-native-community/cli init + build for iOS + Android
+* ✅ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
+* ✅ Verify Maven assets → https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.78.0-rc.0
+* ✅ Generate changelog PR → https://github.com/facebook/react-native/pull/48685
+* ✅ Create GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
+* ✅ Communicate release → Discord
+* ✅ Update `Podfile.lock`
+* ✅ Update GitHub project
 ```
 
 ### Step 1: Check out release branch locally
