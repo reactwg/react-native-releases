@@ -100,16 +100,16 @@ In `fbsource` run
 ```bash
 js1 publish react-native 0.<your-release-candidate-minor+1>.0-main
 
-# ex. if you just released 0.75.0-rc.0, then
-js1 publish react-native 0.76.0-main
+# ex. if you just released 0.78.0-rc.0, then
+js1 publish react-native 0.79.0-main
 ```
 
-This will update all the relevant packages to `0.76.0-main`
+This will update all the relevant packages to `0.78.0-main`
 
 ## Release patches on release candidate
 You can follow the general release process for patches. The only thing to note is that your versioning scheme should be increasing the prerelease version.
 
-ex. 0.74.0-rc.1 -> 0.74.0-rc.2
+ex. 0.78.0-rc.1 -> 0.78.0-rc.2
 
 [See guide to release process](./guide-release-process-0.73.md)
 

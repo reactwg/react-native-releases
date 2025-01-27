@@ -19,7 +19,7 @@ Everyone can open a pick request by [filing a GitHub issue via this link](https:
 
 Judgement call, but using these dimensions to evaluate:
 
-- Is it a fix for a regression introduced by the current release (for example, did it work in `v0.73.0` but it's broken in `v0.74.0`)?
+- Is it a fix for a regression introduced by the current release (for example, did it work in `v0.77.0` but it's broken in `v0.78.0`)?
 - Is it a fix for a critical developer workflow?
 
 ### What is release blocking?
@@ -31,7 +31,7 @@ Judgement call, but using these dimensions to evaluate:
 
 ### When will my fix make it into a release?
 
-We follow a release cycle that is not strictly monthly - you can read more [about it here](https://github.com/react-native-community/discussions-and-proposals/issues/17). When creating a new release, we cut a new branch from `main` (e.g. `0.74-stable`), with all the merged commits up to this point. After this initial cut, new commits on `main` will only be included on this release if they get manually cherry picked. Otherwise, they will be included in the next stable version (when a new cut from `main` will happen). This means that once a pull request is merged to the [core `react-native` repo](https://github.com/facebook/react-native), it may take one or two months for the changes to make it into a stable React Native release.
+We follow a release cycle that is not strictly monthly - you can read more [about it here](https://github.com/react-native-community/discussions-and-proposals/issues/17). When creating a new release, we cut a new branch from `main` (e.g. `0.77-stable`), with all the merged commits up to this point. After this initial cut, new commits on `main` will only be included on this release if they get manually cherry picked. Otherwise, they will be included in the next stable version (when a new cut from `main` will happen). This means that once a pull request is merged to the [core `react-native` repo](https://github.com/facebook/react-native), it may take one or two months for the changes to make it into a stable React Native release.
 
 ### How do I know if my fix/feature is in a certain release?
 
