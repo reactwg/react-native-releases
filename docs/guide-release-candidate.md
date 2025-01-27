@@ -22,7 +22,6 @@ The general stages for handling a release candidate:
 
 Add a new column for this release candidate in the [External Dependencies Supported table](./support.md#external-dependencies-supported). Follow up internally if unsure.
 
-
 ### 1. Create a new release branch
 
 - Check-out a clone of `react-native` repo
@@ -35,19 +34,16 @@ git pull origin main
 git checkout -b 0.76-stable
 ```
 
-**Create a similar branch in the [@react-native-community/template](https://github.com/react-native-community/template) project**
+**Create corresponding release branches in related community repos**
 
-- Check-out a clone of `@react-native-community/template` repo
-- Pull `main`
-- Create a release branch. It must be of the form `<major>.<minor>-stable`
-- Push the branch up to `origin`.
+- [@react-native-community/cli](https://github.com/react-native-community/cli)
+    - Example: `14.x` (refer to and update [this table](https://github.com/react-native-community/cli#compatibility))
+- [@react-native-community/template](https://github.com/react-native-community/template)
+    - Example: `0.76-stable`
 
-```bash
-git checkout main
-git pull origin main
-git checkout -b 0.76-stable
-git push --set-upstream origin 0.76-stable
-```
+With repo write permissions, you can do this from the GitHub UI.
+
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/75455096-7cbe-464d-91d2-5d6b803d7191" />
 
 ### 2. Create a Hermes Release
 
