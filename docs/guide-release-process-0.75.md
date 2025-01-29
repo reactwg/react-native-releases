@@ -226,7 +226,7 @@ git switch main
 git fetch --all --tags
 git pull
 
-BASE_VERSION=$(git tag --sort=-creatordate  | grep -E '^v0\.' | head -n2 | tail -n1)
+BASE_VERSION=$(git tag -l --sort=-v:refname | grep -E '^v0\.' | head -n2 | tail -n1)
 
 # Generate the changelog
 npx @rnx-kit/rn-changelog-generator \
