@@ -9,12 +9,16 @@ body:
       value: |
         ## Cherry-pick Request
         Do you want to request a pick into one or multiple release branches? Please refer to the [Support table](https://github.com/reactwg/react-native-releases?tab=readme-ov-file#which-versions-are-currently-supported) to ensure all versions you are requesting a pick for are in a valid release window.
-  - type: input
+  - type: dropdown
     id: target-branch
     attributes:
       label: Target Branch(es)
       description: Please input which Release Branch needs this pick, eg `0.76`. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy).
-      placeholder: "0.XX"
+      options:
+        - 0.78
+        - 0.77
+        - 0.76
+        - 0.75
     validations:
       required: true
   - type: input
