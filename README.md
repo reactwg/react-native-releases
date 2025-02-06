@@ -24,7 +24,7 @@ In those docs you can find clarification about the roles of the various members 
 
 In those docs instead you can find step-by-step guides on how to run a React Native release
 
-- Guide: [Running a Release (Version >= 0.75)](./docs/guide-release-process.md)
+- Guide: [Running a Release](./docs/guide-release-process.md)
 - [Guide: Release Candidates](./docs/guide-release-candidate.md)
   - [How to setup a new release project](./docs/guide-release-project-setup.md)
   - [How to cut a release candidate](./docs/guide-release-candidate.md#cut-a-release-candidate)
