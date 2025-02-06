@@ -117,7 +117,7 @@ If you are joining as a release crew member you'll need the following:
 - Try running a release test on an existing release branch for RNTester on both iOS/Android
     ```bash
     # In your react-native checkout
-    git co 0.73-stable
+    git co 0.78-stable
     yarn
     yarn test-e2e-local -p iOS -t RNTester --hermes true -c <YOUR_GITHUB_TOKEN>
     ```

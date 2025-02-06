@@ -30,7 +30,7 @@ Push the picks to the remote branch.
 
 Head to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) in the Hermes repo.
 
-Click the "Run Workflow" button. Run the workflow from `main`, input the React Native version you are releasing (ex. 0.73.5), and the SHA of the head of your Hermes release branch.
+Click the "Run Workflow" button. Run the workflow from `main`, input the React Native version you are releasing (ex. 0.78.1), and the SHA of the head of your Hermes release branch.
 
 <figure>
 <img src="../assets/hermes_publish_tag.png" width="400" />

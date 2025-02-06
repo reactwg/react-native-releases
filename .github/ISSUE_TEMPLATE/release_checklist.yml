@@ -18,7 +18,7 @@ body:
     attributes:
       label: Target Minor
       description: Release Minor (for auto-triaging).
-      placeholder: "0.74"
+      placeholder: "0.77"
     validations:
       required: true
 
@@ -32,10 +32,8 @@ body:
 
         - [ ] [Complete picks](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-2-cherry-pick-or-merge-requests-against-release-branch)
           - See [framework to evaluate priority of picks](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md#release-issues-and-pick-request-escalation)
-        - [ ] (If < 0.74) [Publish monorepo packages](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-3-publish-monorepo-packages)
-        - [ ] [Push things remote to get assets (like Hermes) ready](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-4-build-artifacts-on-circleci)
+        - [ ] [Push things remote to get assets (like Hermes) ready](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process.md#step-4-build-artifacts-on-circleci)
         - [ ] Test release (create [Test Report](https://github.com/reactwg/react-native-releases/issues/new/choose))
-        - [ ] (If > 0.74) [Publish monorepo packages](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-6-publish-monorepo-packages)
         - [ ] [Publish `react-native`](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-7-publish-react-native)
         - [ ] [Verify release](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-8-verify-release)
         - [ ] [Update Changelog](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-process-0.73.md#step-9-generate-the-changelog-pr)
