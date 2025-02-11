@@ -172,68 +172,49 @@ yarn test-e2e-local -t "RNTestProject" -p "Android" -h false -c $GITHUB_TOKEN
 ```bash
 react-native$ yarn test-e2e-local-clean # alias this command to make your life easier to something like "clean"
 
-react-native$ yarn test-e2e-local -p iOS -t RNTester -c $GITHUB_TOKEN
-react-native$ cd packages/rn-tester && yarn start
+# RNTester
+
+react-native$ yarn test-e2e-local -t "RNTester" -p "iOS" --hermes true -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
-xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS sim
-react-native/packages/rn-tester$ cd ../../
+xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS simulator
 
-react-native$ yarn test-e2e-local -p iOS -t RNTester --hermes false -c $GITHUB_TOKEN
-react-native$ cd packages/rn-tester && yarn start
+react-native$ yarn test-e2e-local -t "RNTester" -p "iOS" --hermes false -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
-xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS sim
-react-native/packages/rn-tester$ cd ../../
+xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS simulator
 
-react-native$ yarn test-e2e-local -p Android -t RNTester -c $GITHUB_TOKEN
-react-native$ cd packages/rn-tester && yarn start
+react-native$ yarn test-e2e-local -t "RNTester" -p "Android" --hermes true -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
 adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
-react-native/packages/rn-tester$ cd ../../
 
-react-native$ yarn test-e2e-local -p Android -t RNTester --hermes false -c $GITHUB_TOKEN
-react-native$ cd packages/rn-tester && yarn start
+react-native$ yarn test-e2e-local -t "RNTester" -p "Android" --hermes false -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
 adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
-react-native/packages/rn-tester$ cd ../../
 
-# by default, RNTestProject will use Hermes for iOS and Android
-react-native$ yarn test-e2e-local -p iOS -t RNTestProject -c $GITHUB_TOKEN
-react-native$ cd /tmp/RNTestProject
-tmp/RNTestProject$ yarn start
+# RNTestProject
+
+react-native$ yarn test-e2e-local -t "RNTestProject" -p "iOS" --hermes true -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
-xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS sim
+xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS simulator
 
-# test RNTestProject on Android with Hermes
-tmp/RNTestProject$ yarn run android # this should build the Android app and run on your emulator
-tmp/RNTestProject$ yarn start
+react-native$ yarn test-e2e-local -t "RNTestProject" -p "iOS" --hermes false -c $GITHUB_TOKEN
+# verify tests "what to test"
+# kill metro
+xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS simulator
+
+react-native$ yarn test-e2e-local -t "RNTestProject" -p "Android" --hermes true -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
 adb uninstall com.rntestproject # delete RNTestProject from your Android emulator
 
-# test RNTestProject with JSC for iOS
-tmp/RNTestProject$ cd ios && bundle install && USE_HERMES=0 bundle exec pod install --ansi
-tmp/RNTestProject/ios$ cd ../
-tmp/RNTestProject$ yarn run ios
-tmp/RNTestProject$ yarn start
+react-native$ yarn test-e2e-local -t "RNTestProject" -p "Android" --hermes false -c $GITHUB_TOKEN
 # verify tests "what to test"
 # kill metro
-xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS sim
-
-# update RNTestProject with JSC forAndroid
-tmp/RNTestProject$ cd android
-tmp/RNTestProject$ vim gradle.properties # update `hermesEnabled` to false
-tmp/RNTestProject$ ./gradlew clean
-tmp/RNTestProject/ios$ cd ../
-tmp/RNTestProject$ yarn run android # This should re-build Android app
-tmp/RNTestProject$ yarn start
-# verify tests "what to test"
-# kill metro
-adb uninstall com.rntestproject # delete RNTestProject from your Android sim
+adb uninstall com.rntestproject # delete RNTestProject from your Android emulator
 ```
 
 ## Versions older than 71
