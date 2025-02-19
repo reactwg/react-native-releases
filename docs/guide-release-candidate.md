@@ -131,18 +131,18 @@ Update the [support policy](./support.md#what-versions-are-currently-supported) 
 So, for example, if the table contains:
 
 ```diff
-| Version    | Type                  | Status           |
-| ---------- | --------------------- | ---------------- |
--| 0.72.x     | Next version          | Not started      |
--| 0.71.x     | Latest stable         | In support       |
--| 0.70.x     | Previous minor series | In support       |
--| 0.69.x     | Previous minor series | In support       |
--| <=0.68.x   | Old minor series      | Unsupported      |
-+| 0.73.x     | Next version          | Not started      |
-+| 0.72.x     | Latest stable         | In support       |
-+| 0.71.x     | Previous minor series | In support       |
-+| 0.70.x     | Previous minor series | In support       |
-+| <=0.69.x   | Old minor series      | Unsupported      |
+| Version     | Type                       | Status           |
+| ----------- | -------------------------- | ---------------- |
+-| 0.72.x     | Next version               | Future           |
+-| 0.71.x     | Latest stable              | Active           |
+-| 0.70.x     | Previous (-1) minor series | Active           |
+-| 0.69.x     | Previous (-2) minor series | End of Cycle     |
+-| <=0.68.x   | Old minor series           | Unsupported      |
++| 0.73.x     | Next version               | Future           |
++| 0.72.x     | Latest stable              | Active           |
++| 0.71.x     | Previous (-1) minor series | Active           |
++| 0.70.x     | Previous (-2) minor series | End of Cycle     |
++| <=0.69.x   | Old minor series           | Unsupported      |
 ```
 
 ### 3. Ship blog post
