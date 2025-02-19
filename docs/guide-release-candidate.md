@@ -67,12 +67,12 @@ To trigger a nightly:
 
 At this point, you'll follow the general release process from steps 4-13
 
-### [4. Build Artifacts on CircleCI](./guide-release-process-0.73.md#step-4-build-artifacts-on-circleci)
-### [5. Test the Release](./guide-release-process-0.73.md#step-5-test-the-release)
-### [6. Publish Monorepo Packages](./guide-release-process-0.73.md#step-6-publish-monorepo-packages)
-### [7. Publish React Native](./guide-release-process-0.73.md#step-7-publish-react-native)
-### [8. Verify Release](./guide-release-process-0.73.md#step-8-verify-release)
-### [9. Generate the Changelog PR](./guide-release-process-0.73.md#step-9-generate-the-changelog-pr)
+### [4. Build Artifacts on CircleCI](./guide-release-process.md#step-4-build-artifacts-on-circleci)
+### [5. Test the Release](./guide-release-process.md#step-5-test-the-release)
+### [6. Publish Monorepo Packages](./guide-release-process.md#step-6-publish-monorepo-packages)
+### [7. Publish React Native](./guide-release-process.md#step-7-publish-react-native)
+### [8. Verify Release](./guide-release-process.md#step-8-verify-release)
+### [9. Generate the Changelog PR](./guide-release-process.md#step-9-generate-the-changelog-pr)
 
 > [!Note]
 > The changelog for the release candidate may be quite long and will need some manual curation. In addition, the changelog parser can be flaky and mis-parse some commits. Here are guidelines for editing the changelog
@@ -88,10 +88,10 @@ At this point, you'll follow the general release process from steps 4-13
   - The **Failed to Parse** section contains commits that has a `## Changelog:` entry in their summary but, due to typos or other problems, the tool was not able to parse and automatically attribute them to the right section.
   - For both these categories, we have to manually go through the listed commits and move them to the right section, based on the actual change they introduce.
 
-### [10. Create Github Release](./guide-release-process-0.73.md#step-10-create-the-github-release)
-### [11. Communicate Release](./guide-release-process-0.73.md#step-11-communicate-release)
-### [12. Update podfile.lock on release](./guide-release-process-0.73.md#step-12-update-podfilelock-on-the-release-branch)
-### [13. Update Github Project](./guide-release-process-0.73.md#step-13-update-github-project)
+### [10. Create Github Release](./guide-release-process.md#step-10-create-the-github-release)
+### [11. Communicate Release](./guide-release-process.md#step-11-communicate-release)
+### [12. Update podfile.lock on release](./guide-release-process.md#step-12-update-podfilelock-on-the-release-branch)
+### [13. Update Github Project](./guide-release-process.md#step-13-update-github-project)
 ### 14. Bump minor version of all monorepo packages on `main`
 
 Now we've cut a release branch, we need to update `main` monorepo packages and internal Meta dependencies to point to the "next" version.
@@ -111,7 +111,7 @@ You can follow the general release process for patches. The only thing to note i
 
 ex. 0.78.0-rc.1 -> 0.78.0-rc.2
 
-[See guide to release process](./guide-release-process-0.73.md)
+[See guide to release process](./guide-release-process.md)
 
 ## Promote release candidate to stable
 
@@ -119,7 +119,7 @@ Promoting a release candidate to stable is similar to releasing a patch. The dif
 
 As well, there is follow-up in terms of writing a blog post and communicating to the ecosystem about this release.
 
-### 1. Release a stable version following [release process](./guide-release-process-0.73.md)
+### 1. Release a stable version following [release process](./guide-release-process.md)
 
 ### 2. Update the Support policy
 
