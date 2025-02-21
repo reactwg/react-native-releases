@@ -1,0 +1,33 @@
+name: Handle @react-native-bot commands
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  publish-message:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repo
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Run React Native Bot
+        uses: actions/github-script@v5
+        env:
+          REACT_NATIVE_BOT_GITHUB_TOKEN: ${{ secrets.REACT_NATIVE_BOT_GITHUB_TOKEN }}
+        with:
+          github-token: ${{ secrets.REACT_NATIVE_BOT_GITHUB_TOKEN }}
+          script: |
+            // List of allowed GitHub users to interact with @react-native-bot
+            const allowedUsers = [
+              'cortinico',
+              'cipolleschi'
+            ];
+
+            const commentBody = context.payload.comment.body;
+            const commenterUsername = context.payload.comment.user.login;
+            
+            if (allowedUsers.includes(commenterUsername) && commentBody.includes('@react-native-bot')) {
+              const script = require('./.github/workflows/scripts/react-native-bot.js')
+              script({github, context})
+            }
