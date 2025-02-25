@@ -21,7 +21,8 @@ jobs:
             // List of allowed GitHub users to interact with @react-native-bot
             const allowedUsers = [
               'cortinico',
-              'cipolleschi'
+              'cipolleschi',
+              'fabriziocucci'
             ];
 
             const commentBody = context.payload.comment.body;
