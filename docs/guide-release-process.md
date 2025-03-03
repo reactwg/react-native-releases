@@ -17,7 +17,7 @@ These steps apply when making a patch release or an incremental release candidat
 * ✅ Push picks to `0.78-stable`
 * ✅ Wait for `build_npm_package` (if <0.78) or `test_ios_rntester` (if >=0.78) to complete → https://github.com/facebook/react-native/actions/runs/12870884886
 * ✅ (ONLY for RC0,1,4,stable) Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
-  * ✅ Rob: https://github.com/reactwg/react-native-releases/issues/723
+  * ✅ <Tester Name>: https://github.com/reactwg/react-native-releases/issues/
 * ✅ Publish release job → https://github.com/facebook/react-native/actions/runs/12784528348
 * ✅ Verify template: npx @react-native-community/cli init + build for iOS + Android
 * ✅ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
