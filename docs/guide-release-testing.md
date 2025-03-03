@@ -94,7 +94,35 @@ If any of those prerequisites is not met, the script should output a proper erro
 
 If you need to build React Native from source, you can skip the `-c` parameter. By not passing the Github token, the script falls back to the previous flow, building everything locally.
 
-## Dimensions to test
+## Dimensions to test (RN >= 0.79)
+
+Here are the 4 dimensions we cover in manual testing:
+
+**1. RNTester + iOS:**
+
+```bash
+yarn test-e2e-local -t "RNTester" -p "iOS" -c $GITHUB_TOKEN
+```
+
+**2. RNTester + Android:**
+
+```bash
+yarn test-e2e-local -t "RNTester" -p "Android" -c $GITHUB_TOKEN
+```
+
+**3. RNTestProject + iOS:**
+
+```bash
+yarn test-e2e-local -t "RNTestProject" -p "iOS" -c $GITHUB_TOKEN
+```
+
+**4. RNTestProject + Android**
+
+```bash
+yarn test-e2e-local -t "RNTestProject" -p "Android" -c $GITHUB_TOKEN
+```
+
+## Dimensions to test (RN <= 0.78)
 
 Here are the 8 dimensions we cover in manual testing:
 
