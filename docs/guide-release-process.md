@@ -16,9 +16,9 @@ These steps apply when making a patch release or an incremental release candidat
 
 * ✅ Push picks to `0.78-stable`
 * ✅ Wait for `build_npm_package` (if <0.78) or `test_ios_rntester` (if >=0.78) to complete → https://github.com/facebook/react-native/actions/runs/12870884886
-* ✅ Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
-  * ✅ Rob: https://github.com/reactwg/react-native-releases/issues/723
-  * ✅ Vojtech: https://github.com/reactwg/react-native-releases/issues/724
+* ✅ Verify that E2E tests are green → https://github.com/facebook/react-native/actions/runs/13634115054
+* ✅ (ONLY for RC0,1,4,stable) Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
+  * ✅ <Tester Name>: https://github.com/reactwg/react-native-releases/issues/
 * ✅ Publish release job → https://github.com/facebook/react-native/actions/runs/12784528348
 * ✅ Verify template: npx @react-native-community/cli init + build for iOS + Android
 * ✅ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
@@ -91,9 +91,20 @@ This will kick off a Github Action workflow called [Test All](https://github.com
 
 ### Step 4: Test the release
 
-Follow the [Release Testing guide](./guide-release-testing.md). Ideally, we should have 2 Release Crew members test the release. Coordinate with another Release Crew member to do a second pass.
+Follow the [Release Testing guide](./guide-release-testing.md). 
 
-There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. **Ensure a Meta Release Crew member is aware and approves**.
+* If you're releasing >= 0.79
+  * We should have **1x Release Crew** member testing the release.
+  * Additionally **only** the following releases should be manually tested.
+    * `RC0`
+    * `RC1`
+    * `RC4` (Golden RC)
+    * `.0` (Stable release)
+  * All the other releases require no manual testing.
+  * You should ensure that the **E2E jobs** on the release branch are green.
+* If you're releasing <= 0.78
+  * We should have **2x Release Crew** members test the release. Coordinate with another Release Crew member to do a second pass.
+  * There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. **Ensure a Meta Release Crew member is aware and approves**.
 
 ### Step 5. Create release
 Starting from React Native 0.75, a new release is created using a Github Action workflow called [Create Release](https://github.com/facebook/react-native/actions/workflows/create-release.yml).
