@@ -39,13 +39,13 @@ body:
         Refer to this [spreadsheet](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) for test cases.
 
         - [ ] RNTester + iOS + Hermes
-        - [ ] RNTester + iOS + JSC
+        - [ ] RNTester + iOS + JSC (only for RN <= 0.78)
         - [ ] RNTester + Android + Hermes
-        - [ ] RNTester + Android + JSC
+        - [ ] RNTester + Android + JSC (only for RN <= 0.78)
         - [ ] RNTestProject + iOS + Hermes
-        - [ ] RNTestProject + iOS + JSC
+        - [ ] RNTestProject + iOS + JSC (only for RN <= 0.78)
         - [ ] RNTestProject + Android + Hermes
-        - [ ] RNTestProject + Android + JSC
+        - [ ] RNTestProject + Android + JSC (only for RN <= 0.78)
 
         Close this issue if there are no blocking issues.
 
