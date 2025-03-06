@@ -12,6 +12,8 @@ The general stages for handling a release candidate:
 ## Pre-requisites
 
 - Write access to [react-native](https://github.com/facebook/react-native) repository.
+- Write access to [template](https://github.com/react-native-community/template) repository.
+- Write access to [cli](https://github.com/react-native-community/cli) repository.
 - Write access to [hermes](https://github.com/facebook/hermes) repository.
 - Write access to [releases](https://github.com/reactwg/react-native-releases) repository.
 - One CircleCI personal API token - see [here](https://circleci.com/docs/managing-api-tokens#creating-a-personal-api-token) how to set one.
@@ -40,6 +42,10 @@ git checkout -b 0.76-stable
     - Example: `14.x` (refer to and update [this table](https://github.com/react-native-community/cli#compatibility))
 - [@react-native-community/template](https://github.com/react-native-community/template)
     - Example: `0.76-stable`
+ 
+> [!CAUTION]
+> Make sure the CLI team ([#cli](https://discord.com/channels/514829729862516747/1232435652533031013) channel on discord) is aware of the upcoming branch cut.
+> They are responsible of making sure the CLI is bumped **before RC1**.
 
 With repo write permissions, you can do this from the GitHub UI.
 
