@@ -322,6 +322,9 @@ git add packages/rn-tester/Podfile.lock
 git commit -m "Update Podfile.lock" -m "Changelog: [Internal]"
 git push
 ```
+> **Note:**
+> If you just cloned the `react-native` repository, make sure to run `yarn` to install all dependencies.
+> Additionally, we recommend installing the latest Ruby version using [rbenv](https://github.com/rbenv/rbenv) before proceeding.
 
 ### Step 11: Update GitHub Project
 
