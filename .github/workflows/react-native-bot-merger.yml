@@ -22,7 +22,8 @@ jobs:
             const allowedUsers = [
               'cortinico',
               'cipolleschi',
-              'fabriziocucci'
+              'fabriziocucci',
+              'robhogan'
             ];
 
             const commentBody = context.payload.comment.body;
