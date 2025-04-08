@@ -99,7 +99,6 @@ Follow the [Release Testing guide](./guide-release-testing.md).
     * `RC0`
     * `RC1`
     * `RC4` (Golden RC)
-    * `.0` (Stable release)
   * All the other releases require no manual testing.
   * You should ensure that the **E2E jobs** on the release branch are green.
 * If you're releasing <= 0.78
