@@ -4,11 +4,11 @@
 
 | Version  | Type                       | Support level |
 | -------- | -------------------------- | ------------- |
-| 0.79.x   | Next version               | Future        |
-| 0.78.x   | Latest stable              | Active        |
-| 0.77.x   | Previous (-1) minor series | Active        |
-| 0.76.x   | Previous (-2) minor series | End of Cycle  |
-| <=0.75.x | Old minor series           | Unsupported   |
+| 0.80.x   | Next version               | Future        |
+| 0.79.x   | Latest stable              | Active        |
+| 0.78.x   | Previous (-1) minor series | Active        |
+| 0.77.x   | Previous (-2) minor series | End of Cycle  |
+| <=0.76.x | Old minor series           | Unsupported   |
 
 ### What level of support can be expected?
 
@@ -36,6 +36,7 @@ When a version is in the unsupported stage, no new released are to be expected. 
 
 | Version               | Android SDK minimum   | JDK version           | Xcode Version min.    | Cocoapods             | Node min.             |
 | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| 0.79                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.78                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.77                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.76                  | Android 7.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
