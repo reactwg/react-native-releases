@@ -23,7 +23,8 @@ jobs:
               'cortinico',
               'cipolleschi',
               'fabriziocucci',
-              'robhogan'
+              'robhogan',
+              'hezi'
             ];
 
             const commentBody = context.payload.comment.body;
