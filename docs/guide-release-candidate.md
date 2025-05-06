@@ -15,7 +15,6 @@ The general stages for handling a release candidate:
 - Write access to [template](https://github.com/react-native-community/template) repository.
 - Write access to [hermes](https://github.com/facebook/hermes) repository.
 - Write access to [releases](https://github.com/reactwg/react-native-releases) repository.
-- One CircleCI personal API token - see [here](https://circleci.com/docs/managing-api-tokens#creating-a-personal-api-token) how to set one.
 
 ## Cut a Release Candidate
 
