@@ -9,25 +9,26 @@
 
 ## Release steps
 
-These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).  Here is the template used for the 0.76.1 release:
+These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).  Here is the template used for 0.78.0-rc.0:
 
 ```md
 # 0.78.0-rc.0
 
-* ✅ Push picks to `0.78-stable`
-* ✅ Wait for `build_npm_package` (if <0.78) or `test_ios_rntester` (if >=0.78) to complete → https://github.com/facebook/react-native/actions/runs/12870884886
-* ✅ Verify that E2E tests are green → https://github.com/facebook/react-native/actions/runs/13634115054
-* ✅ (ONLY for RC0,1,4,stable) Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
-  * ✅ <Tester Name>: https://github.com/reactwg/react-native-releases/issues/
-* ✅ Publish release job → https://github.com/facebook/react-native/actions/runs/12784528348
-* ✅ Verify template: npx @react-native-community/cli init + build for iOS + Android
-* ✅ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
-* ✅ Verify Maven assets → https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.78.0-rc.0
-* ✅ Generate changelog PR → https://github.com/facebook/react-native/pull/48685
-* ✅ Create GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
-* ✅ Communicate release → Discord
-* ✅ Update `Podfile.lock`
-* ✅ Update GitHub project
+* ✅ Pick changes and push `0.78-stable`
+* ⌛ Wait for `build_npm_package` (if <0.78) or `test_ios_rntester` (if >=0.78) to complete → https://github.com/facebook/react-native/actions/runs/12870884886
+* ⌛ Verify that E2E tests are green → https://github.com/facebook/react-native/actions/runs/13634115054
+* ⌛ (ONLY for RC0,1,4,stable) Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
+  * ⌛ <Tester Name>: https://github.com/reactwg/react-native-releases/issues/
+* ⌛ Publish release job → https://github.com/facebook/react-native/actions/runs/12784528348
+* ⌛ Verify template: npx @react-native-community/cli init + build for iOS + Android
+* ⌛ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
+* ⌛ Verify Maven assets → https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.78.0-rc.0
+* ⌛ Generate changelog PR → https://github.com/facebook/react-native/pull/48685
+* ⌛ Create GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
+* ⌛ Communicate release to `releases-coordination` on Discord
+* ⌛ Communicate release to `React Native Releases` on Workplace (Meta internal)
+* ⌛ Update `Podfile.lock`
+* ⌛ Update GitHub project
 ```
 
 ### Step 1: Check out release branch locally
