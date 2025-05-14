@@ -12,8 +12,8 @@ body:
   - type: input
     id: target-branch
     attributes:
-      label: Target Branch(es)
-      description: Please input which Release Branch needs this pick, eg `0.76`. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy).
+      label: Target Branch
+      description: Please input which Release Branch needs this pick, eg `0.76`. See our [Releases Support Policy](https://github.com/reactwg/react-native-releases#releases-support-policy). Multiple releases needs separate issues.
       placeholder: "0.XX"
     validations:
       required: true
