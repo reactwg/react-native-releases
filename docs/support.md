@@ -45,6 +45,7 @@ When a version is in the unsupported stage, no new released are to be expected. 
 | 0.74                  | Android 6.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.73                  | Android 5.0           | JDK 17                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 18                    |
 | 0.72                  | Android 5.0           | JDK 11                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 16                    |
+| 0.71                  | Android 5.0           | JDK 11                | 15.1                  | 1.13.x/1.14.x/1.15.2  | 16                    |
 
 ## Cherry-Pick Requests
 
