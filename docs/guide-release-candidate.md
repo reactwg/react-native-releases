@@ -70,16 +70,13 @@ To trigger a nightly:
 
 <img src="../assets/trigger-nightly.png" width="600" />
 
-### 3. Follow the steps in the general release process
+At this point, you'll follow the general release process as per the following links:
 
-At this point, you'll follow the general release process from steps 4-13
-
-### [4. Build Artifacts on CircleCI](./guide-release-process.md#step-4-build-artifacts-on-circleci)
-### [5. Test the Release](./guide-release-process.md#step-5-test-the-release)
-### [6. Publish Monorepo Packages](./guide-release-process.md#step-6-publish-monorepo-packages)
-### [7. Publish React Native](./guide-release-process.md#step-7-publish-react-native)
-### [8. Verify Release](./guide-release-process.md#step-8-verify-release)
-### [9. Generate the Changelog PR](./guide-release-process.md#step-9-generate-the-changelog-pr)
+### [3. Wait for Github Actions artifacts to build](./guide-release-process.md#step-3-wait-for-github-actions-artifacts-to-build)
+### [4. Test the Release](./guide-release-process.md#step-4-test-the-release)
+### [5. Kick-off the Release](./guide-release-process.md#step-5-create-release)
+### [6. Verify Release](./guide-release-process.md#step-6-verify-release)
+### [7. Generate the Changelog PR](./guide-release-process.md#step-7-generate-the-changelog-pr)
 
 > [!Note]
 > The changelog for the release candidate may be quite long and will need some manual curation. In addition, the changelog parser can be flaky and mis-parse some commits. Here are guidelines for editing the changelog
@@ -95,11 +92,11 @@ At this point, you'll follow the general release process from steps 4-13
   - The **Failed to Parse** section contains commits that has a `## Changelog:` entry in their summary but, due to typos or other problems, the tool was not able to parse and automatically attribute them to the right section.
   - For both these categories, we have to manually go through the listed commits and move them to the right section, based on the actual change they introduce.
 
-### [10. Create Github Release](./guide-release-process.md#step-10-create-the-github-release)
-### [11. Communicate Release](./guide-release-process.md#step-11-communicate-release)
-### [12. Update podfile.lock on release](./guide-release-process.md#step-12-update-podfilelock-on-the-release-branch)
-### [13. Update Github Project](./guide-release-process.md#step-13-update-github-project)
-### 14. Bump minor version of all monorepo packages on `main`
+### [8. Create the GitHub Release](./guide-release-process.md#step-8-create-the-github-release)
+### [9. Communicate Release](./guide-release-process.md#step-9-communicate-release)
+### [10. Update podfile.lock on release](./guide-release-process.md#step-10-update-podfilelock-on-the-release-branchh)
+### [11. Update Github Project](./guide-release-process.md#step-11-update-github-project)
+### 12. Bump minor version of all monorepo packages on `main`
 
 Now we've cut a release branch, we need to update `main` monorepo packages and internal Meta dependencies to point to the "next" version.
 
