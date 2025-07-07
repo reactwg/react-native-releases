@@ -59,3 +59,7 @@ Using the newly generated Hermes tag run the following script on the React Nativ
 ```
 
 Add and commit the extra file that got created at packages/react-native/sdks/hermes/.hermesversion. Now you can continue with the rest of your React Native release.
+
+```
+git add packages/react-native/sdks/.hermesvesion && git commit -m "Bump hermes version"
+```
