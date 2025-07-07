@@ -40,15 +40,7 @@ When testing locally, we want to ensure that we start from a clean slate to avoi
 We test on two apps
 
 - `RNTester`, a demonstration app that higlights the APIs and core components of React Native
-- `RNTestProject`, a project built from the React Native [template]()
-
-| App           | New Architecture enabled |
-| ------------- | ------------------------ |
-| RNTester      | true                     |
-| RNTestProject | false                    |
-
-> [!Note]
-> If you need to enable New Architecture on `RNTestProject`, follow the instructions [here](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md#enable-the-new-architecture-for-apps).
+- `RNTestProject`, a project built from the React Native [template](https://github.com/react-native-community/template)
 
 To generate the the right project with the specific configuration desired, you can use the command:
 
@@ -74,7 +66,7 @@ export GITHUB_TOKEN=<token>
 ```
 
 > [!Warning]
-> If you are testing versions of React Native that are < 0.75, you need a CircleCI token rather than a Github Token.
+> If you are testing versions of React Native that are < 0.75, you need a CircleCI token rather than a GitHub Token.
 > Follow [these instruction](https://circleci.com/docs/managing-api-tokens/) to learn how to create one.
 
 Use [this link](https://github.com/settings/tokens/new?description=React%20Native%20Releases&scopes=repo) to generate a token with the Repo scope.
