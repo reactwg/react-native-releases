@@ -21,6 +21,7 @@ The general stages for handling a release candidate:
 ### 0. Update External Dependencies
 
 Add a new column for this release candidate in the [External Dependencies Supported table](./support.md#external-dependencies-supported). Follow up internally if unsure.
+Consider opening a new pull request rather than committing directly to `main` as viewers of the `react-native-release` repo will be notified.
 
 ### 1. Create a new release branch
 
