@@ -72,7 +72,7 @@ To trigger a nightly:
 
 At this point, you'll follow the general release process as per the following links:
 
-### [3. Wait for Github Actions artifacts to build](./guide-release-process.md#step-3-wait-for-github-actions-artifacts-to-build)
+### [3. Push branch & Wait for Github Actions artifacts to build](./guide-release-process.md#step-3-wait-for-github-actions-artifacts-to-build)
 ### [4. Test the Release](./guide-release-process.md#step-4-test-the-release)
 ### [5. Kick-off the Release](./guide-release-process.md#step-5-create-release)
 ### [6. Verify Release](./guide-release-process.md#step-6-verify-release)
