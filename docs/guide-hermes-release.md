@@ -10,6 +10,16 @@ Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebo
 ### If you are cutting a release candidate
 Create a Hermes release branch of the form `rn/<major>.<minor>-stable` from latest `main`.
 
+Make sure your branch is pushed to the remote.
+
+```
+# Run this in the Hermes repo:
+git checkout main
+git pull origin main
+git checkout -b rn/0.76-stable
+git push origin HEAD
+```
+
 ### For stable patch releases
 
 Check out the Hermes release branch for your minor. It should be of the form `rn/<major>.<minor>-stable`.
