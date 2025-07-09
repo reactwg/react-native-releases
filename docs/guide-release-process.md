@@ -239,7 +239,7 @@ git pull
 
 BASE_VERSION=$(git tag -l --sort=-v:refname | grep -E '^v0\.' | head -n2 | tail -n1)
 
-# Generate the changelog
+# Generate the changelog PR
 npx @rnx-kit/rn-changelog-generator \
   --base $BASE_VERSION \
   --compare $NEW_VERSION \
@@ -247,8 +247,9 @@ npx @rnx-kit/rn-changelog-generator \
   --changelog ./CHANGELOG.md \
   --token $GITHUB_TOKEN
 ```
+And then move to the generated branch for that version (e.g. `changelog/v0.81.0-rc.0`)
 
-You'll likely need to reformat the generated `CHANGELOG.md` changes and reorder the heading to keep the latest release ordering. Once done, create a PR with your changes against `main`.
+You'll likely need to reformat the generated `CHANGELOG.md` on that branch and reorder the heading to keep the latest release ordering.
 
 ### Step 8: Create the GitHub Release
 
