@@ -229,14 +229,14 @@ Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-nat
 > [!Note]
 > Changelog commits must be submitted to the `main` branch.
 
-Starting from React Native 0.80, the **Publish Release** action will generate a changelog PR such as `changelog/v0.80.0-rc.0` for you.
+Starting from React Native (**`>= 0.80`**), the **Publish Release** action will generate a changelog PR such as `changelog/v0.80.0-rc.0` for you.
 
 Reformat and re-style the modified `CHANGELOG.md` on that branch based on previous changelog PRs. Then, a Meta engineer should: 
 1. Import the PR in the Meta internal system, 
 2. Get the resulting diff approved, 
 3. Land the diff into `main`.
 
-If it fails, or for (**`< 0.80`**) manually generate the updated changelog manually and open a PR from `main` after similar reformatting:
+If it fails, or for (**`< 0.80`**), manually generate the updated changelog on `main` and open a PR to `main` after similar reformatting:
 
 <details>
   <summary>Manually Generate Changelog Updates</summary>
