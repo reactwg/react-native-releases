@@ -1,3 +1,4 @@
+
 # Release Process (>= 0.75)
 
 > [!Note]
@@ -326,13 +327,21 @@ cat <<EOF | pbcopy
 EOF
 ```
 
-### Step 10: Update Podfile.lock on the release branch
+### Step 10: Ensure Podfile.lock is updated
+
+Everytime we release a new version, there is a new `hermes-engine` version published. We need to update `packages/rn-tester` to use this new version. This is in preparation for the next release from this branch.
+
+Since React Native (**`>= 0.80`**) this happens automatically by the **Publish Release**.
+
+Ensure that there's a **`[LOCAL] Bump Podfile.lock`** commit on the release branch created by **Publish Release**.
+
+If the automatic bump fails, or you are on (**`< 0.80`**):
+<details>
+  <Summary>Manually update `Podfile.lock`:</Summary>
 
 > **Note:**
 > If you just cloned the `react-native` repository, make sure to run `yarn` to install all dependencies.
 > Additionally, we recommend installing the latest Ruby version using [rbenv](https://github.com/rbenv/rbenv) before proceeding.
-
-Everytime we release a new version, there is a new `hermes-engine` version published. We need to update `packages/rn-tester` to use this new version. This is in preparation for the next release from this branch.
 
 ```bash
 # Check out release branch
@@ -341,15 +350,17 @@ git switch <release-branch>
 # Make sure to update the release branch
 git pull
 
-# Head to rn-tester package and update pods
+# Head to rn-tester package and update pods (including parentheses in the second command to run the command in a subshell)
 rm -rf packages/react-native-codegen/lib
-(cd packages/rn-tester && bundle exec pod update hermes-engine --no-repo-update)
+(cd packages/rn-tester && bundle install && bundle exec pod update hermes-engine --no-repo-update)
 
 # Commit only changes to packages/rn-tester/Podfile.lock
 git add packages/rn-tester/Podfile.lock
 git commit -m "Update Podfile.lock" -m "Changelog: [Internal]"
 git push
 ```
+</details>
+
 
 ### Step 11: Update GitHub Project
 
