@@ -315,16 +315,15 @@ EOF
 
 ### Step 9: Communicate Release
 
-Send a message in the Core Contributors Discord `#release-coordination` channel about the new release.
+Create and send a message with the template below in the Core Contributors Discord `#release-coordination` channel.
 
-```bash
-PULL_REQUEST=$(gh pr view --json url --jq '.url')
-cat <<EOF | pbcopy
-📢 $VERSION release is out!
+Get a Meta engineer to send that same message in the `React Native Releases` Workplace group.
 
-📦 https://github.com/facebook/react-native/releases/tag/v$VERSION
-📝 $PULL_REQUEST
-EOF
+```
+📢 **0.81.0-rc.0 is out!**
+
+📦 Release tag: https://github.com/facebook/react-native/releases/tag/v0.81.0-rc.0
+📝 Changelog PR: https://github.com/facebook/react-native/pull/52517
 ```
 
 ### Step 10: Ensure Podfile.lock is updated
