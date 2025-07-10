@@ -229,7 +229,7 @@ Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-nat
 > [!Note]
 > Changelog commits must be submitted to the `main` branch.
 
-In most cases the **Publish Release** action will generate a changelog PR such as `changelog/v0.81.0-rc.0` for you.
+Starting from React Native 0.80, the **Publish Release** action will generate a changelog PR such as `changelog/v0.80.0-rc.0` for you.
 
 Reformat and stylize the modified `CHANGELOG.md` on that branch based on previous changelog PRs, then get the PR approved, and merge it to `main`.
 
