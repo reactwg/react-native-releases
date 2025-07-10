@@ -150,7 +150,13 @@ export NEW_VERSION="v0.76.0-rc.3" # Should be prefixed with a 'v'
 export GITHUB_TOKEN=<your token>
 ```
 
-Verify the `template` with the [version compatible with the release](https://github.com/react-native-community/cli#compatibility). Notice that you might need to use the "`next`" version if `cli` released an pre-release to support the current version.
+Verify the `template` with the [version compatible with the release](https://github.com/react-native-community/cli#compatibility).
+
+> [!Note]
+> For a new release, you might need to use a pre-released version. (e.g **`20.0.0-alpha.0`**).
+> 
+> `npm view @react-native-community/cli versions` will print all available versions.
+
 ```
 export VERSION=${NEW_VERSION#v}
 export REACT_NATIVE_COMMUNITY_CLI_VERSION="^20.0.0"
