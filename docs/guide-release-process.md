@@ -231,7 +231,10 @@ Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-nat
 
 Starting from React Native 0.80, the **Publish Release** action will generate a changelog PR such as `changelog/v0.80.0-rc.0` for you.
 
-Reformat and stylize the modified `CHANGELOG.md` on that branch based on previous changelog PRs, then get the PR approved, and merge it to `main`.
+Reformat and re-style the modified `CHANGELOG.md` on that branch based on previous changelog PRs. Then, a Meta engineer should: 
+1. import the PR in the Meta internal system, 
+2. get the resulting diff approved, 
+3. land the diff into `main`.
 
 If it fails, you can generate the updated changelog manually and then open a PR from `main` manually after similar reformatting:
 
