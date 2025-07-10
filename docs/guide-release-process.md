@@ -222,13 +222,22 @@ curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz
 ```
 
-### Step 7: Generate the changelog PR
+### Step 7: Update CHANGELOG.md
 
 Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-native/blob/main/CHANGELOG.md) file at the `react-native` repo root.
 
 > [!Note]
 > Changelog commits must be submitted to the `main` branch.
 
+In most cases the **Publish Release** action will generate a changelog PR such as `changelog/v0.81.0-rc.0` for you.
+
+Reformat and stylize the modified `CHANGELOG.md` on that branch based on previous changelog PRs, then get the PR approved, and merge it to `main`.
+
+If it fails, you can generate the updated changelog manually and then open a PR from `main` manually after similar reformatting:
+
+<details>
+  <summary>Manually Generate Changelog Updates</summary>
+ 
 ```bash
 # Check out `main` branch
 git switch main
@@ -239,7 +248,7 @@ git pull
 
 BASE_VERSION=$(git tag -l --sort=-v:refname | grep -E '^v0\.' | head -n2 | tail -n1)
 
-# Generate the changelog PR
+# Generate the changelog
 npx @rnx-kit/rn-changelog-generator \
   --base $BASE_VERSION \
   --compare $NEW_VERSION \
@@ -247,9 +256,7 @@ npx @rnx-kit/rn-changelog-generator \
   --changelog ./CHANGELOG.md \
   --token $GITHUB_TOKEN
 ```
-And then move to the generated branch for that version (e.g. `changelog/v0.81.0-rc.0`)
-
-You'll likely need to reformat the generated `CHANGELOG.md` on that branch and reorder the heading to keep the latest release ordering.
+</details>
 
 ### Step 8: Create the GitHub Release
 
