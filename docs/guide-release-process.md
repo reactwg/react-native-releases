@@ -326,12 +326,12 @@ git switch <release-branch>
 # Make sure to update the release branch
 git pull
 
-# Head to rn-tester package and update pods
+# Head to rn-tester package and update pods (including parentheses in the second command to run the command in a subshell)
 rm -rf packages/react-native-codegen/lib
 (cd packages/rn-tester && bundle install && bundle exec pod update hermes-engine --no-repo-update)
 
 # Commit only changes to packages/rn-tester/Podfile.lock
-git add ./Podfile.lock
+git add packages/rn-tester/Podfile.lock
 git commit -m "Update Podfile.lock" -m "Changelog: [Internal]"
 git push
 ```
