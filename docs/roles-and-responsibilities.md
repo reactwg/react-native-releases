@@ -119,6 +119,7 @@ If you are joining as a release crew member you'll need the following:
     # In your react-native checkout
     git co 0.78-stable
     yarn
-    yarn test-e2e-local -p iOS -t RNTester --hermes true -c <YOUR_GITHUB_TOKEN>
+    # On RN < 0.81- `yarn test-e2e-local -p iOS -t RNTester --hermes true -c <YOUR_GITHUB_TOKEN>`
+    yarn test-release-local -p iOS -t RNTester --hermes true -c <YOUR_GITHUB_TOKEN>
     ```
     - See [release testing](./guide-release-testing.md) for more information.
