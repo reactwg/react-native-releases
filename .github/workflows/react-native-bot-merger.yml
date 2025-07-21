@@ -24,7 +24,9 @@ jobs:
               'cipolleschi',
               'fabriziocucci',
               'robhogan',
-              'hezi'
+              'hezi',
+              'motiz88',
+              'vzaidman'
             ];
 
             const commentBody = context.payload.comment.body;
