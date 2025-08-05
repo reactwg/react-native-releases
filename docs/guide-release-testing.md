@@ -99,37 +99,50 @@ Here are the 4 dimensions we cover in manual testing:
 **1. RNTester + iOS:**
 
 ```bash
+# 1. Open an iOS Emulator
+# 2. Kill Metro
+# 3. Remove any existing RNTester:
+xcrun simctl uninstall booted com.meta.RNTester.localDevelopment
+# 4. Build, install, and run RNTester + Metro:
 yarn test-release-local -t "RNTester" -p "iOS" -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS simulator
+# 5. Verify tests "what to test"
 ```
 
 **2. RNTester + Android:**
 
 ```bash
+# 1. Open an Android Emulator
+# 2. Kill Metro
+# 3. Remove any existing RNTester:
+adb uninstall com.facebook.react.uiapp
+# 4. Build, install, and run RNTester + Metro:
 yarn test-release-local -t "RNTester" -p "Android" -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
+# 5. Verify tests "what to test"
 ```
 
 **3. RNTestProject + iOS:**
 
 ```bash
+
+# 1. Open an iOS Emulator
+# 2. Kill Metro
+# 3. Remove any existing RNTestProject:
+xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject
+# 4. Build, install, and run RNTestProject + Metro:
 yarn test-release-local -t "RNTestProject" -p "iOS" -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS simulator
+# 5. Verify tests "what to test"
 ```
 
 **4. RNTestProject + Android**
 
 ```bash
+# 1. Open an Android Emulator
+# 2. Kill Metro
+# 3. Remove any existing RNTestProject:
+adb uninstall com.rntestproject
+# 4. Build, install, and run RNTestProject + Metro:
 yarn test-release-local -t "RNTestProject" -p "Android" -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-adb uninstall com.rntestproject # delete RNTestProject from your Android emulator
+# 5. Verify tests "what to test"
 ```
 
 ## Testing Sequence (RN <= 0.78)
