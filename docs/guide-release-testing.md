@@ -238,7 +238,9 @@ adb uninstall com.rntestproject # delete RNTestProject from your Android emulato
 
 ## What to test?
 
-- Depending on the nature of what is being picked in, you may only test very specific workflows.
+[Spreadsheet of test cases](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) is the up tp date list of what tp test.
+
+However, depending on the nature of what is being picked in, you may only test very specific workflows:
 - At Meta, we have internal e2e tests but they don't capture interactive capabilities or developer experience workflows.
 - General rule of thumb is to prioritize
   - debugging
