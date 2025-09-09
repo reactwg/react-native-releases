@@ -26,7 +26,8 @@ jobs:
               'robhogan',
               'hezi',
               'motiz88',
-              'vzaidman'
+              'vzaidman',
+              'gabrieldonadel'
             ];
 
             const commentBody = context.payload.comment.body;
