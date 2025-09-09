@@ -253,7 +253,7 @@ If it fails, or for (**`< 0.80`**), manually generate the updated changelog on `
 git switch main
 
 # Pull new tags
-git fetch --all --tags
+git fetch --all --tags --force
 git pull
 
 BASE_VERSION=$(git tag -l --sort=-v:refname | grep -E '^v0\.' | head -n2 | tail -n1)
