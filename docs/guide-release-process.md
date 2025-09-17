@@ -25,7 +25,7 @@ These steps apply when making a patch release or an incremental release candidat
 * ⌛ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
 * ⌛ Verify Maven assets → https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.78.0-rc.0
 * ⌛ Generate changelog PR → https://github.com/facebook/react-native/pull/48685
-* ⌛ Create GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
+* ⌛ Publish GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
   * ⌛ Verify DevTools Github Release Assets → https://github.com/facebook/react-native/actions/runs/17794492301
 * ⌛ Communicate release to `releases-coordination` on Discord
 * ⌛ Communicate release to `React Native Releases` on Workplace (Meta internal)
