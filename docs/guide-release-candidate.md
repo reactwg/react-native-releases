@@ -160,5 +160,3 @@ So, for example, if the table contains:
 - Head to [react-native-website](https://github.com/facebook/react-native-website)
 - Make sure all relevant PRs for release candidate are merged
 - Cut a new version of the website, [instructions](https://github.com/facebook/react-native-website#cutting-a-new-version)
-
-### 5. Coordinate a release retrospective date & next release crew
