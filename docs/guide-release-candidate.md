@@ -125,12 +125,16 @@ As well, there is follow-up in terms of writing a blog post and communicating to
 
 ### 1. Release a stable version following [release process](./guide-release-process.md)
 
-### 2. Update the Support policy
+### 2. Update the Support policy on website and working group.
 
-Update the [support policy](./support.md#what-versions-are-currently-supported) for the new version.
+You need to update the **support policy** and releases table for the upcoming version of React Native.
 
-- The first line should contain the `Next Release` and the status must be `Not Started`
-- The other lines must be updated by bumping the versions in the first column by 1 minor
+The files to update are:
+
+- The [release table](https://github.com/facebook/react-native-website/edit/main/website/src/components/releases/_releases-table.md) on the React Native website.
+- The [support policy](./support.md#what-versions-are-currently-supported) in the releases working group.
+
+Make sure to update all the lines by bumping the versions in the first column by 1 minor
 
 So, for example, if the table contains:
 
