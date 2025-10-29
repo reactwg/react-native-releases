@@ -5,9 +5,21 @@
 
 Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebook/hermes). You can give yourself permission via the Meta Internal OSS dashboard.
 
-## Step 1: Check-out or create the Hermes release branch
+See the guide you need, based on the React native release you are running:
+- [React Native >= 0.83](#for-react-native-0.83)
+- [React Native < 0.82](#for-react-native-0.82)
 
-### If you are cutting a release candidate
+## For React Native >= 0.83
+
+Starting from React Native 0.83, we need to have two tags for Hermes:
+- A tag for the (legacy) Hermes
+- A tag for HermesV1
+
+We decoupled the build of Hermes from the React Native repository and we can now consume Hermes binaries that are produced in the Hermes repository
+
+### Step 1: Check-out or create the (Legacy) Hermes release branch
+
+#### If you are cutting a release candidate
 Create a Hermes release branch of the form `rn/<major>.<minor>-stable` from latest `main`.
 
 Make sure your branch is pushed to the remote.
@@ -20,14 +32,9 @@ git checkout -b rn/0.76-stable
 git push origin HEAD
 ```
 
-### For stable patch releases
+### Step 2: Cherry-pick
 
-Check out the Hermes release branch for your minor. It should be of the form `rn/<major>.<minor>-stable`.
-
-> [!Tip]
-> If one doesn't exist and you are not releasing a release candidate, use the [latest tag](https://github.com/facebook/hermes/tags) for your minor. Check out that tag, and create the branch of the form `rn/<major>.<minor>-stable`. We should be creating these during release candidate cuts.
-
-## Step 2: Cherry-pick
+#### For (Legacy) Hermes
 
 > [!Important]
 > If you cutting a release candidate, skip this step
@@ -36,7 +43,83 @@ Pick the relevant commits onto that branch. The pick requests should be from `ma
 
 Push the picks to the remote branch.
 
-## Step 3: Publish Tag
+#### For HermesV1
+
+> [!Important]
+> If you cutting a release candidate, skip this step
+
+1. Checkout the `250829098.0.0-stable` branch.
+2. Pick the relevant commits onto that branch. The pick requests should be from `static_h` and no other branch on Hermes.
+3. Push the picks to the remote branch.
+
+> [!Important]
+> If you cherry picked something, you need to bump the patch version of hermes, as shown in [this commit](https://github.com/facebook/hermes/commit/ddd708a85b164d1841c024973d0f6d3fad60a4c2)
+> 1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
+> 2. Bump the patch number by 1
+> 3. Commit and push.
+
+### Step 3: Publish Tag
+
+This step should be automatic. When a new commit is pushed, we should have a new tag in the Hermes repo.
+
+If that's not it, navigate to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) and runthe workflow twice:
+
+#### For (Legacy) Hermes
+
+1. Set the branch to the release branch (e.g.: rn/0.83-stable)
+2. Set the release type as `Release`
+3. Set the hermes version to follow this pattern: `hermes-<date as YYYY-mm-DD>-RNv<version-of-react-native>`. For example: `hermes-2025-11-03-RNv0.83.0`. Do not add he prerelease tag
+
+#### For Hermes V1
+
+1. Set the branch to the Hermes V1 release branch: `250829098.0.0-stable`
+2. Set the release type as `Release`
+3. Set the hermes version to follow this pattern: `hermesV1-<date as YYYY-mm-DD>-RNv<version-of-react-native>`. For example: `hermesV1-2025-11-03-RNv0.83.0`. Do not add he prerelease tag
+
+### Step 4: Bump the Hermes version on the React Native release branch
+
+Using the newly generated Hermes tag run the following script on the React Native release branch:
+
+```bash
+# Replace <the_hermes_tag> with the tag that will look like 'hermes-2022-07-20-RNv0.70.0-bc97c5399e0789c0a323f8e1431986e207a9e8ba'
+./packages/react-native/scripts/hermes/bump-hermes-version.js -t <the_hermes_tag> -s <the_hermes_v1_tag> -h <the_hermes_version> -v <the_hermes_v1_version>
+```
+
+An example of the invocation is:
+```
+./packages/react-native/scripts/hermes/bump-hermes-version.js -t hermes-2025-11-03-RNv0.83.0 -s hermesV1-2025-11-03-RNv0.83.0 -h 250829098.0.2 -v 250829098.0.2
+```
+
+Add and commit the extra file that got created at packages/react-native/sdks/hermes/.hermesversion. Now you can continue with the rest of your React Native release.
+
+```
+git add packages/react-native/sdks/.hermesvesion && git commit -m "Bump hermes version"
+```
+
+---
+
+## For React Native < 0.82
+
+### Step 1: Check-out the Hermes release branch
+
+Check out the Hermes release branch for your minor. It should be of the form `rn/<major>.<minor>-stable`.
+
+> [!Tip]
+> If one doesn't exist and you are not releasing a release candidate, use the [latest tag](https://github.com/facebook/hermes/tags) for your minor. Check out that tag, and create the branch of the form `rn/<major>.<minor>-stable`. We should be creating these during release candidate cuts.
+
+### Step 2: Cherry-pick
+
+> [!Important]
+> If you cutting a release candidate, skip this step
+
+Pick the relevant commits onto that branch. The pick requests should be from `main` and no other branch on Hermes.
+
+Push the picks to the remote branch.
+
+### Step 3: Publish Tag
+
+> [!Note]
+> This has probably changed. We need to restore the legacy behavior for versions < 0.82
 
 Head to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) in the Hermes repo.
 
