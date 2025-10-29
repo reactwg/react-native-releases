@@ -84,19 +84,17 @@ From the `250829098.0.0-stable` branch
 
 ### Step 4: Publish Tag
 
-Navigate to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) and run the workflow twice:
+Navigate to the [RN Build Static Hermes](https://github.com/facebook/hermes/actions/workflows/rn-build-hermes.yml) and run the workflow twice:
 
 #### For (Legacy) Hermes
 
 1. Set the branch to the release branch (e.g.: rn/0.83-stable)
 2. Set the release type as `Release`
-3. Set the hermes version specified in the `package.json`. For example, if in the step 3 we set the version `0.14.0`, then specify `0.14.0`. Do not add the prerelease tag.
 
 #### For Hermes V1
 
 1. Set the branch to the Hermes V1 release branch: `250829098.0.0-stable`
 2. Set the release type as `Release`
-3. Set the hermes version specified in the `package.json`. For example, if in the step 3 we set the version `250829098.0.2`, then specify: `250829098.0.2`. Do not add the prerelease tag
 
 ### Step 5: Bump the Hermes version on the React Native release branch
 
