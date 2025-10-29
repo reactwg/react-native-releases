@@ -6,8 +6,8 @@
 Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebook/hermes). You can give yourself permission via the Meta Internal OSS dashboard.
 
 See the guide you need, based on the React native release you are running:
-- [React Native >= 0.83](#for-react-native--0.83)
-- [React Native < 0.82](#for-react-native--0.82)
+- [React Native >= 0.83](#for-react-native--083)
+- [React Native < 0.82](#for-react-native--082)
 
 ## For React Native >= 0.83
 
