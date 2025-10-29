@@ -112,6 +112,10 @@ An example of the invocation is:
 ./packages/react-native/scripts/hermes/bump-hermes-version.js -t v0.14.0 -s v250829098.0.2
 ```
 
+> [!Note]
+> The script also support the `-h` parameter to specify the legacy Hermes version and the `-v` parameter to specify the Hermes V1 version.
+> When not passed, the script will check the latest version of hermes published on NPM and will prompt for confirmation.
+
 Add and commit the extra files that got created at:
 - packages/react-native/sdks/.hermesversion
 - packages/react-native/sdks/.hermesV1version
