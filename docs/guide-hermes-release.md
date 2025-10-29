@@ -39,9 +39,8 @@ git push origin HEAD
 > [!Important]
 > If you cutting a release candidate, skip this step
 
-Pick the relevant commits onto that branch. The pick requests should be from `main` and no other branch on Hermes.
-
-Push the picks to the remote branch.
+1. Pick the relevant commits onto that branch. The pick requests should be from `main` and no other branch on Hermes.
+2. Push the picks to the remote branch.
 
 #### For HermesV1
 
@@ -58,42 +57,72 @@ Push the picks to the remote branch.
 > 2. Bump the patch number by 1
 > 3. Commit and push.
 
-### Step 3: Publish Tag
+### Step 3: Bump hermes-compiler versions
 
-This step should be automatic. When a new commit is pushed, we should have a new tag in the Hermes repo.
+> [!Important]
+> This step is required only if
+> - we are cutting the release candidate
+> _or_
+> - we cherry-picked something in one of the branches
 
-If that's not it, navigate to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) and runthe workflow twice:
+Hermes is now publishing the [`hermes-compiler`](https://www.npmjs.com/package/hermes-compiler) package on NPM to release the hermes-compiler as a seprate npm package.
+You have to update the versions for both Legacy Hermes and Hermes V1.
+
+#### For Legacy Hermes
+
+From the release branch (e.g.: `rn/0.83.0-stable`):
+1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
+2. Bump the **minor** number by 1
+3. Commit and push.
+
+#### For Hermes V1
+
+From the `250829098.0.0-stable` branch
+1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
+2. Bump the **patch** number by 1
+3. Commit and push.
+
+### Step 4: Publish Tag
+
+Navigate to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) and run the workflow twice:
 
 #### For (Legacy) Hermes
 
 1. Set the branch to the release branch (e.g.: rn/0.83-stable)
 2. Set the release type as `Release`
-3. Set the hermes version to follow this pattern: `hermes-<date as YYYY-mm-DD>-RNv<version-of-react-native>`. For example: `hermes-2025-11-03-RNv0.83.0`. Do not add he prerelease tag
+3. Set the hermes version specified in the `package.json`. For example, if in the step 3 we set the version `0.14.0`, then specify `0.14.0`. Do not add the prerelease tag.
 
 #### For Hermes V1
 
 1. Set the branch to the Hermes V1 release branch: `250829098.0.0-stable`
 2. Set the release type as `Release`
-3. Set the hermes version to follow this pattern: `hermesV1-<date as YYYY-mm-DD>-RNv<version-of-react-native>`. For example: `hermesV1-2025-11-03-RNv0.83.0`. Do not add he prerelease tag
+3. Set the hermes version specified in the `package.json`. For example, if in the step 3 we set the version `250829098.0.2`, then specify: `250829098.0.2`. Do not add the prerelease tag
 
-### Step 4: Bump the Hermes version on the React Native release branch
+### Step 5: Bump the Hermes version on the React Native release branch
 
 Using the newly generated Hermes tag run the following script on the React Native release branch:
 
 ```bash
 # Replace <the_hermes_tag> with the tag that will look like 'hermes-2022-07-20-RNv0.70.0-bc97c5399e0789c0a323f8e1431986e207a9e8ba'
-./packages/react-native/scripts/hermes/bump-hermes-version.js -t <the_hermes_tag> -s <the_hermes_v1_tag> -h <the_hermes_version> -v <the_hermes_v1_version>
+./packages/react-native/scripts/hermes/bump-hermes-version.js -t <the_hermes_tag> -s <the_hermes_v1_tag>
 ```
 
 An example of the invocation is:
 ```
-./packages/react-native/scripts/hermes/bump-hermes-version.js -t hermes-2025-11-03-RNv0.83.0 -s hermesV1-2025-11-03-RNv0.83.0 -h 250829098.0.2 -v 250829098.0.2
+./packages/react-native/scripts/hermes/bump-hermes-version.js -t v0.14.0 -s v250829098.0.2
 ```
 
-Add and commit the extra file that got created at packages/react-native/sdks/hermes/.hermesversion. Now you can continue with the rest of your React Native release.
+Add and commit the extra files that got created at:
+- packages/react-native/sdks/.hermesversion
+- packages/react-native/sdks/.hermesV1version
+and updated at:
+- packages/react-native/sdks/hermes-engine/version.properties
+
+Now you can continue with the rest of your React Native release.
 
 ```
-git add packages/react-native/sdks/.hermesvesion && git commit -m "Bump hermes version"
+git add packages/react-native/sdks/.hermesvesion packages/react-native/sdks/.hermesv1vesion packages/react-native/sdks/hermes-engine/version.properties
+git commit -m "Bump hermes version"
 ```
 
 ---
@@ -118,10 +147,7 @@ Push the picks to the remote branch.
 
 ### Step 3: Publish Tag
 
-> [!Note]
-> This has probably changed. We need to restore the legacy behavior for versions < 0.82
-
-Head to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag.yml) in the Hermes repo.
+Head to the [Publish Tag workflow](https://github.com/facebook/hermes/actions/workflows/create-tag-legacy.yml) in the Hermes repo.
 
 Click the "Run Workflow" button. Run the workflow from `main`, input the React Native version you are releasing (e.g. 0.82.0, 0.82.1, etc), and the SHA of the head of your Hermes release branch.
 
@@ -141,7 +167,7 @@ Using the newly generated Hermes tag run the following script on the React Nativ
 ./packages/react-native/scripts/hermes/bump-hermes-version.js -t <the_hermes_tag>
 ```
 
-Add and commit the extra file that got created at packages/react-native/sdks/hermes/.hermesversion. Now you can continue with the rest of your React Native release.
+Add and commit the extra file that got created at `packages/react-native/sdks/hermes/.hermesversion`. Now you can continue with the rest of your React Native release.
 
 ```
 git add packages/react-native/sdks/.hermesvesion && git commit -m "Bump hermes version"
