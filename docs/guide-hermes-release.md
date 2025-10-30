@@ -73,9 +73,16 @@ From the release branch (e.g.: `rn/0.83.0-stable`):
 2. Bump the **patch** number by 1
 3. Commit and push.
 
-### Step 4: Publish Tag
+### Step 4: Build Hermes and Publish Tag
 
-Navigate to the [RN Build Static Hermes](https://github.com/facebook/hermes/actions/workflows/rn-build-hermes.yml) and run the workflow twice:
+Navigate to the [RN Build Hermes](https://github.com/facebook/hermes/actions/workflows/rn-build-hermes.yml) and run the workflow twice.
+This workflow:
+- builds the Hermes artifacts;
+- publishes them on maven;
+- publishes the hermes-compiler to NPM;
+- publish the tag on GitHub
+
+The tag will be created as last step, and we need to wait for the whole process to end before React Native can start the Release.
 
 #### For (Legacy) Hermes
 
