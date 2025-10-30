@@ -61,23 +61,14 @@ git push origin HEAD
 
 > [!Important]
 > This step is required only if
-> - we are cutting the release candidate
-> _or_
 > - we cherry-picked something in one of the branches
 
 Hermes is now publishing the [`hermes-compiler`](https://www.npmjs.com/package/hermes-compiler) package on NPM to release the hermes-compiler as a seprate npm package.
-You have to update the versions for both Legacy Hermes and Hermes V1.
+You have to update the versions for both Legacy Hermes.
 
 #### For Legacy Hermes
 
 From the release branch (e.g.: `rn/0.83.0-stable`):
-1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
-2. Bump the **minor** number by 1
-3. Commit and push.
-
-#### For Hermes V1
-
-From the `250829098.0.0-stable` branch
 1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
 2. Bump the **patch** number by 1
 3. Commit and push.
@@ -119,6 +110,7 @@ Add and commit the extra files that got created at:
 - packages/react-native/sdks/.hermesV1version
 and updated at:
 - packages/react-native/sdks/hermes-engine/version.properties
+- packages/react-native/package.json
 
 Now you can continue with the rest of your React Native release.
 
@@ -126,6 +118,29 @@ Now you can continue with the rest of your React Native release.
 git add packages/react-native/sdks/.hermesvesion packages/react-native/sdks/.hermesv1vesion packages/react-native/sdks/hermes-engine/version.properties
 git commit -m "Bump hermes version"
 ```
+
+### Step 5: [Only for Branch Cut] Bump version on `main` and Hermes v1 release branch
+
+The `main` branch and the `250829098.0.0-stable` should always track the next version that we are going to release.
+
+After the build started and the tag is generated, bump the hermes-compiler versions on those branches:
+
+#### For Legacy Hermes
+
+From the `main` branch:
+1. Create a separate branch `<username>/bump-hermes-compiler-to-0.X.0` (replace `<username>` and `X` with your gh username and the next minor version of Hermes)
+1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
+2. Bump the **minor** number by 1
+3. Commit and push.
+4. Open a PR on the Hermes repository
+5. Import and land it.
+
+#### For Hermes V1
+
+From the `250829098.0.0-stable` branch
+1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
+2. Bump the **patch** number by 1
+3. Commit and push.
 
 ---
 
