@@ -300,8 +300,20 @@ $(git show --patch | grep '^+[^+]' | sed 's/^\+//')
 
 <!-- TODO Update these links for your release version -->
 Hermes dSYMS:
-- [Debug](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz)
-- [Release](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz)
+- [Debug](https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/$HERMES_VERSION/hermes-ios-$HERMES_VERSION-hermes-framework-dSYM-debug.tar.gz)
+- [Release](https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/$HERMES_VERSION/hermes-ios-$HERMES_VERSION-hermes-framework-dSYM-release.tar.gz)
+
+Hermes V1 dSYMS:
+- [Debug](https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/$HERMES_V1_VERSION/hermes-ios-$HERMES_V1_VERSION-hermes-framework-dSYM-debug.tar.gz)
+- [Release](https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/$HERMES_V1_VERSION/hermes-ios-$HERMES_V1_VERSION-hermes-framework-dSYM-release.tar.gz)
+
+ReactNativeDependencies dSYMs:
+- [Debug](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-dependencies-dSYM-debug.tar.gz)
+- [Release](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-dependencies-dSYM-release.tar.gz)
+
+ReactNative Core dSYMs:
+- [Debug](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-core-debug.tar.gz)
+- [Release](https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-core-release.tar.gz)
 
 ---
 
