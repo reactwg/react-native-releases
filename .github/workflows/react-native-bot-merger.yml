@@ -27,7 +27,8 @@ jobs:
               'hezi',
               'motiz88',
               'vzaidman',
-              'gabrieldonadel'
+              'gabrieldonadel',
+              'huntie',
             ];
 
             const commentBody = context.payload.comment.body;
