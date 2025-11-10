@@ -51,7 +51,7 @@ git push origin HEAD
 2. Pick the relevant commits onto that branch. The pick requests should be from `static_h` and no other branch on Hermes.
 3. Push the picks to the remote branch.
 
-### Step 34: Build Hermes and Publish Tag
+### Step 3: Build Hermes and Publish Tag
 
 Navigate to the [RN Build Hermes](https://github.com/facebook/hermes/actions/workflows/rn-build-hermes.yml) and run the workflow twice.
 This workflow:
