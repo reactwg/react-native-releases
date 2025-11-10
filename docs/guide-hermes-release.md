@@ -51,29 +51,7 @@ git push origin HEAD
 2. Pick the relevant commits onto that branch. The pick requests should be from `static_h` and no other branch on Hermes.
 3. Push the picks to the remote branch.
 
-> [!Important]
-> If you cherry picked something, you need to bump the patch version of hermes, as shown in [this commit](https://github.com/facebook/hermes/commit/ddd708a85b164d1841c024973d0f6d3fad60a4c2)
-> 1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
-> 2. Bump the patch number by 1
-> 3. Commit and push.
-
-### Step 3: Bump hermes-compiler versions
-
-> [!Important]
-> This step is required only if
-> - we cherry-picked something in one of the branches
-
-Hermes is now publishing the [`hermes-compiler`](https://www.npmjs.com/package/hermes-compiler) package on NPM to release the hermes-compiler as a seprate npm package.
-You have to update the versions for both Legacy Hermes.
-
-#### For Legacy Hermes
-
-From the release branch (e.g.: `rn/0.83.0-stable`):
-1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
-2. Bump the **patch** number by 1
-3. Commit and push.
-
-### Step 4: Build Hermes and Publish Tag
+### Step 34: Build Hermes and Publish Tag
 
 Navigate to the [RN Build Hermes](https://github.com/facebook/hermes/actions/workflows/rn-build-hermes.yml) and run the workflow twice.
 This workflow:
@@ -126,7 +104,7 @@ git add packages/react-native/sdks/.hermesvesion packages/react-native/sdks/.her
 git commit -m "Bump hermes version"
 ```
 
-### Step 5: [Only for Branch Cut] Bump version on `main` and Hermes v1 release branch
+### Step 4: [Only for Branch Cut] Bump version on `main` and Hermes v1 release branch
 
 The `main` branch and the `250829098.0.0-stable` should always track the next version that we are going to release.
 
