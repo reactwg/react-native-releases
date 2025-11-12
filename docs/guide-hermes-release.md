@@ -83,7 +83,7 @@ Using the newly generated Hermes tag run the following script on the React Nativ
 
 An example of the invocation is:
 ```
-./packages/react-native/scripts/hermes/bump-hermes-version.js -t v0.14.0 -s v250829098.0.2
+./packages/react-native/scripts/hermes/bump-hermes-version.js -t hermes-v0.14.0 -s hermes-v250829098.0.2
 ```
 
 > [!Note]
