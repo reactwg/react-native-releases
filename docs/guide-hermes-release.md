@@ -72,7 +72,7 @@ The tag will be created as last step, and we need to wait for the whole process 
 1. Set the branch to the Hermes V1 release branch: `250829098.0.0-stable`
 2. Set the release type as `Release`
 
-### Step 5: Bump the Hermes version on the React Native release branch
+### Step 4: Bump the Hermes version on the React Native release branch
 
 Using the newly generated Hermes tag run the following script on the React Native release branch:
 
@@ -104,7 +104,7 @@ git add packages/react-native/sdks/.hermesvesion packages/react-native/sdks/.her
 git commit -m "Bump hermes version"
 ```
 
-### Step 4: [Only for Branch Cut] Bump version on `main` and Hermes v1 release branch
+### Step 5: [Only for Branch Cut] Bump version on `main` and Hermes v1 release branch
 
 The `main` branch and the `250829098.0.0-stable` should always track the next version that we are going to release.
 
