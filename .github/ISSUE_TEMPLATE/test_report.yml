@@ -27,7 +27,10 @@ body:
     attributes:
       label: Under what system configuration was the test run?
       description: Please provide the host platform + version, as well as the versions of tools such as Xcode. You can easily generate a standardised version of this information by running `npx react-native@<exact-version< info`.
-      placeholder: cd your/project/root && npx react-native@<exact-version> info
+      placeholder: |
+        ```
+        cd your/project/root && npx react-native@<exact-version> info
+        ```
     validations:
       required: false
 
@@ -39,13 +42,9 @@ body:
         Refer to this [spreadsheet](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) for test cases.
 
         - [ ] RNTester + iOS + Hermes
-        - [ ] RNTester + iOS + JSC (only for RN <= 0.78)
         - [ ] RNTester + Android + Hermes
-        - [ ] RNTester + Android + JSC (only for RN <= 0.78)
         - [ ] RNTestProject + iOS + Hermes
-        - [ ] RNTestProject + iOS + JSC (only for RN <= 0.78)
         - [ ] RNTestProject + Android + Hermes
-        - [ ] RNTestProject + Android + JSC (only for RN <= 0.78)
 
         Close this issue if there are no blocking issues.
 
