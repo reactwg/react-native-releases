@@ -1,45 +1,42 @@
 # Release Testing
 
-Release testing is manual testing the release crew does to sanity check that our new releases build and run and don't regress core experiences.
-
 > [!Important]
 > Make sure you have the right access/tokens set up. See [onboarding](./roles-and-responsibilities.md#onboarding-to-release-crew).
 
 > [!Caution]
 > Currently, this flow can only be done on macOS machines.
 
-> [!Note]
-> In most cases we should have 2 release crew members running release testing, on two separate machines.
+## Setup
 
-## Checkout the version to test
+### Check out + update target release branch
 
-When testing locally, first checkout and pull from the stable branch for the version you wish to test. For example, if testing 0.75.x:
+```
+git checkout 0.83-stable
+git pull
+```
 
-1. `git checkout 0.75-stable`
-2. `git pull`
-
-## Clean up the local state
+### Clean up the local state
 
 When testing locally, we want to ensure that we start from a clean slate to avoid caches polluting our testing.
 
-1. Delete `RNTester` and `RNTestProject` from your Android emulator and iOS simulator if leftover from previous test.
+1. Delete `RNTester` and `RNTestProject` from your Android emulator and iOS simulator if leftover from a previous test.
 2. Remove any temporary files from the `react-native` repo:
 
-   ```bash
+    ```bash
     yarn test-release-local-clean  # On RN < 0.81- `yarn test-e2e-local-clean`
-   ```
+    ```
 
 3. Install dependencies:
 
-   ```bash
-    yarn install
-   ```
+    ```bash
+    yarn
+    ```
 
 ## Generating projects to test
 
 We test on two apps
 
-- `RNTester`, a demonstration app that higlights the APIs and core components of React Native
+- `RNTester`, a demonstration app that highlights the APIs and core components of React Native
 - `RNTestProject`, a project built from the React Native [template](https://github.com/react-native-community/template)
 
 To generate the the right project with the specific configuration desired, you can use the command:
@@ -60,10 +57,6 @@ Followed by the options:
 ```
 
 Using the `-c <your-token>` option is recommended, as the script will download the required artifacts from GitHub, instead of having to build from source reducing the testing time.
-
-> [!Warning]
-> If you are testing versions of React Native that are < 0.75, you need a CircleCI token rather than a GitHub Token.
-> Follow [these instruction](https://circleci.com/docs/managing-api-tokens/) to learn how to create one.
 
 Use [this link](https://github.com/settings/tokens/new?description=React%20Native%20Releases&scopes=repo) to generate a token with the Repo scope. Then you can store it using:
 
@@ -86,13 +79,10 @@ If any of those prerequisites is not met, the script should output a proper erro
 
 If you need to build React Native from source, you can skip the `-c` parameter. By not passing the GitHub token, the script falls back to the previous flow, building everything locally.
 
-## Testing Sequence (RN >= 0.79)
+## Testing Sequence
 
 > [!Tip]
 > Make sure the remote assets are built on your release branch to use the `-c` option (highly recommended)
-
-> [!Note]
-> On React Native **`< 0.81`** `test-release-local` is called `test-e2e-local`
 
 Here are the 4 dimensions we cover in manual testing:
 
@@ -143,97 +133,6 @@ adb uninstall com.rntestproject
 # 4. Build, install, and run RNTestProject + Metro:
 yarn test-release-local -t "RNTestProject" -p "Android" -c $GITHUB_TOKEN
 # 5. Verify tests "what to test"
-```
-
-## Testing Sequence (RN <= 0.78)
-
-> [!Tip]
-> Make sure the remote assets are built on your release branch to use the `-c` option (highly recommended)
-
-<details>
-  <summary>ℹ️ For (<b><code>RN < 0.71</code></b>) ℹ️<br/></summary>
-You need to use the interactive script run you through the different variants below.
-This script will ask you to select which platform and which project you want to test, and then to execute a series of extra steps during the process. Bear in mind, when testing RNTester on Android, you need to start the Android emulator ahead of time or it will fail.
-
-```bash
-./scripts/test-manual-e2e.sh
-```
-
-</details>
-
-
-Here are the 8 dimensions we cover in manual testing:
-
-**1. RNTester + iOS + Hermes:**
-
-```bash
-yarn test-e2e-local -t "RNTester" -p "iOS" -h true -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS simulator
-```
-
-**2. RNTester + iOS + JSC:**
-
-```bash
-yarn test-e2e-local -t "RNTester" -p "iOS" -h false -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-xcrun simctl uninstall booted com.meta.RNTester.localDevelopment # delete RNTester from your iOS simulator
-```
-
-**3. RNTester + Android + Hermes:**
-
-```bash
-yarn test-e2e-local -t "RNTester" -p "Android" -h true -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
-```
-
-**4. RNTester + Android + JSC:**
-
-```bash
-yarn test-e2e-local -t "RNTester" -p "Android" -h false -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-adb uninstall com.facebook.react.uiapp # delete RNTester from your Android emulator
-```
-
-**5. RNTestProject + iOS + Hermes:**
-
-```bash
-yarn test-e2e-local -t "RNTestProject" -p "iOS" -h true -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS simulator
-```
-
-**6. RNTestProject + iOS + JSC:**
-
-```bash
-yarn test-e2e-local -t "RNTestProject" -p "iOS" -h false -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject # delete RNTestProject from your iOS simulator
-```
-
-**7. RNTestProject + Android + Hermes:**
-
-```bash
-yarn test-e2e-local -t "RNTestProject" -p "Android" -h true -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-adb uninstall com.rntestproject # delete RNTestProject from your Android emulator
-```
-
-**8. RNTestProject + Android + JSC:**
-
-```bash
-yarn test-e2e-local -t "RNTestProject" -p "Android" -h false -c $GITHUB_TOKEN
-# verify tests "what to test"
-# kill metro
-adb uninstall com.rntestproject # delete RNTestProject from your Android emulator
 ```
 
 ## What to test?
