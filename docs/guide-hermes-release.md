@@ -127,6 +127,11 @@ From the `250829098.0.0-stable` branch
 2. Bump the **patch** number by 1
 3. Commit and push.
 
+### Step 6: [Only for Branch Cut] Bump hermes versions on React Native `main` branch
+1. Go to the react-native repository
+2. Update the [`packages/react-native/sdks/hermes-engine/versions.properties` file]([url](https://github.com/facebook/react-native/blob/main/packages/react-native/sdks/hermes-engine/version.properties)) by bumping the `HERMES_V1_VERSION_NAME`
+This is an [example PR]([url](https://github.com/facebook/react-native/pull/55042).
+
 ---
 
 ## For React Native < 0.82
