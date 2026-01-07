@@ -21,12 +21,12 @@ These steps apply when making a patch release or an incremental release candidat
 * ⌛ (ONLY for RC0,1,4,stable) Test release → https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md
   * ⌛ <Tester Name>: https://github.com/reactwg/react-native-releases/issues/
 * ⌛ Publish release job → https://github.com/facebook/react-native/actions/runs/12784528348
-* ⌛ Verify template: npx @react-native-community/cli init + build for iOS + Android
-* ⌛ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0-rc.6&to=0.78.0-rc.0
+* ⌛ Verify template: `npx @react-native-community/cli init` + `build` for iOS + Android
+* ⌛ Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=0.77.0&to=0.78.0-rc.0
 * ⌛ Verify Maven assets → https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.78.0-rc.0
 * ⌛ Generate changelog PR → https://github.com/facebook/react-native/pull/48685
 * ⌛ Create GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
-* ⌛ Communicate release to `releases-coordination` on Discord
+* ⌛ Communicate release to `#releases-coordination` on Discord
 * ⌛ Communicate release to `React Native Releases` on Workplace (Meta internal)
 * ⌛ Update `Podfile.lock`
 * ⌛ Update GitHub project
