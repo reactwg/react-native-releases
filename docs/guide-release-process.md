@@ -28,7 +28,6 @@ These steps apply when making a patch release or an incremental release candidat
 * ⌛ Create GitHub release → https://github.com/facebook/react-native/releases/tag/v0.78.0-rc.0
 * ⌛ Communicate release to `#releases-coordination` on Discord
 * ⌛ Communicate release to `React Native Releases` on Workplace (Meta internal)
-* ⌛ Update `Podfile.lock`
 * ⌛ Update GitHub project
 ```
 
