@@ -117,11 +117,11 @@ The workflow requires 4 parameters:
 1. Check the `latest` checkbox, if you are publishing a patch on the [latest version](./glossary.md#latest-version).
 1. The last checkbox is for a dry-run. If you need to run a release, keep it unchecked.
 
-This runs the *Create Release* workflow.  It'll sync package versions ([publish-bumped-packages.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-bumped-packages.yml)), commit and publish a tag ([create-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/create-release.yml)):
+This runs the **Create Release** workflow ([create-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/create-release.yml)).  It'll sync package versions ([publish-bumped-packages.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-bumped-packages.yml)), commit and publish a tag:
 
 <img src="https://github.com/user-attachments/assets/d39492bf-0cc3-40da-befd-d1e81855e328" width="600" />
 
-The new tag will then launch a **Publish Release** ([publish-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-release.yml#L2-L6)) workflow which builds and publishes the `react-native` npm package artifact:
+The new tag will then launch a **Publish Release** workflow ([publish-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-release.yml#L2-L6)) which builds and publishes the `react-native` npm package artifact:
 
 <img src="../assets/release_process_jobs_gha.png" width="600" />
 
