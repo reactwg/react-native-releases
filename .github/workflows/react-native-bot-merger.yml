@@ -29,6 +29,7 @@ jobs:
               'vzaidman',
               'gabrieldonadel',
               'huntie',
+              'chrfalch',
             ];
 
             const commentBody = context.payload.comment.body;
