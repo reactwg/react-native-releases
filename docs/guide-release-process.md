@@ -65,6 +65,9 @@ npx rn-release-info 0.76.5
 git cherry-pick <commit-on-main>
 ```
 
+Alternatively, you can also pick via **react-native-bot** by leaving a comment: 
+`@react-native-bot merge <commit_id> 0.xx-stable`
+
 > [!Warning]
 > For any pick requests or merge requests for Hermes, notify a Meta Release Crew member. They'll need to publish and pick the [Hermes release](./guide-hermes-release.md) into the release branch. Do not proceed past step 3 until the the branch has been updated with the Hermes release.
 
