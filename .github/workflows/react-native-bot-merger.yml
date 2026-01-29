@@ -20,6 +20,7 @@ jobs:
           script: |
             // List of allowed GitHub users to interact with @react-native-bot
             const allowedUsers = [
+              'alanlee2',
               'cortinico',
               'cipolleschi',
               'fabriziocucci',
