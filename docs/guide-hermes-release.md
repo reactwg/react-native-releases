@@ -20,7 +20,7 @@ We decoupled the build of Hermes from the React Native repository and we can now
 ### Step 1: Check-out or create the (Legacy) Hermes release branch
 
 #### If you are cutting a release candidate
-Create a Hermes release branch of the form `rn/<major>.<minor>-stable` from latest `main`.
+Create a Hermes release branch of the form `release-v0.<hermes-minor>` from latest `main`.
 
 Make sure your branch is pushed to the remote.
 
@@ -28,7 +28,7 @@ Make sure your branch is pushed to the remote.
 # Run this in the Hermes repo:
 git checkout main
 git pull origin main
-git checkout -b rn/0.76-stable
+git checkout -b release-v0.14
 git push origin HEAD
 ```
 
@@ -62,9 +62,13 @@ This workflow:
 
 The tag will be created as last step, and we need to wait for the whole process to end before React Native can start the Release.
 
+> [!Important]
+> If you are releasing a patch for legacy Hermes, you also have to bump the patch number [`hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/release-v0.14/npm/hermes-compiler/package.json#L3) file from the `release-v0.XX` branch.
+> If you are releasing a patch for Hermes V1 for the latest version of React Native, you also have to bump the patch number [`hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/250829098.0.0-stable/npm/hermes-compiler/package.json#L3) file from the `250829098.0.0-stable`
+
 #### For (Legacy) Hermes
 
-1. Set the branch to the release branch (e.g.: rn/0.83-stable)
+1. Set the branch to the release branch (e.g.: `release-v0.14`)
 2. Set the release type as `Release`
 
 #### For Hermes V1
