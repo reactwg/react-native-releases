@@ -4,11 +4,11 @@
 
 | Version  | Type                       | Support level |
 | -------- | -------------------------- | ------------- |
-| 0.83.x   | Next version               | Future        |
-| 0.82.x   | Latest stable              | Active        |
-| 0.81.x   | Previous (-1) minor series | Active        |
-| 0.80.x   | Previous (-2) minor series | End of Cycle  |
-| <=0.79.x | Old minor series           | Unsupported   |
+| 0.85.x   | Next version               | Future        |
+| 0.84.x   | Latest stable              | Active        |
+| 0.83.x   | Previous (-1) minor series | Active        |
+| 0.82.x   | Previous (-2) minor series | End of Cycle  |
+| <=0.81.x | Old minor series           | Unsupported   |
 
 ### What level of support can be expected?
 
