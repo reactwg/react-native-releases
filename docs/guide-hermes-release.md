@@ -108,7 +108,7 @@ git add packages/react-native/sdks/.hermesvesion packages/react-native/sdks/.her
 git commit -m "Bump hermes version"
 ```
 
-### Step 5: [Only for Branch Cut] Bump version on `main` and Hermes v1 release branch
+### Step 5: Bump version on `main` and Hermes v1 release branch
 
 The `main` branch and the `250829098.0.0-stable` should always track the next version that we are going to release.
 
