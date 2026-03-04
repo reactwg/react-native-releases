@@ -93,9 +93,13 @@ Here are the 4 dimensions we cover in manual testing:
 # 2. Kill Metro
 # 3. Remove any existing RNTester:
 xcrun simctl uninstall booted com.meta.RNTester.localDevelopment
-# 4. Build, install, and run RNTester + Metro:
+# 4. clean up everything
+yarn test-release-local-clean
+# 5. install dependencies
+yarn
+# 6. Build, install, and run RNTester + Metro:
 yarn test-release-local -t "RNTester" -p "iOS" -c $GITHUB_TOKEN
-# 5. Verify tests "what to test"
+# 7. Verify tests "what to test"
 ```
 
 **2. RNTester + Android:**
@@ -105,22 +109,29 @@ yarn test-release-local -t "RNTester" -p "iOS" -c $GITHUB_TOKEN
 # 2. Kill Metro
 # 3. Remove any existing RNTester:
 adb uninstall com.facebook.react.uiapp
-# 4. Build, install, and run RNTester + Metro:
+# 4. clean up everything
+yarn test-release-local-clean
+# 5. install dependencies
+yarn
+# 6. Build, install, and run RNTester + Metro:
 yarn test-release-local -t "RNTester" -p "Android" -c $GITHUB_TOKEN
-# 5. Verify tests "what to test"
+# 7. Verify tests "what to test"
 ```
 
 **3. RNTestProject + iOS:**
 
 ```bash
-
 # 1. Open an iOS Emulator
 # 2. Kill Metro
 # 3. Remove any existing RNTestProject:
 xcrun simctl uninstall booted org.reactjs.native.example.RNTestProject
-# 4. Build, install, and run RNTestProject + Metro:
+# 4. clean up everything
+yarn test-release-local-clean
+# 5. install dependencies
+yarn
+# 6. Build, install, and run RNTestProject + Metro:
 yarn test-release-local -t "RNTestProject" -p "iOS" -c $GITHUB_TOKEN
-# 5. Verify tests "what to test"
+# 7. Verify tests "what to test"
 ```
 
 **4. RNTestProject + Android**
@@ -130,9 +141,13 @@ yarn test-release-local -t "RNTestProject" -p "iOS" -c $GITHUB_TOKEN
 # 2. Kill Metro
 # 3. Remove any existing RNTestProject:
 adb uninstall com.rntestproject
-# 4. Build, install, and run RNTestProject + Metro:
+# 4. clean up everything
+yarn test-release-local-clean
+# 5. install dependencies
+yarn
+# 6. Build, install and run RNTestProject + Metro:
 yarn test-release-local -t "RNTestProject" -p "Android" -c $GITHUB_TOKEN
-# 5. Verify tests "what to test"
+# 7. Verify tests "what to test"
 ```
 
 ## What to test?
