@@ -227,8 +227,8 @@ Note, this may take a moment to update. Later, we will link to some of these art
 
 ```bash
 export VERSION=${NEW_VERSION#v}
-curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-debug.tar.gz
-curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-hermes-framework-dSYM-release.tar.gz
+curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-core-dSYM-debug.tar.gz
+curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-core-dSYM-release.tar.gz
 ```
 
 ### Step 7: Update CHANGELOG.md
