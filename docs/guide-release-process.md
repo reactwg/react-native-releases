@@ -1,5 +1,5 @@
 
-# Release Process (>= 0.75)
+# Release Process
 
 > [!Note]
 > This documents the steps to releasing a **stable** React Native release.
@@ -97,17 +97,13 @@ This will kick off a Github Action workflow called [Test All](https://github.com
 
 Follow the [Release Testing guide](./guide-release-testing.md). 
 
-* If you're releasing >= 0.79
-  * We should have **1x Release Crew** member testing the release.
-  * Additionally **only** the following releases should be manually tested.
+* We should have **1x Release Crew** member testing the release:
+  * **Only** the following releases should be manually tested.
     * `RC0`
     * `RC1`
     * `RC4` (Golden RC)
   * All the other releases require no manual testing.
-  * You should ensure that the **E2E jobs** on the release branch are green.
-* If you're releasing <= 0.78
-  * We should have **2x Release Crew** members test the release. Coordinate with another Release Crew member to do a second pass.
-  * There may be exceptional cases where we can bypass 2 release tests or only do selective tests, based on circumstances. **Ensure a Meta Release Crew member is aware and approves**.
+* You should ensure that the **E2E jobs** on the release branch are green.
 
 ### Step 5. Create release
 Starting from React Native 0.75, a new release is created using a Github Action workflow called [Create Release](https://github.com/facebook/react-native/actions/workflows/create-release.yml).
