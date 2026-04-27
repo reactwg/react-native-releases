@@ -1,5 +1,5 @@
 
-# Release Process (>= 0.75)
+# Release Process
 
 > [!Note]
 > This documents the steps to releasing a **stable** React Native release.
