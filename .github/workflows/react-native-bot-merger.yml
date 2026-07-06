@@ -30,6 +30,7 @@ jobs:
               'gabrieldonadel',
               'huntie',
               'chrfalch',
+              'zeyap',
             ];
 
             const commentBody = context.payload.comment.body;
