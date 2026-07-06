@@ -8,9 +8,24 @@
 >
 > Follow the dedicated release candidate [guide](./guide-release-candidate.md) for more detail.
 
+> [!TIP]
+> The steps below are automated by the **[`rn-release-automator` CLI](./guide-release-cli.md)** — the recommended way to run a release. Each step leads with the CLI command and keeps the manual instructions in a collapsible **Manual steps** section. For a patch or incremental RC, the two commands you'll use most are:
+>
+> ```sh
+> npx rn-release-automator@latest prepare-release --series 0.85   # cherry-picks + choose next version
+> npx rn-release-automator@latest publish --version 0.85.0-rc.1   # trigger the release
+> ```
+>
+> Always preview mutating commands with `--dry-run` first. See the [Release CLI guide](./guide-release-cli.md) for setup and the full command reference.
+
 ## Release steps
 
-These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).  Here is the template used for 0.78.0-rc.0:
+These steps apply when making a patch release or an incremental release candidate.  Typically we like to keep the *#release-crew* Discord channel up to date with progress.  You're free to do this however you'd like.  One method is it keep a progress message up-to-date (⌛ started, ✅ complete, 🚨 problem).
+
+> [!TIP]
+> The CLI generates this progress template for you — run `npx rn-release-automator@latest communicate --version <version>` (or pick **Communicate** from the menu) and copy the **Release Status Message**.
+
+Here is the template used for 0.78.0-rc.0:
 
 ```md
 # 0.78.0-rc.0
@@ -33,6 +48,13 @@ These steps apply when making a patch release or an incremental release candidat
 
 ### Step 1: Check out release branch locally
 
+> [!TIP]
+> Get an overview of the series (branch, CI, npm, pending picks) first with:
+> ```sh
+> npx rn-release-automator@latest status --series 0.85
+> ```
+> Checking out the branch is a local git operation, so do it yourself as below. `prepare-release` (Step 2) will verify the branch exists before doing anything.
+
 From your local `facebook/react-native` clone, check out the relevant [release branch](./glossary.md#release-branch). Make sure your system is set up with the right [tooling dependencies](./support.md#external-dependencies-supported) for the release. e.g. you may need to switch Node versions.
 
 ```sh
@@ -52,6 +74,25 @@ New changes targeting a given release need to be replicated from `main` onto the
 
 ![CleanShot 2024-12-09 at 11 08 50@2x](https://github.com/user-attachments/assets/5fe54818-230d-4ab6-b6fd-0a576a32008f)
 
+Once the project is up to date, let the CLI analyze the pending pick requests and process them for you. **Preview first with `--dry-run`**, then run it for real:
+
+```sh
+npx rn-release-automator@latest prepare-release --series 0.85 --dry-run
+npx rn-release-automator@latest prepare-release --series 0.85
+```
+
+`prepare-release` will:
+
+- Fetch the latest published version in the series and let you pick the **next version** (next RC, promote to stable, or next patch).
+- Check CI status and list any **unpublished commits** already on the branch.
+- Classify each open [pick request](https://github.com/reactwg/react-native-releases/issues) — e.g. 🟢 *can be bot-merged*, 🟡 *not on main yet*, 🔵 *PR targets the branch*, 🔴 *Hermes / multi-target / complex* — and, for bot-mergeable picks, comment `@react-native-bot merge <sha> <branch>` for you (skipped in dry-run). It can also close pick requests whose PR is already merged.
+
+> [!Warning]
+> For any pick requests or merge requests for Hermes, notify a Meta Release Crew member. They'll need to publish and pick the [Hermes release](./guide-hermes-release.md) into the release branch. Do not proceed past step 3 until the the branch has been updated with the Hermes release. The CLI flags Hermes-related picks as 🔴 and leaves them for manual handling.
+
+<details>
+  <summary><b>Manual steps</b> — cherry-pick without the CLI</summary>
+
 Once the project is up to date, you can pick these locally:
 
 ```bash
@@ -68,8 +109,7 @@ git cherry-pick <commit-on-main>
 Alternatively, you can also pick via **react-native-bot** by leaving a comment: 
 `@react-native-bot merge <commit_id> 0.xx-stable`
 
-> [!Warning]
-> For any pick requests or merge requests for Hermes, notify a Meta Release Crew member. They'll need to publish and pick the [Hermes release](./guide-hermes-release.md) into the release branch. Do not proceed past step 3 until the the branch has been updated with the Hermes release.
+</details>
 
 ### Step 3: Wait for Github Actions artifacts to build
 
@@ -80,6 +120,9 @@ git push
 ```
 
 This will kick off a Github Action workflow called [Test All](https://github.com/facebook/react-native/actions/workflows/test-all.yml) that will build relevant artifacts (Hermes prebuilts, `RNTester.apk`) that will expedite local testing.
+
+> [!TIP]
+> You don't have to watch the Actions tab manually — `prepare-release`, `publish`, and `test-release` all check CI status on the branch before continuing, and `status --series 0.85` shows the latest workflow runs at any time.
 
 [Navigate to Github Actions](https://github.com/facebook/react-native/actions/workflows/test-all.yml) and wait for the `build_npm_package` job to complete successfully (~30min into the `test-all` workflow). If the job fails, try and fix the issue so that the artifacts build.
 
@@ -95,7 +138,13 @@ This will kick off a Github Action workflow called [Test All](https://github.com
 
 ### Step 4: Test the release
 
-Follow the [Release Testing guide](./guide-release-testing.md). 
+Kick off local testing with the CLI, which verifies your repo/branch and CI, cleans the environment, wires up prebuild downloads, and prints the test matrix:
+
+```sh
+npx rn-release-automator@latest test-release --version 0.85.0-rc.0
+```
+
+Then follow the [Release Testing guide](./guide-release-testing.md) for what and how to test.
 
 * We should have **1x Release Crew** member testing the release:
   * **Only** the following releases should be manually tested.
@@ -106,7 +155,21 @@ Follow the [Release Testing guide](./guide-release-testing.md).
 * You should ensure that the **E2E jobs** on the release branch are green.
 
 ### Step 5. Create release
-Starting from React Native 0.75, a new release is created using a Github Action workflow called [Create Release](https://github.com/facebook/react-native/actions/workflows/create-release.yml).
+
+Starting from React Native 0.75, a new release is created using a Github Action workflow called [Create Release](https://github.com/facebook/react-native/actions/workflows/create-release.yml). The CLI runs its pre-flight checks (CI green? pending picks? already published on npm?), triggers that workflow, and monitors it to completion.
+
+> [!CAUTION]
+> This publishes a release. **Always preview with `--dry-run` first** — it runs every read-only check and shows exactly what would be triggered, without triggering anything.
+
+```sh
+npx rn-release-automator@latest publish --version 0.85.0-rc.0 --dry-run
+npx rn-release-automator@latest publish --version 0.85.0-rc.0
+```
+
+The CLI picks the stable branch from the version, sets the `latest` flag automatically for stable (non-RC) releases, and keeps the workflow's dry-run input `false` for a real run. It then triggers the **Create Release** workflow ([create-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/create-release.yml)), which syncs package versions ([publish-bumped-packages.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-bumped-packages.yml)), commits and publishes a tag. The new tag then launches the **Publish Release** workflow ([publish-release.yml](https://github.com/facebook/react-native/blob/main/.github/workflows/publish-release.yml#L2-L6)) which builds and publishes the `react-native` npm package artifact.
+
+<details>
+  <summary><b>Manual steps</b> — trigger the workflow from the GitHub UI</summary>
 
 <img src="../assets/create_release.png" width="600" />
 
@@ -124,9 +187,22 @@ The new tag will then launch a **Publish Release** workflow ([publish-release.ym
 
 <img src="../assets/release_process_jobs_gha.png" width="600" />
 
+</details>
+
 ### Step 6: Verify Release
 
-Once all workflows above are complete, verify the following:
+Once all workflows above are complete, run the interactive verification checklist. It finds the latest published version in the series and walks you through **8 post-release checks** — this single command covers Steps 6 through 9 and Step 11 below (npm, template, upgrade helper, Maven, changelog PR, GitHub release, communicate, and GitHub project):
+
+```sh
+npx rn-release-automator@latest verify-release --series 0.85
+```
+
+For each check the CLI offers to run it for you (e.g. `npm view`, `npx …init`, a Maven `curl`), open the relevant page in your browser, or skip.
+
+<details>
+  <summary><b>Manual steps</b> — verify each item by hand</summary>
+
+Verify the following:
 
 #### Verify npm publishes
 
@@ -227,7 +303,12 @@ curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts
 curl -I https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/$VERSION/react-native-artifacts-$VERSION-reactnative-core-dSYM-release.tar.gz
 ```
 
+</details>
+
 ### Step 7: Update CHANGELOG.md
+
+> [!TIP]
+> `verify-release` (Step 6) includes a step that opens the pending changelog PR for you to review and merge. This step describes what to do with it.
 
 Now we need to update the [`CHANGELOG.md`](https://github.com/facebook/react-native/blob/main/CHANGELOG.md) file at the `react-native` repo root.
 
@@ -267,6 +348,9 @@ npx @rnx-kit/rn-changelog-generator \
 </details>
 
 ### Step 8: Create the GitHub Release
+
+> [!TIP]
+> `verify-release` (Step 6) opens the draft GitHub release for this tag and reminds you whether to mark it as *Latest* (stable) or *Pre-release* (RC). Use `communicate --version <version>` to generate a release body template.
 
 > [!Note]
 > For large releases with many changelog changes such as RC0 (e.g. `0.81.0-rc.0`) or Major release (e.g. `0.81.0`) the link to CHANGELOG.md at the bottom of the Github release is enough.
@@ -331,9 +415,20 @@ EOF
 
 ### Step 9: Communicate Release
 
-Create and send a message with the template below in the Core Contributors Discord `#release-coordination` channel.
+Generate the announcement templates with the CLI:
 
-Get a Meta engineer to send that same message in the `React Native Releases` Workplace group.
+```sh
+npx rn-release-automator@latest communicate --version 0.81.0-rc.0
+```
+
+This prints ready-to-copy templates: the release **status** tracker, the **Discord** announcement (long and short forms), and the **GitHub release** body. Pass `--format discord-short` (or `discord`, `github`, `status`, `all`) to print just one.
+
+Send the short announcement in the Core Contributors Discord `#release-coordination` channel, and get a Meta engineer to send the same message in the `React Native Releases` Workplace group.
+
+<details>
+  <summary><b>Manual steps</b> — announcement template</summary>
+
+Create and send a message with the template below:
 
 ```
 📢 **0.81.0-rc.0 is out!**
@@ -341,6 +436,8 @@ Get a Meta engineer to send that same message in the `React Native Releases` Wor
 📦 Release tag: https://github.com/facebook/react-native/releases/tag/v0.81.0-rc.0
 📝 Changelog PR: https://github.com/facebook/react-native/pull/52517
 ```
+
+</details>
 
 ### Step 10: Ensure Podfile.lock is updated
 
@@ -378,5 +475,8 @@ git push
 
 
 ### Step 11: Update GitHub Project
+
+> [!TIP]
+> `verify-release` (Step 6) finishes by opening this project for you (it tries to auto-detect the project for the series).
 
 Make sure you've updated the status of completed and ongoing tasks in the relevant [GitHub project](https://github.com/reactwg/react-native-releases/projects?query=is%3Aopen). Unresolved items can be assigned to the following release.

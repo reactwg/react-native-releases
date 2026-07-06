@@ -7,6 +7,21 @@ For every MINOR release, we create a Github Project to manage pick requests.  Yo
 - enable the `auto-add to project` workflow to make sure picks are visible to the correct project version
 - make the project publicly visible
 
+> [!TIP]
+> This is automated by `create-github-project`. It clones an existing project, renames it (`React Native 0.<minor>`), sets the description from the release schedule, makes it public, clears the copied items, and opens the pages where the remaining manual bits (crew access, status, auto-add workflow) are configured.
+>
+> **Preview with `--dry-run` first**, then run it for real:
+>
+> ```sh
+> npx rn-release-automator@latest create-github-project --series 0.85 --dry-run
+> npx rn-release-automator@latest create-github-project --series 0.85
+> ```
+>
+> GitHub Projects need the `project` scope — the CLI offers to run `gh auth refresh -s read:project,project` if it's missing.
+
+<details>
+  <summary><b>Manual steps</b> — set up the project from the GitHub UI</summary>
+
 Navigate to the **reactwg** projects page: https://github.com/orgs/reactwg/projects
 
 ## Copy the current release
@@ -34,3 +49,5 @@ https://github.com/user-attachments/assets/6adca6be-0abc-407d-9efc-26da693c5b3b
 
 ## Set project visibility to **public**
 https://github.com/user-attachments/assets/ad6720e3-24d0-436f-9f53-0a1a7863d61b
+
+</details>

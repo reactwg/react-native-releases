@@ -6,6 +6,18 @@
 > [!Caution]
 > Currently, this flow can only be done on macOS machines.
 
+> [!TIP]
+> The CLI drives the setup for you: it verifies you're on the right repo/branch, checks CI so prebuilds are available, offers to clean the environment, wires up your GitHub token for prebuild downloads, offers to open a new test report, and prints the four test-matrix commands to run.
+>
+> ```sh
+> npx rn-release-automator@latest test-release --version 0.85.0-rc.0
+> ```
+>
+> It only requires manual testing for RC0, RC1, RC4, and stable (and will tell you when testing is optional). Use the sections below (**What to test?** / **How to test?**) for what to exercise. The manual setup steps are collapsed just below.
+
+<details>
+  <summary><b>Manual steps</b> — set up and run the test matrix by hand</summary>
+
 ## Setup
 
 ### Check out + update target release branch
@@ -141,6 +153,8 @@ yarn test-release-local-clean && yarn
 yarn test-release-local -t "RNTestProject" -p "Android" -c $GITHUB_TOKEN
 # 6. Verify tests "what to test"
 ```
+
+</details>
 
 ## What to test?
 

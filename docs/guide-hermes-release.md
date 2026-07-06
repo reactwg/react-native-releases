@@ -3,6 +3,9 @@
 > [!Important]
 > Only Meta release crew should publish Hermes releases. If you are a community releaser that is picking a Hermes pick request, ping a Meta release crew member to publish the Hermes release.
 
+> [!NOTE]
+> Publishing the Hermes tags is a **manual, Meta-only** flow — follow the steps below. The [`rn-release-automator` CLI](./guide-release-cli.md) does not publish Hermes itself, but its `cut-branch` command **guides you through the React-Native-side steps**: it opens this guide at the right moment, then prompts for the new Hermes tag(s) and runs the `bump-hermes-version.js` script + commit + push for you ([Step 4](#step-4-bump-the-hermes-version-on-the-react-native-release-branch)). `prepare-release` also flags any Hermes-related pick requests as 🔴 so they aren't picked automatically.
+
 Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebook/hermes). You can give yourself permission via the Meta Internal OSS dashboard.
 
 See the guide you need, based on the React native release you are running:

@@ -18,6 +18,21 @@ The general stages for handling a release candidate:
 
 ## Cut a Release Candidate
 
+> [!TIP]
+> The whole branch cut is automated by `cut-branch`. Its interactive workflow: verifies your repo state, checks CI on `main`, prompts you to update the external dependencies table, creates the `X.Y-stable` branch (and the matching branch in `react-native-community/template`), notifies the #cli Discord channel, triggers a nightly, walks you through the [Hermes release](./guide-hermes-release.md) and version bump, and prints the follow-ups.
+>
+> **Preview with `--dry-run` first**, then run it for real:
+>
+> ```sh
+> npx rn-release-automator@latest cut-branch --series 0.85 --dry-run
+> npx rn-release-automator@latest cut-branch --series 0.85
+> ```
+>
+> When it finishes, continue with [`create-github-project`](./guide-release-project-setup.md) and [`prepare-release`](./guide-release-process.md#step-2-action-cherry-picks-and-pull-requests). The manual equivalents of each phase are below and in the linked general release process.
+
+<details>
+  <summary><b>Manual steps</b> — cut the branch by hand (steps 0–3)</summary>
+
 ### 0. Update External Dependencies
 
 Add a new column for this release candidate in the [External Dependencies Supported table](./support.md#external-dependencies-supported). Follow up internally if unsure.
@@ -70,6 +85,8 @@ To trigger a nightly:
 
 <img src="../assets/trigger-nightly.png" width="600" />
 
+</details>
+
 At this point, you'll follow the general release process as per the following links:
 
 ### [3. Push branch & Wait for Github Actions artifacts to build](./guide-release-process.md#step-3-wait-for-github-actions-artifacts-to-build)
@@ -115,6 +132,14 @@ You can follow the general release process for patches. The only thing to note i
 
 ex. 0.78.0-rc.1 -> 0.78.0-rc.2
 
+With the CLI, `prepare-release` detects the current RC and offers the next one automatically:
+
+```sh
+npx rn-release-automator@latest prepare-release --series 0.85   # choose "Next RC"
+npx rn-release-automator@latest publish --version 0.85.0-rc.2 --dry-run
+npx rn-release-automator@latest publish --version 0.85.0-rc.2
+```
+
 [See guide to release process](./guide-release-process.md)
 
 ## Promote release candidate to stable
@@ -123,7 +148,28 @@ Promoting a release candidate to stable is similar to releasing a patch. The dif
 
 As well, there is follow-up in terms of writing a blog post and communicating to the ecosystem about this release.
 
+> [!TIP]
+> With the CLI, promote and then run the post-promotion follow-ups:
+>
+> ```sh
+> # 1. Release the stable version (choose "Promote to stable" when prompted)
+> npx rn-release-automator@latest prepare-release --series 0.85
+> npx rn-release-automator@latest publish --version 0.85.0 --dry-run
+> npx rn-release-automator@latest publish --version 0.85.0
+> npx rn-release-automator@latest verify-release --series 0.85
+>
+> # 2–4. Support policy table, blog post, and website version cut
+> npx rn-release-automator@latest post-promotion --series 0.85
+> ```
+
 ### 1. Release a stable version following [release process](./guide-release-process.md)
+
+In the CLI, run `prepare-release --series 0.85` and choose **Promote to stable**, then `publish --version 0.85.0` (with `--dry-run` first) and `verify-release --series 0.85`.
+
+Steps 2–4 below (support policy table, blog post, website version cut) are all driven by `post-promotion --series 0.85`. It generates the updated support-policy table for you and can open the file in the GitHub editor or copy the table to your clipboard, then opens the website PRs page and version-cutting instructions.
+
+<details>
+  <summary><b>Manual steps</b> — post-promotion follow-ups by hand (steps 2–4)</summary>
 
 ### 2. Update the React Native support policy
 
@@ -157,3 +203,5 @@ Example:
 - Head to [react-native-website](https://github.com/facebook/react-native-website)
 - Make sure all relevant PRs for release candidate are merged
 - Cut a new version of the website, [instructions](https://github.com/facebook/react-native-website#cutting-a-new-version)
+
+</details>
