@@ -30,7 +30,7 @@ When a version is in the unsupported stage, no new released are to be expected. 
 
 | Version               | Android SDK minimum   | JDK version           | Xcode Version min.    | Cocoapods             | Node min.             |
 | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
-| 0.87                  | Android 7.0           | JDK 17                | 16.1                  | 1.13.x/1.14.x/1.15.2  | 22.11.0               |
+| 0.87                  | Android 7.0           | JDK 17                | 26.0                  | 1.13.x/1.14.x/1.15.2  | 22.11.0               |
 | 0.86                  | Android 7.0           | JDK 17                | 16.1                  | 1.13.x/1.14.x/1.15.2  | 22.11.0               |
 | 0.85                  | Android 7.0           | JDK 17                | 16.1                  | 1.13.x/1.14.x/1.15.2  | 22.11.0               |
 | 0.84                  | Android 7.0           | JDK 17                | 16.1                  | 1.13.x/1.14.x/1.15.2  | 22.11.0               |
