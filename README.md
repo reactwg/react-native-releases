@@ -14,6 +14,15 @@ Please refer to the official [Support Policy](https://github.com/reactwg/react-n
 
 ## Running a React Native Release
 
+> [!TIP]
+> The recommended way to run a release is the **[`rn-release-automator` CLI](./docs/guide-release-cli.md)**. It walks you through every phase with interactive prompts and pre-flight checks:
+>
+> ```sh
+> npx rn-release-automator@latest
+> ```
+>
+> Every guide below leads with the relevant CLI command and keeps the manual steps in collapsible sections. Always run mutating commands with `--dry-run` first — see the [Release CLI guide](./docs/guide-release-cli.md) to get started.
+
 React Native releases are run by a group of volunteers called the **Release Crew**.
 In those docs you can find clarification about the roles of the various members of the Release Crew:
 
@@ -24,6 +33,7 @@ In those docs you can find clarification about the roles of the various members 
 
 In those docs instead you can find step-by-step guides on how to run a React Native release
 
+- [Guide: Release CLI (`rn-release-automator`)](./docs/guide-release-cli.md) — **start here**
 - [Guide: Running a Release](./docs/guide-release-process.md)
 - [Guide: Release Candidates](./docs/guide-release-candidate.md)
   - [How to setup a new release project](./docs/guide-release-project-setup.md)
