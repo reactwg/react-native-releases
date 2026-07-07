@@ -10,7 +10,7 @@ Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebo
 
 See the guide you need, based on the React native release you are running:
 - [React Native >= 0.87](#for-react-native--087)
-- [React Native 0.83 <= X < 0.87](#for-react-native--083-X-087)
+- [React Native 0.83 <= X < 0.87](#for-react-native-083--x--087)
 - [React Native < 0.82](#for-react-native--082)
 
 ## For React Native >= 0.87
