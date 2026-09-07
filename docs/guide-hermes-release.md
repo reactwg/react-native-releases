@@ -43,6 +43,7 @@ The tag will be created as last step, and we need to wait for the whole process 
 
 1. Set the branch to the Hermes V1 release branch: `250829098.0.0-stable`
 2. Set the release type as `Release`
+3. Keep `Update latest-v1 (unchecked leaves the npm tag unchanged)` unticked
 
 ### Step 3: Bump the Hermes version on the React Native release branch
 
