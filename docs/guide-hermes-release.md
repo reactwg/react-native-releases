@@ -4,7 +4,7 @@
 > Only Meta release crew should publish Hermes releases. If you are a community releaser that is picking a Hermes pick request, ping a Meta release crew member to publish the Hermes release.
 
 > [!NOTE]
-> Publishing the Hermes tags is a **manual, Meta-only** flow — follow the steps below. The [`rn-release-automator` CLI](./guide-release-cli.md) does not publish Hermes itself, but its `cut-branch` command **guides you through the React-Native-side steps**: it opens this guide at the right moment, then prompts for the new Hermes tag(s) and runs the `bump-hermes-version.js` script + commit + push for you ([Step 4](#step-4-bump-the-hermes-version-on-the-react-native-release-branch)). `prepare-release` also flags any Hermes-related pick requests as 🔴 so they aren't picked automatically.
+> Publishing the Hermes tags is a **manual, Meta-only** flow — follow the steps below. The [`rn-release-automator` CLI](./guide-release-cli.md) does not publish Hermes itself, but its `cut-branch` command **guides you through the React-Native-side steps**: it opens this guide at the right moment, then prompts for the new Hermes tag(s) and runs the `bump-hermes-version.js` script + commit + push for you ([Step 4](#step-4-bump-the-hermes-version-on-the-react-native-release-branch)). Note that its Hermes step has not been updated for React Native >= 0.87 and passes flags the script no longer accepts, so run Step 3 below by hand for those releases. `prepare-release` also flags any Hermes-related pick requests as 🔴 so they aren't picked automatically.
 
 Prerequisites: You'll need access to the [Hermes repo](https://github.com/facebook/hermes). You can give yourself permission via the Meta Internal OSS dashboard.
 
@@ -14,16 +14,35 @@ See the guide you need, based on the React native release you are running:
 
 ## For React Native >= 0.87
 
-Starting from React Native 0.83, we need to have one tag for HermesV1.
+Starting from React Native 0.87, we only need one tag, the one for HermesV1. The (legacy) Hermes tag is gone.
 
 We decoupled the build of Hermes from the React Native repository and we can now consume Hermes binaries that are produced in the Hermes repository
+
+### Which Hermes train?
+
+Hermes V1 releases run in **trains**, each with its own branch on the Hermes repo (`250829098.0.0-stable`, `260318099.0.0-stable`, and so on). Every step below refers to "the train branch", so work out which one you need before you start.
+
+The train for a React Native release is whatever that release branch already declares:
+
+```bash
+grep HERMES_VERSION_NAME packages/react-native/sdks/hermes-engine/version.properties
+```
+
+Use the Hermes branch matching that number. A release branch freshly cut from `main` inherits `main`'s train. Older release branches stay on their own train for patches.
+
+As of September 2026:
+
+| React Native      | Hermes train branch     |
+| ----------------- | ----------------------- |
+| `main`, 0.88      | `260318099.0.0-stable`  |
+| 0.85, 0.86, 0.87  | `250829098.0.0-stable`  |
 
 ### Step 1: Cherry-pick
 
 > [!Important]
 > If you cutting a release candidate, skip this step
 
-1. Checkout the `250829098.0.0-stable` branch.
+1. Checkout the train branch.
 2. Pick the relevant commits onto that branch. The pick requests should be from `static_h` and no other branch on Hermes.
 3. Push the picks to the remote branch.
 
@@ -39,57 +58,55 @@ This workflow:
 The tag will be created as last step, and we need to wait for the whole process to end before React Native can start the Release.
 
 > [!Important]
-> If you are releasing a patch for Hermes V1 for the latest version of React Native, you also have to bump the patch number [`hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/250829098.0.0-stable/npm/hermes-compiler/package.json#L3) file from the `250829098.0.0-stable`
+> If you are releasing a patch for Hermes V1, you also have to bump the patch number in `npm/hermes-compiler/package.json` on the train branch first. That file is what decides the version the workflow builds.
 
-1. Set the branch to the Hermes V1 release branch: `250829098.0.0-stable`
+1. Set the branch to the train branch
 2. Set the release type as `Release`
 3. Keep `Update latest-v1 (unchecked leaves the npm tag unchanged)` unticked
 
 ### Step 3: Bump the Hermes version on the React Native release branch
 
-Using the newly generated Hermes tag run the following script on the React Native release branch:
+Run the script on the React Native release branch:
 
 ```bash
-# Replace <the_hermes_tag> with the tag that will look like 'hermes-2022-07-20-RNv0.70.0-bc97c5399e0789c0a323f8e1431986e207a9e8ba'
-./packages/react-native/scripts/hermes/bump-hermes-version.js -s <the_hermes_v1_tag>
+./packages/react-native/scripts/hermes/bump-hermes-version.js
 ```
 
-An example of the invocation is:
-```
-./packages/react-native/scripts/hermes/bump-hermes-version.js -s hermes-v250829098.0.2
-```
+It fetches the `latest-v1` dist-tag from NPM and prompts for confirmation.
+
+> [!Important]
+> Check that the version it proposes matches your branch's train before you confirm. `latest-v1` tracks the newest train, so on an older release branch it will suggest the wrong one.
 
 > [!Note]
-> The script also support the `-v` parameter to specify the Hermes V1 version.
-> When not passed, the script will check the latest version of hermes published on NPM and will prompt for confirmation.
+> The script takes no arguments today. The `-s` and `-t` flags were removed. `-v` is currently broken: it is declared as an alias of `version`, so yargs treats it as its own built-in version flag, prints the package version and exits without doing anything.
 
-Add and commit the extra files that got created at:
-- packages/react-native/sdks/.hermesV1version
-and updated at:
-- packages/react-native/sdks/hermes-engine/version.properties
-- packages/react-native/package.json
+Then commit what changed:
+- created: `packages/react-native/sdks/.hermesv1version`
+- updated: `packages/react-native/package.json`, the `hermes-compiler` dependency, which is `0.0.0` on a freshly cut branch
+- updated: `packages/react-native/sdks/hermes-engine/version.properties`, if the version changed
 
-Now you can continue with the rest of your React Native release.
-
-```
-git add packages/react-native/sdks/.hermesvesion packages/react-native/sdks/.hermesv1vesion packages/react-native/sdks/hermes-engine/version.properties
+```bash
+git status
+git add packages/react-native/sdks/.hermesv1version packages/react-native/sdks/hermes-engine/version.properties packages/react-native/package.json
 git commit -m "Bump hermes version"
 ```
 
-### Step 4: Bump version on Hermes v1 release branch
+Now you can continue with the rest of your React Native release.
 
-The `250829098.0.0-stable` should always track the next version that we are going to release.
+### Step 4: Bump version on the Hermes train branch
 
-After the build started and the tag is generated, bump the hermes-compiler versions on those branches:
+The train branch should always track the next version that we are going to release.
 
-From the `250829098.0.0-stable` branch
-1. Open the [`npm/hermes-compiler/package.json`](https://github.com/facebook/hermes/blob/ddd708a85b164d1841c024973d0f6d3fad60a4c2/npm/hermes-compiler/package.json) file
+After the build started and the tag is generated, bump the hermes-compiler version on it:
+
+1. Open `npm/hermes-compiler/package.json` on the train branch
 2. Bump the **patch** number by 1
 3. Commit and push.
 
 ### Step 5: [Only for Branch Cut] Bump hermes versions on React Native `main` branch
 1. Go to the react-native repository
-2. Update the [`packages/react-native/sdks/hermes-engine/versions.properties` file]([url](https://github.com/facebook/react-native/blob/main/packages/react-native/sdks/hermes-engine/version.properties)) by bumping the `HERMES_V1_VERSION_NAME`
+2. Update [`packages/react-native/sdks/hermes-engine/version.properties`](https://github.com/facebook/react-native/blob/main/packages/react-native/sdks/hermes-engine/version.properties) by bumping `HERMES_VERSION_NAME`
+
 This is an [example PR](https://github.com/facebook/react-native/pull/55042).
 
 ---
