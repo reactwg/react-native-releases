@@ -14,6 +14,9 @@ See the guide you need, based on the React native release you are running:
 
 ## For React Native >= 0.87
 
+> [!Important]
+> For **versions >= 0.88**, use branch `260318099.0.0-stable`, rather than `250829098.0.0-stable`
+
 Starting from React Native 0.83, we need to have one tag for HermesV1.
 
 We decoupled the build of Hermes from the React Native repository and we can now consume Hermes binaries that are produced in the Hermes repository
