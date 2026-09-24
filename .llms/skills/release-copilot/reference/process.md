@@ -9,7 +9,7 @@ obvious.
 One dispatch drives the whole publish:
 
 1. **Create release** (`create-release.yml`), dispatched on the release branch with
-   `version`, `is-latest-on-npm`, `dry-run`. It sets versions, commits, and pushes
+   `version`, `is-latest-on-npm`, `dry-run`. It sets versions, commits and pushes
    the branch with `--follow-tags`, creating `v<version>`.
 2. The tag push matches `v0.*.*` and fires **Publish to npm**
    (`publish-npm.yml`), the single entry point for npm OIDC trusted publishing.

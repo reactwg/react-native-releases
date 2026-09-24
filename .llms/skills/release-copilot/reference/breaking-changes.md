@@ -1,12 +1,12 @@
 # Breaking changes in a non-breaking release
 
 Roughly every other release is **non-breaking**. A breaking change must not ship in
-one. There are two ways to handle that, and the cheap one is the proactive sweep.
+one. There are two ways to handle that and the cheap one is the proactive sweep.
 
 ## Why this document exists
 
 0.88 is non-breaking. [#57879](https://github.com/react/react-native/pull/57879)
-changed the ObjC TurboModule ArrayBuffer type and shipped in rc.0 anyway, and was only
+changed the ObjC TurboModule ArrayBuffer type and shipped in rc.0 anyway and was only
 reverted a fortnight later after a user hit it.
 
 It was **correctly annotated the whole time**:
@@ -24,7 +24,7 @@ The lesson is not "annotate better". It is **read the annotations you already ha
 
 ## The proactive sweep
 
-Run at branch cut, and again before each RC, since picks can introduce one. Cheapest
+Run at branch cut and again before each RC, since picks can introduce one. Cheapest
 signal first.
 
 ### 0. Pick the right baseline
@@ -37,7 +37,7 @@ is the latest *published* version of the previous series, not its `.0`:
 ```
 
 A breaking change already in 0.87.1 went out on the breaking 0.87 line. 0.88 is not
-introducing it, and anyone upgrading from 0.87.1 already has it. Using `.0` as the
+introducing it and anyone upgrading from 0.87.1 already has it. Using `.0` as the
 baseline reports those as 0.88 regressions and sends you reverting things that are
 not yours to revert.
 
@@ -47,7 +47,7 @@ Match on `This reverts commit <sha>`.
 
 ### 1. The changelog Breaking section
 
-Cheap, and worth running, but **not sufficient**. Measured on 0.88: the published rc.0
+Cheap and worth running, but **not sufficient**. Measured on 0.88: the published rc.0
 `Breaking` section listed **one** entry while the branch carried **three**
 `[BREAKING]`-annotated commits. Curation drops things.
 
@@ -55,7 +55,7 @@ Cheap, and worth running, but **not sufficient**. Measured on 0.88: the publishe
 git show <tag>:CHANGELOG.md | sed -n '/^## v<version>/,/^## v/p' | sed -n '/^### Breaking/,/^### /p'
 ```
 
-Anything there is either a mistake to revert, or a deliberate exception someone has to
+Anything there is either a mistake to revert or a deliberate exception someone has to
 sign off in writing. An empty section does **not** mean the release is clean.
 
 ### 2. Commit annotations, which are the source of truth
@@ -73,7 +73,7 @@ Then subtract anything reverted on the branch. The `noBreakingChanges` gate does
 > **The compare endpoint caps at 250 commits** while still reporting the true size in
 > `total_commits`. An unpaginated read of the 554-commit `v0.87.1...0.88-stable` range
 > returned 250 and produced a confidently clean "3 breaking commits" when there were
-> ten. Always paginate, compare the count against `total_commits`, and **fail rather
+> ten. Always paginate, compare the count against `total_commits` and **fail rather
 > than judge on a partial range**. A scan that cannot see the whole range must not
 > return a verdict.
 
@@ -151,7 +151,7 @@ Sometimes it surfaces after the cut, when someone integrates and hits it. Then:
    `breaking-change-detection` skill and try to falsify the report with a concrete
    downstream snippet. Reverting on a mistaken report costs more than the report did.
 2. **Check whether it is already documented.** If it is in the `Breaking` section, the
-   question is not "is it breaking" but "why did we ship it", and the answer changes
+   question is not "is it breaking" but "why did we ship it" and the answer changes
    who decides.
 3. **Scope the revert properly.** See `reverts.md`. The reported commit is often only
    part of it.
@@ -179,11 +179,11 @@ so it never reaches you.
 previous release either. No consumer could have depended on it, so nothing breaks.
 
 Case 2 is the one that needs a human. `#57982` is exactly it: annotated
-`[Android][Breaking]`, genuinely new in 0.88, and harmless because the whole Java
+`[Android][Breaking]`, genuinely new in 0.88 and harmless because the whole Java
 ArrayBuffer TurboModule API is 0.88-only.
 
 **Do not reason about this from dates.** `d84c13d5111` was authored 2026-08-17, nine
-days *before* `v0.87.1` was tagged on 08-26, and is still not in it: it landed on
+days *before* `v0.87.1` was tagged on 08-26 and is still not in it: it landed on
 `main` after the 0.87 branch cut, so it never reached that line. Use ancestry:
 
 ```sh
@@ -204,13 +204,13 @@ The reliable method is to run the spec through both branches' codegen and compar
 to read the source:
 
 ```sh
-# in a worktree of the previous release, and again on the branch
+# in a worktree of the previous release and again on the branch
 parser.parseString(SPEC, 'NativeSample.js')   // accepted or rejected?
 generateModuleH.generate(...)                  // succeeded or threw?
 ```
 
 If it generated on the previous release, check the output is functional rather than
-placeholder, and that any `static_assert` it emits would actually pass. `#58063`
+placeholder and that any `static_assert` it emits would actually pass. `#58063`
 emitted a real `AsyncEventEmitter` plus a `static_assert` that holds, because
 `Bridging<jsi::ArrayBuffer>` exists in 0.87 and is exported through the umbrella. That
 is what made it a real break rather than a better error message.
@@ -220,6 +220,6 @@ is what made it a real break rather than a better error message.
 - **Already reverted.** Excluded automatically.
 - **Mis-annotated.** Someone tagged `[BREAKING]` for something that breaks nothing.
   Confirm rather than trusting the label, in either direction.
-- **A reviewed exception.** Rare, and it needs a written decision plus a prominent
+- **A reviewed exception.** Rare and it needs a written decision plus a prominent
   release-note entry. "We noticed late" is not an exception, it is a decision someone
   has to actually make.

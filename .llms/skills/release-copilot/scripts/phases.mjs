@@ -2,7 +2,7 @@
  * Phase definitions.
  *
  * Declarative on purpose: the up-front summary, the guided prompts, the
- * autonomous runner and the dry-run printer all read these same objects, so
+ * guided runner and the dry-run printer all read these same objects, so
  * they cannot describe different releases. This is the thing that replaces
  * release_checklist.yml rather than duplicating it.
  *
@@ -17,7 +17,7 @@ const RN = 'react/react-native';
 const triggerCreateRelease = (state, ctx) =>
   declare({
     step: 'publish',
-    why: `trigger Create Release for ${state.proposedNext}`,
+    why: `Publish ${state.proposedNext} from ${state.branch}`,
     cmd: 'gh',
     args: [
       'workflow',
@@ -34,6 +34,19 @@ const triggerCreateRelease = (state, ctx) =>
       '-f',
       'dry-run=false',
     ],
+    impact: [
+      `publishes react-native@${state.proposedNext} to npm, publicly and permanently`,
+      `creates the git tag v${state.proposedNext} on ${state.branch}`,
+      ctx.isLatest
+        ? 'moves the npm "latest" tag, so every `npm install react-native` resolves to this'
+        : 'goes to the npm "next" tag, "latest" is unchanged',
+      'triggers the Podfile.lock bump, the changelog PR and a draft GitHub release',
+    ],
+    reversible:
+      'not really. npm deprecates rather than unpublishes and the tag is public the moment it is pushed.',
+    // A typo in the version is the failure this guards. Typing it back is the
+    // cheapest check that the human read what they are about to publish.
+    confirmToken: state.proposedNext,
   });
 
 const checkoutStep = {
@@ -53,17 +66,14 @@ const checkoutStep = {
       why: `switch to ${state.branch}`,
       cmd: 'git',
       args: ['switch', state.branch],
+      impact: [`changes your local checkout to ${state.branch}`],
+      reversible: 'yes, switch back to the branch you were on',
     }),
   ],
   note:
     'Check your toolchain matches what this series needs, Node version in particular. See docs/support.md for the supported external dependencies.',
 };
 
-/**
- * Artifacts come from the LAST workflow run on the branch, so this gate exists
- * to stop people pushing during testing and silently invalidating what they are
- * about to test.
- */
 /**
  * Signals a gate cannot judge: the codegen output contract, the public API
  * snapshots and the unsnapshotted surfaces all need a human reading diffs.
@@ -77,6 +87,11 @@ const breakingSweepStep = {
     'The gate covers changelog and commit annotations. Still diff the codegen snapshots by hand: they catch changes to what RN emits for third-party modules, which the public API snapshots miss. See reference/breaking-changes.md.',
 };
 
+/**
+ * Artifacts come from the LAST workflow run on the branch, so this gate exists
+ * to stop people pushing during testing and silently invalidating what they are
+ * about to test.
+ */
 const artifactsStep = {
   id: 'artifacts',
   title: 'Wait for branch artifacts to build',
@@ -208,9 +223,15 @@ export const PHASES = {
         actions: state => [
           declare({
             step: 'create-branches',
-            why: `create ${state.branch} from main`,
+            why: `Create the release branch ${state.branch} from main`,
             cmd: 'gh',
             args: ['api', `repos/${RN}/git/refs`, '-f', `ref=refs/heads/${state.branch}`, '-f', 'sha=MAIN_SHA'],
+            impact: [
+              `creates ${state.branch} on ${RN}, visible to everyone`,
+              'from this point main targets the next version, so picks must be requested rather than merged',
+            ],
+            reversible: 'the branch can be deleted, but anything cut from it cannot be recalled',
+            confirmToken: state.branch,
           }),
         ],
         note:
@@ -239,9 +260,11 @@ export const PHASES = {
         actions: () => [
           declare({
             step: 'nightly',
-            why: 'give partners a nightly before release-specific fixes land',
+            why: 'Trigger a nightly build from main',
             cmd: 'gh',
             args: ['workflow', 'run', 'nightly.yml', '--repo', RN, '--ref', 'main'],
+            impact: ['publishes a nightly to npm that partners may integrate against'],
+            reversible: 'no, but nightlies are expected to churn',
           }),
         ],
       },

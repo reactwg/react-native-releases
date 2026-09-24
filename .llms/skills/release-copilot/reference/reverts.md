@@ -102,7 +102,7 @@ commits, is strong evidence without needing a full native build.
 
 1. Confirm the scope, with the evidence above.
 2. **Open the pick request first**, with the scope analysis in the body. It is the
-   record of why this set and not another, and it is much harder to reconstruct later.
+   record of why this set and not another and it is much harder to reconstruct later.
 3. Revert, resolve, verify locally.
 4. Push.
 5. Comment with the resulting SHAs and close.

@@ -58,7 +58,7 @@ Most entries there are release plumbing and should go:
 - internal test fixes with no user-facing effect
 
 But some are genuinely user-facing and only landed in `Unknown` because their
-commit lacked a `Changelog:` line. A Hermes bump is the recurring example, and it
+commit lacked a `Changelog:` line. A Hermes bump is the recurring example and it
 is usually the single most significant change in the release. It belongs under
 `Changed`:
 
@@ -73,7 +73,7 @@ Deleting the whole bucket loses it silently. Read every entry before dropping it
 - Drop anything tagged `[Internal]`, plus BUCK-file and pure-refactor commits.
 - Collapse superseded dependency bumps. If X went to 0.7.0 and later to 0.8.0 in
   the same release, keep only 0.8.0.
-- For a large section (RC0, or a `.0`), a link to `CHANGELOG.md` at the bottom of
+- For a large section (RC0 or a `.0`), a link to `CHANGELOG.md` at the bottom of
   the GitHub release is enough; the full text does not need repeating there.
 
 ## Landing it

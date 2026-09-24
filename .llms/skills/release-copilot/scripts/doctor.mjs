@@ -105,7 +105,7 @@ async function checkCheckout(path) {
     return {
       status: FAIL,
       detail: `no react-native checkout at ${path ?? '(unset)'}`,
-      fix: 'Clone react/react-native and pass --checkout <path>, or set RN_CHECKOUT.',
+      fix: 'Clone react/react-native and pass --checkout <path> or set RN_CHECKOUT.',
     };
   }
   const shallow = await run('git', ['-C', path, 'rev-parse', '--is-shallow-repository']);

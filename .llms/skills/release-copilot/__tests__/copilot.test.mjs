@@ -128,7 +128,13 @@ test('classifier: real incidents from the 0.88 cycle', () => {
 // ----------------------------------------------------------- action seam
 
 test('printed command is rendered from the same record the executor consumes', () => {
-  const a = declare({step: 's', why: 'w', cmd: 'gh', args: ['workflow', 'run', 'Create release', '-f', 'version=0.88.0-rc.2']});
+  const a = declare({
+    step: 's',
+    why: 'w',
+    cmd: 'gh',
+    args: ['workflow', 'run', 'Create release', '-f', 'version=0.88.0-rc.2'],
+    impact: ['publishes to npm'],
+  });
   const printed = render(a);
   assert.equal(printed, "gh workflow run 'Create release' -f version=0.88.0-rc.2");
   // The executor uses a.cmd + a.args; assert the rendering is derived from them
@@ -141,7 +147,9 @@ test('printed command is rendered from the same record the executor consumes', (
 
 test('dry-run executes nothing, not even reads', async () => {
   const runner = new Runner({mode: MODES.DRY_RUN, log: () => {}});
-  await runner.run(declare({step: 's', why: 'w', cmd: 'gh', args: ['workflow', 'run', 'x']}));
+  await runner.run(
+    declare({step: 's', why: 'w', cmd: 'gh', args: ['workflow', 'run', 'x'], impact: ['publishes']}),
+  );
   await runner.run(declare({step: 's', why: 'read', mutates: false, cmd: 'git', args: ['ls-remote']}));
   assert.equal(runner.executed.length, 0, 'dry-run must be free of side effects and network');
   assert.equal(runner.plan().length, 2, 'dry-run must still produce the full plan');
@@ -156,12 +164,99 @@ test('gates still evaluate for real in dry-run, they read state not actions', as
 });
 
 test('meta-only actions are delegated, never executed', async () => {
-  const runner = new Runner({mode: MODES.AUTONOMOUS, log: () => {}});
+  const runner = new Runner({mode: MODES.GUIDED, log: () => {}, confirm: async () => true});
   const res = await runner.run(
     declare({step: 's', why: 'w', metaOnly: true, cmd: 'echo', args: ['js1 publish']}),
   );
   assert.equal(res.skipped, 'meta-only');
   assert.equal(runner.executed.length, 0);
+});
+
+// ------------------------------------------------------- guided-only guard
+
+test('there is no unattended mode', async () => {
+  assert.deepEqual(Object.values(MODES).sort(), ['dry-run', 'guided']);
+  assert.throws(
+    () => new Runner({mode: 'autonomous', log: () => {}}),
+    /never unattended/,
+    'an unknown mode must be refused rather than silently treated as guided',
+  );
+});
+
+test('a mutating action cannot be declared without describing its impact', () => {
+  assert.throws(
+    () => declare({step: 'publish', why: 'w', cmd: 'gh', args: ['workflow', 'run', 'x']}),
+    /declares no impact/,
+    'a human cannot consent to something the skill will not describe',
+  );
+  // Read-only and meta-only actions are exempt: nothing changes or a human runs it.
+  assert.ok(declare({step: 's', why: 'w', mutates: false, cmd: 'git', args: ['status']}));
+  assert.ok(declare({step: 's', why: 'w', metaOnly: true, cmd: 'echo', args: ['x']}));
+});
+
+test('guided mode executes nothing the human declines', async () => {
+  const runner = new Runner({mode: MODES.GUIDED, log: () => {}, confirm: async () => false});
+  const res = await runner.run(
+    declare({
+      step: 'publish',
+      why: 'w',
+      cmd: 'gh',
+      args: ['workflow', 'run', 'x'],
+      impact: ['publishes to npm'],
+    }),
+  );
+  assert.equal(res.skipped, 'declined');
+  assert.equal(runner.executed.length, 0);
+  assert.equal(runner.declined.length, 1);
+});
+
+test('the human is shown the command and its impact before being asked', async () => {
+  const lines = [];
+  const runner = new Runner({
+    mode: MODES.GUIDED,
+    log: l => lines.push(l),
+    confirm: async () => false,
+  });
+  await runner.run(
+    declare({
+      step: 'publish',
+      why: 'Publish 0.88.0-rc.3 from 0.88-stable',
+      cmd: 'gh',
+      args: ['workflow', 'run', 'Create release', '-f', 'version=0.88.0-rc.3'],
+      impact: ['publishes react-native@0.88.0-rc.3 to npm, publicly and permanently'],
+      reversible: 'not really',
+    }),
+  );
+  const shown = lines.join('\n');
+  assert.match(shown, /Publish 0\.88\.0-rc\.3 from 0\.88-stable/, 'must say what it does');
+  assert.match(shown, /version=0\.88\.0-rc\.3/, 'must show the exact command');
+  assert.match(shown, /publicly and permanently/, 'must state the impact');
+  assert.match(shown, /undo:/, 'must say whether it can be undone');
+});
+
+test('the publish action makes the human retype the version', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const state = baseState({proposedNext: '0.88.0-rc.3'});
+  const publishStep = phaseFor('rc').steps.find(s => s.id === 'publish');
+  const [action] = publishStep.actions(state, {isLatest: false});
+  // A wrong version is the failure mode this guards, so "y" must not be enough.
+  assert.equal(action.confirmToken, '0.88.0-rc.3');
+  assert.ok(
+    action.impact.some(i => i.includes('npm')),
+    'the human must be told this reaches npm',
+  );
+});
+
+test('a prerelease publish says latest is untouched, a stable one says it moves', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const publishStep = phaseFor('rc').steps.find(s => s.id === 'publish');
+  const state = baseState({proposedNext: '0.88.0-rc.3'});
+
+  const [rc] = publishStep.actions(state, {isLatest: false});
+  assert.ok(rc.impact.some(i => /"latest" is unchanged/.test(i)));
+
+  const [stable] = publishStep.actions({...state, proposedNext: '0.88.0'}, {isLatest: true});
+  assert.ok(stable.impact.some(i => /moves the npm "latest" tag/.test(i)));
 });
 
 // ------------------------------------------------- breaking-change sweep
@@ -404,7 +499,7 @@ test('fixture: a reviewed exception clears the sweep but stays visible', async (
 
 test('fixture: rc dry-run reaches publish once gates are clear, executing nothing', async () => {
   const derived = await deriveState(fixtureSources(FIXTURE), {series: '0.88', today: '2026-09-22'});
-  // Normalise CI: the fixture may be recorded mid-run, and this asserts the plan
+  // Normalise CI: the fixture may be recorded mid-run and this asserts the plan
   // rather than whatever the branch happened to be doing at record time.
   const state = {
     ...derived,

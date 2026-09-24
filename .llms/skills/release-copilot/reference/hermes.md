@@ -5,7 +5,7 @@ happen **before** the RN release that consumes it.
 
 ## Where the version lives
 
-Two files on the release branch, and they must agree:
+Two files on the release branch and they must agree:
 
 ```
 packages/react-native/sdks/hermes-engine/version.properties   HERMES_VERSION_NAME=...
@@ -42,8 +42,8 @@ gh workflow run "RN Build Static Hermes" --repo facebook/hermes \
 
 Inputs:
 
-- `release-type` — `release` or `dry-run`, **defaults to `dry-run`**
-- `update-latest-v1` — boolean, **defaults to false**
+- `release-type`: `release` or `dry-run`, **defaults to `dry-run`**
+- `update-latest-v1`: boolean, **defaults to false**
 
 The in-tree version in `npm/hermes-compiler/package.json` decides what gets cut, so
 bump it before releasing.
@@ -69,7 +69,7 @@ present is normal.
 
 ## Timing trap
 
-A tag cut before a fix lands does not contain it, and nothing in the version number
+A tag cut before a fix lands does not contain it and nothing in the version number
 says so. `hermes-v260318099.0.2` was tagged eight hours before a crash-causing
 change was backed out, so `.0.2` shipped the bad version while the branch was
 already clean.
@@ -88,7 +88,7 @@ attempting them. A Hermes pick blocks the RN release until the branch carries th
 resulting bump.
 
 Watch for the two-sided pattern: a JSI declaration and its Hermes implementation
-are separate commits, and picking only the declaration leaves the API resolving to
+are separate commits and picking only the declaration leaves the API resolving to
 the base implementation with no error at all.
 
 ## The upstream copy

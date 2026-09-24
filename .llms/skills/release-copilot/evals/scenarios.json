@@ -1,5 +1,5 @@
 {
-  "_comment": "Eval scenarios for release-copilot. Each one is a named release situation, the state it puts the skill in, and what the skill MUST decide. Written as data so a reviewer can read the assertion without reading test code. The runner (evals/run.mjs) executes each against the real phase/gate code.",
+  "_comment": "Eval scenarios for release-copilot. Each one is a named release situation, the state it puts the skill in and what the skill MUST decide. Written as data so a reviewer can read the assertion without reading test code. The runner (evals/run.mjs) executes each against the real phase/gate code.",
 
   "scenarios": [
     {
@@ -187,7 +187,7 @@
     {
       "id": "rc-blocked-open-pick",
       "title": "An open pick request for the series",
-      "why": "An unactioned pick means the release ships without a change someone asked for, or with an undecided one.",
+      "why": "An unactioned pick means the release ships without a change someone asked for or with an undecided one.",
       "phase": "rc",
       "state": {
         "series": "0.88",
@@ -303,7 +303,7 @@
     {
       "id": "promote-to-stable",
       "title": "Promoting the final RC to stable",
-      "why": "The only flow where the npm latest tag legitimately moves, and the only one with post-promotion follow-ups.",
+      "why": "The only flow where the npm latest tag legitimately moves and the only one with post-promotion follow-ups.",
       "phase": "promote",
       "state": {
         "series": "0.88",

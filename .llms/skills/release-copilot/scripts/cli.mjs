@@ -52,8 +52,10 @@ async function main() {
   message --series <x.y> --run <url>   include the publish run link
 
   plan    --series <x.y>               dry run: print every command, execute none
-  run     --series <x.y>               guided: confirm before each mutating step
-  run     --series <x.y> --autonomous  execute without prompting
+  run     --series <x.y>               guided: describe and confirm every mutating step
+
+  There is no unattended mode. A release publishes irreversible public state, so
+  every mutating action is shown in full and confirmed before it runs.
 
   shared flags:
     --shape <rc|branch-cut|promote|patch>   override the derived shape
@@ -154,7 +156,7 @@ async function main() {
       const d = await runDoctor({checkout: typeof args.checkout === 'string' ? args.checkout : undefined});
       if (!d.ready) {
         console.log(formatDoctor(d));
-        console.log('\nFix the above, or re-run with --skip-doctor to proceed anyway.');
+        console.log('\nFix the above or re-run with --skip-doctor to proceed anyway.');
         process.exit(1);
       }
     }
@@ -164,8 +166,7 @@ async function main() {
       today: typeof args.today === 'string' ? args.today : undefined,
     });
 
-    const mode =
-      cmd === 'plan' ? MODES.DRY_RUN : args.autonomous ? MODES.AUTONOMOUS : MODES.GUIDED;
+    const mode = cmd === 'plan' ? MODES.DRY_RUN : MODES.GUIDED;
 
     const isLatest = args.latest === true;
     const result = await runPhase(state, {
@@ -180,9 +181,18 @@ async function main() {
       confirm: async action => {
         const {createInterface} = await import('node:readline/promises');
         const rl = createInterface({input: process.stdin, output: process.stdout});
-        const answer = await rl.question(`  run this? [y/N] `);
-        rl.close();
-        return answer.trim().toLowerCase() === 'y';
+        try {
+          if (action.confirmToken) {
+            const answer = await rl.question(
+              `    type "${action.confirmToken}" to confirm, anything else to skip: `,
+            );
+            return answer.trim() === action.confirmToken;
+          }
+          const answer = await rl.question('    run this? [y/N] ');
+          return answer.trim().toLowerCase() === 'y';
+        } finally {
+          rl.close();
+        }
       },
     });
 

@@ -96,7 +96,7 @@ function classifyRun(run, jobs) {
 }
 
 /**
- * Releases ship on Monday, weekly. Slips happen when something blocks, and the
+ * Releases ship on Monday, weekly. Slips happen when something blocks and the
  * release then goes out on the first clear day after.
  *
  * The next expected date is derived from the last ACTUAL publish, not from the
@@ -265,7 +265,7 @@ export async function deriveState(sources, {series, today} = {}) {
         }
 
         // Meta's import rewrites SHAs, so a change can exist on both `main` and
-        // the previous release branch as different objects, and `merge-base`
+        // the previous release branch as different objects and `merge-base`
         // reports a false negative. The CHANGELOG cites the main-side SHA of
         // everything each version shipped, so it is the reliable test.
         //
@@ -321,7 +321,7 @@ export async function deriveState(sources, {series, today} = {}) {
 
   const nextParsed = proposedNext ? parseVersion(proposedNext) : null;
 
-  // The golden RC is the LAST one before .0, and it is not predictable: across
+  // The golden RC is the LAST one before .0 and it is not predictable: across
   // 0.82-0.87 it landed anywhere from rc.3 to rc.7. It is only knowable once the
   // series has shipped, so for an in-flight series say unknown rather than guess.
   const released = seriesHasReleased(tags, resolvedSeries);
@@ -420,7 +420,7 @@ export async function deriveState(sources, {series, today} = {}) {
 }
 
 export function summarize(state) {
-  // Defensive on every field: this is display code, and a partially populated
+  // Defensive on every field: this is display code and a partially populated
   // state (a scenario, a fixture recorded mid-flight) must not take down a run.
   const L = [];
   const distTags = state.distTags ?? {};

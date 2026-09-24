@@ -30,7 +30,7 @@ export const FLAKE_SIGNATURES = [
 ];
 
 /**
- * Structural failures: real, reproducible, and not fixed by retrying.
+ * Structural failures: real, reproducible and not fixed by retrying.
  * `cache-key-test` was one of these on every release branch until it was fixed.
  */
 export const STRUCTURAL_SIGNATURES = [
@@ -134,7 +134,7 @@ export const gates = {
    * A non-breaking series must not carry [BREAKING]-annotated commits.
    *
    * This exists because #57879 shipped in 0.88.0-rc.0 while correctly annotated
-   * [IOS] [BREAKING], and published in the changelog's Breaking section saying
+   * [IOS] [BREAKING] and published in the changelog's Breaking section saying
    * modules would stop compiling. The annotation was right; nothing read it.
    */
   noBreakingChanges(state) {
@@ -146,7 +146,7 @@ export const gates = {
       return FAIL(
         state.breakingScanComplete === false
           ? 'commit range was truncated, so the scan is incomplete and cannot be trusted. ' +
-            'Re-run with pagination, or scan locally with git log'
+            'Re-run with pagination or scan locally with git log'
           : 'could not enumerate commits to check for [BREAKING] annotations',
       );
     }
@@ -158,7 +158,7 @@ export const gates = {
         `${state.breakingBaseline}: ` +
         bc.map(c => `${c.sha} ${c.title}`).join('; ') +
         `. Each needs a verdict: it is only a real break if the affected API was REACHABLE in ` +
-        `${state.breakingBaseline}, per generator target. Revert, or record a reviewed exception. ` +
+        `${state.breakingBaseline}, per generator target. Revert or record a reviewed exception. ` +
         'See reference/breaking-changes.md',
     );
   },

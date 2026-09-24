@@ -14,11 +14,11 @@ git cherry-pick -x <sha>
 ```
 
 Reasons: the branch has usually moved on since the PR was opened, `-x` records the
-origin in the commit message so provenance survives, authorship is preserved, and the
+origin in the commit message so provenance survives, authorship is preserved and the
 history stays consistent with the other release-branch commits. Then comment on the
-PR saying it was imported manually, and close it.
+PR saying it was imported manually and close it.
 
-Merging the PR is not wrong, but it is the exception, and on a protected release
+Merging the PR is not wrong, but it is the exception and on a protected release
 branch it needs approvals the cherry-pick route does not.
 
 ## Open the pick request before you push
@@ -42,7 +42,7 @@ https://github.com/orgs/reactwg/projects/<n>     "React Native <series> Releases
 
 `github.com/reactwg/react-native-releases/projects` is empty by design and will
 make you think nothing is tracked. Issues labelled `Type Pick Request` are added
-automatically, and closing an issue moves it to Done / Picked.
+automatically and closing an issue moves it to Done / Picked.
 
 ```sh
 gh project list --owner reactwg --limit 50
@@ -73,12 +73,12 @@ Not accepted after RC1:
 15. Non-critical improvements
 16. Nice-to-haves
 
-Criterion 8 is the one people forget: during RC0 the bar is open, and it tightens
+Criterion 8 is the one people forget: during RC0 the bar is open and it tightens
 sharply at RC1.
 
 ## Ordering
 
-Pick in **dependency order**, not the order the requests were filed, and not
+Pick in **dependency order**, not the order the requests were filed and not
 chronological order on `main` unless that happens to match.
 
 Read each commit's own summary. A commit that says "this was blocked until X
@@ -92,7 +92,7 @@ git merge-base --is-ancestor <sha> origin/<branch> && echo present || echo missi
 ```
 
 A SHA cited in a request may not be on `main` at all. Meta's import flow lands
-commits under different SHAs, and export branches carry SHAs that never reach
+commits under different SHAs and export branches carry SHAs that never reach
 `main`.
 
 ## Conflicts
@@ -105,7 +105,7 @@ that parses and fails at runtime.
 ## Set Target Release when you close, not when you open
 
 The board's `Target Release` defaults to the series' first RC when an issue is
-auto-added, and nothing updates it when the pick actually lands. Left alone it is
+auto-added and nothing updates it when the pick actually lands. Left alone it is
 wrong for almost every item: on 0.88, **seven of eleven** were still marked
 `0.88.0-rc.0` despite every one of them shipping in rc.1, because the requests were
 all filed after rc.0 had already gone out.
@@ -130,6 +130,6 @@ Picked manually into `0.88-stable` as <sha>.
 Closing moves the board item to Done / Picked.
 
 For a change applied directly to the release branch with no counterpart on `main`,
-file the request anyway as a record, and say plainly in the body that it is
+file the request anyway as a record and say plainly in the body that it is
 deliberate and why. Undocumented divergence between a release branch and `main` is
 the thing nobody can reconstruct later.

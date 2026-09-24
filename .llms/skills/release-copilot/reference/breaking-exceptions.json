@@ -1,5 +1,5 @@
 {
-  "_comment": "Reviewed exceptions to the noBreakingChanges gate. An entry here means a human looked at a [BREAKING]-annotated commit and determined it does not break consumers of the previous release. Never add one to make a red gate go away: record the evidence, and if you cannot state why it is safe, it is not an exception.",
+  "_comment": "Reviewed exceptions to the noBreakingChanges gate. An entry here means a human looked at a [BREAKING]-annotated commit and determined it does not break consumers of the previous release. Never add one to make a red gate go away: record the evidence and if you cannot state why it is safe, it is not an exception.",
 
   "exceptions": [
     {
@@ -9,7 +9,7 @@
       "title": "Enforce the ArrayBuffer borrow contract for Java TurboModules",
       "annotation": "[Android][Breaking]",
       "verdict": "not breaking for 0.87 -> 0.88 upgraders",
-      "reason": "The API it constrains is itself new in 0.88, so no consumer of the previous release can depend on it. All three Java ArrayBuffer TurboModule commits (5fb3ebce1ac, 5bb96395949, d84c13d5111) are 0.88-only, and 0.87's Android public API snapshot contains no Java-facing ArrayBuffer type: its 56 ArrayBuffer mentions are all C++ (facebook::jsi::ArrayBuffer 41, facebook::react::AsyncArrayBuffer 14). The annotation is correct against main's history and wrong against the released line.",
+      "reason": "The API it constrains is itself new in 0.88, so no consumer of the previous release can depend on it. All three Java ArrayBuffer TurboModule commits (5fb3ebce1ac, 5bb96395949, d84c13d5111) are 0.88-only and 0.87's Android public API snapshot contains no Java-facing ArrayBuffer type: its 56 ArrayBuffer mentions are all C++ (facebook::jsi::ArrayBuffer 41, facebook::react::AsyncArrayBuffer 14). The annotation is correct against main's history and wrong against the released line.",
       "contrast": "The iOS equivalent (#57879) WAS breaking and was reverted, because ObjC ArrayBuffer support shipped in 0.87 via 54b88d9dea5, so adopters existed. Reachability in the previous release is the whole difference.",
       "reviewedBy": "fabriziocucci",
       "reviewedOn": "2026-09-21"

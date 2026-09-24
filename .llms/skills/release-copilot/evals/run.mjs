@@ -7,7 +7,7 @@
  *
  *   1. Pass/fail per scenario, with the assertion that failed.
  *   2. An AGENDA COVERAGE matrix: every step the release docs prescribe, the
- *      phase step that implements it, and the scenario that exercises it.
+ *      phase step that implements it and the scenario that exercises it.
  *
  * The matrix is the point. Green tests prove the code does what the code says.
  * The matrix proves the code does what the RELEASE CAPTAIN'S AGENDA says, which
@@ -180,7 +180,7 @@ function renderMarkdown(results, cov) {
   L.push('');
   L.push('### Agenda coverage');
   L.push('');
-  L.push('Every step the release docs prescribe, the phase step implementing it, and the scenarios that reach it.');
+  L.push('Every step the release docs prescribe, the phase step implementing it and the scenarios that reach it.');
   L.push('');
   L.push('| Documented step | Source | Implemented by | Exercised by |');
   L.push('| --- | --- | --- | --- |');

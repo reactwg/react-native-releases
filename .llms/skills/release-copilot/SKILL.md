@@ -1,13 +1,13 @@
 ---
 name: release-copilot
-description: Run a React Native release end to end. Use when cutting a branch, publishing an RC, promoting to stable, or shipping a patch, and when asking where a release currently stands or why its CI is red. Derives live state, gates every step, and can prompt, run autonomously, or dry-run.
+description: Run a React Native release end to end. Use when cutting a branch, publishing an RC, promoting to stable or shipping a patch and when asking where a release currently stands or why its CI is red. Derives live state, gates every step and confirms every mutating action with the release captain before running it.
 ---
 
 # Release co-pilot
 
 The executable source of truth for running a React Native release. It derives where
-the release actually is, refuses to proceed through a failed gate, and can either
-walk you through each step or run unattended.
+the release actually is, refuses to proceed through a failed gate and walks the
+captain through each step, describing what it is about to do before it does it.
 
 ## First, check your environment
 
@@ -16,14 +16,14 @@ node scripts/cli.mjs doctor
 ```
 
 Checks Node, `gh` auth, the `read:project,project` scope the board needs, push access
-to all four repos a release touches, and that your `react-native` checkout is not
+to all four repos a release touches and that your `react-native` checkout is not
 shallow. Every failing check says how to fix itself.
 
 `run` and `plan` call it automatically and refuse to start on a broken environment.
 `--skip-doctor` overrides.
 
 The shallow-clone check matters more than it looks: `git merge-base --is-ancestor`
-silently returns the wrong answer on a shallow clone, and pick ordering and every
+silently returns the wrong answer on a shallow clone and pick ordering and every
 breaking-change check depend on it.
 
 ## Start here
@@ -34,7 +34,6 @@ cd .llms/skills/release-copilot
 node scripts/cli.mjs status --series 0.88      # where are we?
 node scripts/cli.mjs plan   --series 0.88      # what would happen? executes nothing
 node scripts/cli.mjs run    --series 0.88      # guided, confirms each mutating step
-node scripts/cli.mjs run    --series 0.88 --autonomous
 ```
 
 Always `plan` before `run`. `plan` evaluates every gate against live state, so it
@@ -53,7 +52,7 @@ node scripts/cli.mjs message --series 0.88                           # refresh a
 ```
 
 Ticks are **derived from live state**, not tracked by hand: open picks, branch CI, npm
-publication, Maven artifacts, the rn-diff-purge diff, the changelog PR, and whether the
+publication, Maven artifacts, the rn-diff-purge diff, the changelog PR and whether the
 GitHub release is still a draft. A step with no signal (verify template, communicate,
 update the project) stays `:hourglass:` and is listed at the end for you to confirm.
 
@@ -87,7 +86,7 @@ So:
 
 - **Released series:** derived exactly from tags.
 - **In-flight series:** reported as not decided, alongside the planning default
-  (`expectedGoldenRc`, currently rc.5), what prior series did, and whether anything
+  (`expectedGoldenRc`, currently rc.5), what prior series did and whether anything
   substantive landed since the last RC. The team may declare an earlier RC golden when
   nothing was picked between RCs, because another RC would be identical.
 
@@ -100,28 +99,60 @@ rather than ticking or demanding. Matching the planning default is **not** a dec
 | Mode | Reads | Mutations |
 | --- | --- | --- |
 | `plan` | live | printed, never executed |
-| `run` (guided, default) | live | confirm each one |
-| `run --autonomous` | live | executed |
+| `run` (guided) | live | described in full, then confirmed one at a time |
 | tests | fixture | printed |
 
-Gate failures hard-stop in every mode, including autonomous.
+**There is no unattended mode, by design.** A release publishes state that cannot
+be taken back: an npm version can be deprecated but not meaningfully unpublished
+and a tag is public the moment it is pushed. Passing an unknown mode throws
+rather than falling back to guided.
+
+Gate failures hard-stop in both modes.
+
+## What a confirmation looks like
+
+Before any mutating action the captain sees what it does, the exact command, what
+changes and whether it can be undone:
+
+```
+  Publish 0.88.0-rc.3 from 0.88-stable
+
+    command:  gh workflow run 'Create release' --repo react/react-native --ref 0.88-stable \
+                -f version=0.88.0-rc.3 -f is-latest-on-npm=false -f dry-run=false
+    changes:  publishes react-native@0.88.0-rc.3 to npm, publicly and permanently
+              creates the git tag v0.88.0-rc.3 on 0.88-stable
+              goes to the npm "next" tag, "latest" is unchanged
+              triggers the Podfile.lock bump, the changelog PR and a draft GitHub release
+    undo:     not really. npm deprecates rather than unpublishes and the tag is
+              public the moment it is pushed.
+
+    type "0.88.0-rc.3" to confirm, anything else to skip:
+```
+
+`declare()` refuses to build a mutating action with no `impact`, so a step cannot
+ask for consent to something it will not describe.
+
+The riskiest actions (publishing a version, cutting a release branch) ask the
+captain to **retype the version or branch** rather than accept `y`. A wrong
+version is the failure that guard exists for and retyping it is the cheapest
+check that the captain read what they are about to publish.
 
 ## Gates
 
 Preconditions are executable and block. The non-obvious ones exist because of
 specific incidents, so do not remove them as theoretical:
 
-- **`tagFree` and `branchShape`** — `create-release.yml` guards publishing behind
+- **`tagFree` and `branchShape`**: `create-release.yml` guards publishing behind
   `if:` conditions. A failed guard produces a **green run that did nothing**.
-- **`dryRunExplicit`** — the workflow's own `dry-run` input **defaults to true**.
-- **`distTagCorrect`** — `latest` belongs to the newest stable line. An RC goes to
+- **`dryRunExplicit`**: the workflow's own `dry-run` input **defaults to true**.
+- **`distTagCorrect`**: `latest` belongs to the newest stable line. An RC goes to
   `next`.
-- **`ciGreen`** — on red, classify before acting. `scripts/gates.mjs` knows the
-  rubygems DNS failure and the missing-artifact cascade as retryable, and a
+- **`ciGreen`**: on red, classify before acting. `scripts/gates.mjs` knows the
+  rubygems DNS failure and the missing-artifact cascade as retryable and a
   release-branch-only test failure as structural. Anything unrecognised is
   **not** auto-retryable.
-- **`hermesConsistent`** — `version.properties` and `package.json` must agree.
-- **`breakingWindow`** — a breaking change must not ship in a non-breaking series.
+- **`hermesConsistent`**: `version.properties` and `package.json` must agree.
+- **`breakingWindow`**: a breaking change must not ship in a non-breaking series.
 
 ## Verify, never trust the tick
 
@@ -142,14 +173,14 @@ while the publish itself succeeded. Read the `publish_react_native` log for
 
 ## Reference
 
-- `reference/process.md` — the full step content per phase
-- `reference/picks.md` — pick criteria, ordering and the board
-- `reference/reverts.md` — how to scope a revert so it does not ship a second break
-- `reference/changelog.md` — curation rules the generator does not apply
-- `reference/hermes.md` — the coupling and the `latest-v1` rule
-- `reference/testing.md` — which releases need manual testing
-- `reference/field-notes.md` — failures with their signatures and remedies
-- `reference/schedule.json` — cadence data, the source for breaking-window gating
+- `reference/process.md`: the full step content per phase
+- `reference/picks.md`: pick criteria, ordering and the board
+- `reference/reverts.md`: how to scope a revert so it does not ship a second break
+- `reference/changelog.md`: curation rules the generator does not apply
+- `reference/hermes.md`: the coupling and the `latest-v1` rule
+- `reference/testing.md`: which releases need manual testing
+- `reference/field-notes.md`: failures with their signatures and remedies
+- `reference/schedule.json`: cadence data, the source for breaking-window gating
 
 ## Evals: proving it follows the captain's agenda
 
@@ -163,14 +194,14 @@ Unit tests prove the code does what the code says. The evals prove it does what 
 **release documentation** says, which is the claim that matters.
 
 `evals/scenarios.json` holds named release situations as data, readable without
-reading test code. Each states the situation, the state it produces, and what the skill
+reading test code. Each states the situation, the state it produces and what the skill
 must decide. They cover the two critical flows end to end (**branch cut + RC0** and an
-**incremental RC**), promote-to-stable, and eight ways a release must be blocked, each
+**incremental RC**), promote-to-stable and eight ways a release must be blocked, each
 drawn from something that actually happened.
 
 The runner also emits an **agenda coverage matrix**: every step the release docs
-prescribe, the phase step implementing it, and the scenarios that reach it. A
-documented step with no implementing step, or with no scenario exercising it, is a
+prescribe, the phase step implementing it and the scenarios that reach it. A
+documented step with no implementing step or with no scenario exercising it, is a
 counted gap and fails the run. That is the mechanism that lets the docs be retired:
 when the matrix is complete, the skill demonstrably covers the agenda.
 
@@ -192,7 +223,7 @@ evals, so a broken scenario or a new agenda gap fails the normal test run.
 
 A breaking change that reached a non-breaking release has to come out. Scoping that is
 its own problem: on 0.88 the reported commit was only half of it, because the value had
-moved twice inside the release. See `reference/reverts.md` before starting, and open the
+moved twice inside the release. See `reference/reverts.md` before starting and open the
 pick request with the scope analysis **before** pushing.
 
 ## Meta-only steps

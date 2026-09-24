@@ -12,15 +12,15 @@
 | `rc-blocked-truncated-scan` | rc | pass | The compare API caps at 250 commits over a 554-commit range. A partial scan must refuse to judge rather than report clean. |
 | `rc-blocked-red-ci` | rc | pass | Never publish on red. The stop must come before the artifacts step, since release testing uses artifacts from the last run. |
 | `rc-blocked-hermes-mismatch` | rc | pass | 0.88 needed a Hermes pick mid-cycle, at rc.1, not at the branch cut. A mismatch means the branch consumes a different Hermes than it claims. |
-| `rc-blocked-open-pick` | rc | pass | An unactioned pick means the release ships without a change someone asked for, or with an undecided one. |
+| `rc-blocked-open-pick` | rc | pass | An unactioned pick means the release ships without a change someone asked for or with an undecided one. |
 | `rc-blocked-prerelease-taking-latest` | rc | pass | Would point every `npm install react-native` at an RC. The single most damaging mistake available in this flow. |
 | `rc-blocked-workflow-dryrun-default` | rc | pass | create-release defaults dry-run to true. Forgetting it produces a GREEN run that published nothing, indistinguishable from success. |
 | `rc-blocked-tag-exists` | rc | pass | create-release guards on tag absence and SKIPS silently, producing a green run that did nothing. |
-| `promote-to-stable` | promote | pass | The only flow where the npm latest tag legitimately moves, and the only one with post-promotion follow-ups. |
+| `promote-to-stable` | promote | pass | The only flow where the npm latest tag legitimately moves and the only one with post-promotion follow-ups. |
 
 ### Agenda coverage
 
-Every step the release docs prescribe, the phase step implementing it, and the scenarios that reach it.
+Every step the release docs prescribe, the phase step implementing it and the scenarios that reach it.
 
 | Documented step | Source | Implemented by | Exercised by |
 | --- | --- | --- | --- |

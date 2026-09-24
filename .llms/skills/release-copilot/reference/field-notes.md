@@ -18,7 +18,7 @@ unchanged.
 A failed guard **skips the step and the run still goes green**. The conclusion is
 indistinguishable from a real release.
 
-**Do:** check both preconditions before dispatching, and confirm the tag exists on
+**Do:** check both preconditions before dispatching and confirm the tag exists on
 the remote afterwards. Both are gates in this skill (`branchShape`, `tagFree`).
 
 ---
@@ -59,7 +59,7 @@ If that line is there, the release happened. Do not re-run the publish.
 
 ## npm says the version does not exist, but it does
 
-**Signature:** `npm view react-native@<v>` 404s, and `dist-tags` still shows the
+**Signature:** `npm view react-native@<v>` 404s and `dist-tags` still shows the
 previous version, minutes after a confirmed publish.
 
 The full package document at `https://registry.npmjs.org/react-native` is large and
@@ -93,7 +93,7 @@ before it gets that far.
 
 ## Stale job results after a partial rerun
 
-**Signature:** a run shows some jobs green and others red, and the red ones have an
+**Signature:** a run shows some jobs green and others red and the red ones have an
 old `startedAt`.
 
 Re-running a single job creates a new attempt. Jobs not re-run keep their previous
@@ -138,7 +138,7 @@ branch only, while `main` is green.
 
 `cache-key-test.js` asserted behaviour that only holds when the package version
 ends in `-main`. It was added five days before the 0.88 cut, so 0.88 was the first
-branch to inherit it, and it was red from rc.0.
+branch to inherit it and it was red from rc.0.
 
 **Do:** treat a failure that reproduces on the pre-change commit as structural.
 Structural failures are never fixed by retrying. This particular one is fixed, but
@@ -160,7 +160,7 @@ The most expensive pattern of the cycle. It happened four times:
 Symptoms differ (ERESOLVE, silent `any`, incomplete traces, a conflicting pick) but
 the cause is identical: only one side of a two-sided change got picked.
 
-**Do:** when picking, ask what else had to change for this to work, and where that
+**Do:** when picking, ask what else had to change for this to work and where that
 lives. Check the template repo and Hermes explicitly, since neither is in
 `react/react-native` and neither shows up in its CI until something breaks.
 
