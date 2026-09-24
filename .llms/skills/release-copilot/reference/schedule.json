@@ -1,0 +1,53 @@
+{
+  "_comment": "Release cadence. Seeded from react-native-reviewer/.llms/rules/release-cadence.md. This belongs in react-native-releases long term so there is one copy; see the skill's open questions.",
+  "_cadenceRule": "Releases ship on MONDAY, weekly. A release slips only when something blocks it, and it then goes out on the first clear day after. Tuesday tags in the history are slips, not the schedule. Do NOT infer the next release date from the milestone dates below: derive it from the last actual publish date plus the Monday rule. 0.88.0-rc.0 (Tue 09-08) and rc.1 (Tue 09-15) were both one-day slips, rc.1 because Hermes picks were found missing.",
+  "_milestoneCaveat": "branchCut, golden and release are TARGET dates, not publish dates. They have been observed to drift: 0.87's golden target was 2026-08-10 but v0.87.0-rc.4 was tagged 2026-08-04. Use goldenRc (which RC is the last one) for the manual-testing rule; treat the dates as planning targets only.",
+  "releaseDay": "Monday",
+  "cadenceDays": 7,
+  "series": [
+    {
+      "version": "0.84",
+      "type": "breaking",
+      "branchCut": "2026-01-12",
+      "release": "2026-02-16"
+    },
+    {
+      "version": "0.85",
+      "type": "breaking",
+      "branchCut": "2026-03-09",
+      "release": "2026-04-13"
+    },
+    {
+      "version": "0.86",
+      "type": "non-breaking",
+      "branchCut": "2026-05-11",
+      "release": "2026-06-15"
+    },
+    {
+      "version": "0.87",
+      "type": "breaking",
+      "branchCut": "2026-07-13",
+      "release": "2026-08-17"
+    },
+    {
+      "version": "0.88",
+      "type": "non-breaking",
+      "branchCut": "2026-09-07",
+      "release": "2026-10-05"
+    },
+    {
+      "version": "0.89",
+      "type": "breaking",
+      "branchCut": "2026-11-09",
+      "release": "2026-12-14"
+    }
+  ],
+  "manualTestingRcs": [
+    0,
+    1,
+    4
+  ],
+  "lastUpdatedFor": "0.84 through 0.89 (2026 schedule)",
+  "_goldenRcCaveat": "expectedGoldenRc is a PLANNING DEFAULT, not a fact, and the skill must never act on it alone. The golden RC is the last one before .0 and is decided by the team, not by the schedule: measured from tags, 0.82 rc.5, 0.83 rc.5, 0.84 rc.5, 0.85 rc.7, 0.86 rc.3, 0.87 rc.4. A fixed value was wrong for three of the four series it covered, and docs/guide-release-process.md's hardcoded 'RC4 (Golden RC)' is right only for 0.87. The team may also declare an EARLIER RC golden when nothing was picked between RCs, since another RC would be identical. So: derive it from tags for a released series, and for an in-flight series surface the expectation plus the no-picks signal and ASK the captain. Never assume.",
+  "expectedGoldenRc": 5
+}
