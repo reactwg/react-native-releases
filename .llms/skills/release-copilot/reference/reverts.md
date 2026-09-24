@@ -84,6 +84,44 @@ On 0.88, #58264 and #58190 both conflicted and both were kept on exactly this te
 - **Grep for stragglers.** After resolving, the reverted symbols should appear
   nowhere: `grep -rn "RCTArrayBuffer\|mustCopyBytes" <surface>`.
 
+## A complete revert can still leave something stranded
+
+A revert being complete with respect to its own commit does not mean the area is
+reconciled. Anything that landed **after** the reverted commit, written against the
+behaviour it introduced, is now stranded and the revert cannot know about it.
+
+Measured on 0.88. Reverting #57596 (`5e86c323cef`) produced an **identical file set** to
+the commit it reverted, five files, no omissions:
+
+```
+5e86c323cef   serializeMethod.js, GenerateModuleHObjCpp snap, RCTTurboModuleTests.mm,
+19a31849817   RCTTurboModule.mm, RCTTurboModuleArrayBufferTests.mm        (same five)
+```
+
+Yet two things were left behind:
+
+- the `scripts/cxx-api/api-snapshots/*.api` files still carried the `NSData` signature
+- `RCTSampleTurboModule.mm` still implements `getArrayBuffer:(NSData *)`
+
+The second one explains why a file-set check cannot help. That implementation arrived in
+**#57903 on 2026-08-12**, three weeks after #57596 on 2026-07-21 and #57596 never touched
+that file. Comparing the revert's file set against the reverted commit's finds nothing,
+by construction.
+
+**So do not build a revert-completeness check on file-set comparison.** It was proposed,
+it sounds right and it would have caught neither case while implying the area was clean.
+
+What actually catches each:
+
+| Leftover | Detector |
+| --- | --- |
+| stale `.api` snapshot | `Validate C++ API Snapshots` in CI, which was correctly red. The gap was `ciGreen` filtering to the tip SHA and not seeing it. Fixed. |
+| stranded implementation | nothing. It compiles, because the class does not declare conformance to the generated protocol. |
+
+The second has no cheap automated answer. The manual version is the one in the scoping
+procedure above: after reverting, ask what landed *after* the reverted commit that was
+written against it and check those by hand.
+
 ## Verify against the previous release
 
 The property worth checking is not "the revert applied" but "the surface matches the
