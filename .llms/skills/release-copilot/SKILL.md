@@ -158,10 +158,13 @@ specific incidents, so do not remove them as theoretical:
   between the two pin files says nothing about whether the branch has moved on, which is
   how two unreleased Hermes commits went unnoticed during 0.88. A re-landed back-out is
   called out by name, since that needs a human rather than an automatic bump.
-- **`picksNotBreaking`**: assesses pick CANDIDATES before they land. `noBreakingChanges`
-  scans what is already on the branch, so on its own it only catches a breaking change
-  after it has been picked and pushed. An unresolvable candidate blocks rather than
-  passes.
+- **`picksNotBreaking`**: assesses pick CANDIDATES before they land and only in a
+  non-breaking series. `noBreakingChanges` scans what is already on the branch, so on its
+  own it only catches a breaking change after it has been picked and pushed. It does not
+  judge from the changelog line: #58063 carried no `[BREAKING]` tag and broke C++ codegen
+  consumers, so it also inspects the changed files against the surfaces where a break
+  would not be annotated. A hit is a trigger to inspect, not a verdict. An unresolvable
+  candidate blocks rather than passes.
 - **`breakingWindow`**: a breaking change must not ship in a non-breaking series.
 
 ## Verify, never trust the tick

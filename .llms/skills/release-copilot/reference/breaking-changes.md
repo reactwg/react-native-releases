@@ -190,6 +190,33 @@ days *before* `v0.87.1` was tagged on 08-26 and is still not in it: it landed on
 git merge-base --is-ancestor <sha> v0.87.1 && echo "already shipped" || echo "new in this series"
 ```
 
+## Assessing a pick BEFORE it lands
+
+Everything above assesses what is already on the branch. That is too late for a pick:
+by the time a commit is in the range, it has been picked and pushed. `picksNotBreaking`
+resolves each open pick request to its commit and assesses the candidate instead.
+
+It applies **only to a non-breaking series**. A breaking release accepts breaking picks.
+
+It does not judge from the changelog line. #58063 carried no `[BREAKING]` tag and broke
+C++ codegen consumers, so an annotation check would have waved it through. The gate also
+inspects the changed files against the surfaces where a break would not be annotated:
+
+| Surface | Fires when |
+| --- | --- |
+| `react-native-codegen/src/{generators,parsers}` (non-test) | any change |
+| `scripts/cxx-api/api-snapshots/` | lines removed |
+| `types_DEPRECATED/`, `ReactNativeApi.d.ts`, `index.js.flow` | lines removed |
+| `libs.versions.toml`, `*.podspec` | lines removed |
+
+The removal-only rule matters. Adding to a public surface is safe and flagging every
+additive pick would train people to skip the gate.
+
+**A hit is a trigger to inspect, not a verdict.** The gate cannot tell you whether a
+change breaks anyone; it tells you the change is in a place where a break would be
+invisible to the annotation. Run the reachability test below, per generator target, then
+record the outcome.
+
 ## The reachability test
 
 For a commit in case 2, the question is: **was the affected API reachable by a consumer

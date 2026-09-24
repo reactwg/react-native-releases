@@ -1027,6 +1027,93 @@
         "failureMentions": "not re-run",
         "neverReaches": "publish"
       }
+    },
+    {
+      "id": "picks-blocked-unannotated-breaking",
+      "title": "A pick candidate is breaking but carries no annotation",
+      "why": "#58063 had no [BREAKING] tag and broke C++ codegen consumers. Judging a candidate by its changelog line alone passes it, so the gate inspects what the change actually touches.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [
+          {
+            "number": 1501,
+            "title": "[0.88] Align EventEmitter payload types"
+          }
+        ],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [
+          {
+            "number": 1501,
+            "title": "[0.88] Align EventEmitter payload types",
+            "resolved": [
+              {
+                "sha": "ab2ea649e65",
+                "message": "Align payload types\n\n[General][Changed] - tighten the parser",
+                "files": [
+                  {
+                    "f": "packages/react-native-codegen/src/parsers/parsers-commons.js",
+                    "a": 8,
+                    "d": 0
+                  }
+                ]
+              }
+            ],
+            "prOnly": false
+          }
+        ],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "picks",
+        "failingGates": [
+          "picksNotBreaking"
+        ],
+        "failureMentions": "codegen-contract",
+        "neverReaches": "publish"
+      }
     }
   ]
 }

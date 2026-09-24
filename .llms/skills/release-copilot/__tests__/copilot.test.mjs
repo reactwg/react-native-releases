@@ -13,7 +13,7 @@ import {dirname, join} from 'node:path';
 
 import {fixtureSources} from '../scripts/sources.mjs';
 import {deriveState} from '../scripts/release-state.mjs';
-import {evaluate, classifyFailure} from '../scripts/gates.mjs';
+import {evaluate, classifyFailure, hasBreakingTag} from '../scripts/gates.mjs';
 import {declare, render, Runner, MODES} from '../scripts/actions.mjs';
 import {runPhase} from '../scripts/run-phase.mjs';
 import {parseVersion, nextRC, promoteToStable, releaseShape, formatVersion} from '../scripts/version.mjs';
@@ -315,6 +315,82 @@ test('gate: the changelog template is not mistaken for a breaking annotation', a
     pickCandidates: [{number: 1426, title: 'bump androidx', resolved: [{sha: 'd6a', message: template}]}],
   });
   assert.equal((await evaluate(['picksNotBreaking'], state, {})).passed, true);
+});
+
+test('gate: an UNANNOTATED breaking candidate is still caught', async () => {
+  // #58063 carried no [BREAKING] tag and was breaking: C++ codegen accepted
+  // EventEmitter<ArrayBuffer> on 0.87 and rejects it on 0.88. An annotation
+  // check alone passes it, which is why the gate inspects changed files.
+  const state = baseState({
+    openPicks: [{number: 1501, title: 'Align TurboModule EventEmitter payload types'}],
+    pickCandidates: [
+      {
+        number: 1501,
+        title: 'Align TurboModule EventEmitter payload types',
+        resolved: [
+          {
+            sha: 'ab2ea649e65',
+            message: 'Align payload types\n\n[General][Changed] - tighten the parser',
+            files: [{f: 'packages/react-native-codegen/src/parsers/parsers-commons.js', a: 8, d: 0}],
+          },
+        ],
+      },
+    ],
+  });
+  assert.equal(hasBreakingTag(state.pickCandidates[0].resolved[0].message), false, 'no annotation');
+  const ev = await evaluate(['picksNotBreaking'], state, {});
+  assert.equal(ev.passed, false, 'must still block on the touched surface');
+  assert.match(ev.results[0].detail, /codegen-contract/);
+  assert.match(ev.results[0].detail, /trigger to inspect, not a verdict/);
+});
+
+test('surface detection does not fire on test-only or additive changes', async () => {
+  const {breakingSurfaces} = await import('../scripts/gates.mjs');
+  // Noise kills a gate faster than a miss does.
+  assert.equal(
+    breakingSurfaces([
+      {f: 'packages/react-native-codegen/src/generators/modules/__tests__/x-test.js', a: 9, d: 0},
+    ]).length,
+    0,
+    'codegen tests are not the contract',
+  );
+  assert.equal(
+    breakingSurfaces([{f: 'scripts/cxx-api/api-snapshots/ReactAppleDebugCxx.api', a: 4, d: 0}]).length,
+    0,
+    'adding to the API surface is not a break',
+  );
+  assert.equal(
+    breakingSurfaces([{f: 'packages/react-native/scripts/ios-prebuild/setup.js', a: 102, d: 63}]).length,
+    0,
+    'build tooling is not the consumer contract',
+  );
+  // But a removal from the same snapshot is.
+  assert.equal(
+    breakingSurfaces([{f: 'scripts/cxx-api/api-snapshots/ReactAppleDebugCxx.api', a: 0, d: 4}])[0].id,
+    'cxx-api-snapshot',
+  );
+});
+
+test('gate: candidate inspection applies ONLY to a non-breaking series', async () => {
+  const breakingSeries = baseState({
+    schedule: {series: {version: '0.89', type: 'breaking'}, isNonBreaking: false},
+    openPicks: [{number: 1502, title: 'z'}],
+    pickCandidates: [
+      {
+        number: 1502,
+        title: 'z',
+        resolved: [
+          {
+            sha: 'x',
+            message: '[IOS] [BREAKING] - changes codegen',
+            files: [{f: 'packages/react-native-codegen/src/generators/modules/Foo.js', a: 1, d: 1}],
+          },
+        ],
+      },
+    ],
+  });
+  const ev = await evaluate(['picksNotBreaking'], breakingSeries, {});
+  assert.equal(ev.passed, true, 'a breaking release accepts breaking picks');
 });
 
 test('gate: an unassessed pick candidate blocks', async () => {

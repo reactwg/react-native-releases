@@ -55,6 +55,60 @@ export function classifyFailure(text) {
   return {kind: 'unknown', id: null, reason: 'not a known signature, investigate before retrying', retryable: false};
 }
 
+/**
+ * Surfaces where a change can break a consumer who does not touch their code.
+ *
+ * Derived from what actually broke 0.88, not from a guess. Both real breaks
+ * (#57879, #58063) changed the codegen generators or parsers, which is what RN
+ * emits or accepts for third-party specs. An annotation check alone would have
+ * missed #58063, which carried no [BREAKING] tag.
+ *
+ * `removalOnly` surfaces flag only when lines are deleted, since adding to a
+ * public surface is additive and safe. Without that, every additive pick trips
+ * the gate and people learn to skip it.
+ */
+export const BREAKING_SURFACES = [
+  {
+    id: 'codegen-contract',
+    match: /^packages\/react-native-codegen\/src\/(generators|parsers)\//,
+    ignore: /__tests__|__test_fixtures__|__snapshots__/,
+    removalOnly: false,
+    why: 'changes what codegen emits or accepts for third-party specs, per generator target',
+  },
+  {
+    id: 'cxx-api-snapshot',
+    match: /^scripts\/cxx-api\/api-snapshots\//,
+    removalOnly: true,
+    why: 'removes entries from the exported C++ API surface',
+  },
+  {
+    id: 'public-types',
+    match: /(types_DEPRECATED\/|ReactNativeApi\.d\.ts$|index\.js\.flow$)/,
+    removalOnly: true,
+    why: 'removes from the public type surface',
+  },
+  {
+    id: 'version-floor',
+    match: /(libs\.versions\.toml$|\.podspec$)/,
+    removalOnly: true,
+    why: 'moves a dependency or platform floor that consumers resolve against',
+  },
+];
+
+/** Surfaces a candidate touches that could break a consumer. Evidence, not a verdict. */
+export function breakingSurfaces(files) {
+  const hits = [];
+  for (const s of BREAKING_SURFACES) {
+    const matched = (files ?? []).filter(
+      f => s.match.test(f.f) && !(s.ignore && s.ignore.test(f.f)) && (!s.removalOnly || f.d > 0),
+    );
+    if (matched.length) {
+      hits.push({id: s.id, why: s.why, files: matched.map(f => f.f)});
+    }
+  }
+  return hits;
+}
+
 /** True only for a real annotation, never the changelog template. */
 export function hasBreakingTag(message) {
   const withoutComments = String(message ?? '').replace(/<!--[\s\S]*?-->/g, '');
@@ -185,13 +239,36 @@ export const gates = {
     }
 
     const unresolved = cands.filter(c => c.resolved.length === 0);
-    const breaking = cands.filter(c => c.resolved.some(r => hasBreakingTag(r.message)));
+    const annotated = cands.filter(c => c.resolved.some(r => hasBreakingTag(r.message)));
 
-    if (breaking.length) {
+    if (annotated.length) {
       return FAIL(
-        `${breaking.length} open pick(s) carry a [BREAKING] annotation and ${state.series} is non-breaking: ` +
-          breaking.map(c => `#${c.number} ${c.title}`).join('; ') +
+        `${annotated.length} open pick(s) carry a [BREAKING] annotation and ${state.series} is non-breaking: ` +
+          annotated.map(c => `#${c.number} ${c.title}`).join('; ') +
           '. Do not pick without a reviewed exception. See reference/breaking-changes.md',
+      );
+    }
+
+    // The annotation is necessary but not sufficient: #58063 broke C++ codegen
+    // consumers with no [BREAKING] tag at all. Inspect what the change touches.
+    const touching = cands
+      .map(c => ({
+        c,
+        hits: c.resolved.flatMap(r => breakingSurfaces(r.files)),
+      }))
+      .filter(x => x.hits.length);
+
+    if (touching.length) {
+      return FAIL(
+        `${touching.length} open pick(s) touch a surface where a break would not be annotated: ` +
+          touching
+            .map(
+              x =>
+                `#${x.c.number} (${x.hits.map(h => `${h.id}: ${h.files.join(', ')}`).join('; ')})`,
+            )
+            .join('; ') +
+          '. This is a trigger to inspect, not a verdict. Run the reachability test per generator ' +
+          'target from reference/breaking-changes.md, then record the outcome.',
       );
     }
     if (unresolved.length) {
@@ -201,7 +278,9 @@ export const gates = {
           '. Resolve them by hand before picking; an unassessed candidate is not a passing one.',
       );
     }
-    return PASS(`${cands.length} candidate(s) assessed, none annotated [BREAKING]`);
+    return PASS(
+      `${cands.length} candidate(s) assessed: no [BREAKING] annotation and none touch a watched surface`,
+    );
   },
 
   hermesConsistent(state) {

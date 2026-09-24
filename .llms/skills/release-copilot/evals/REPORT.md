@@ -1,6 +1,6 @@
 ## release-copilot evals
 
-15/15 scenarios pass.
+16/16 scenarios pass.
 
 ### Scenarios
 
@@ -21,6 +21,7 @@
 | `picks-blocked-breaking-candidate` | rc | pass | noBreakingChanges only sees what is already on the branch, so alone it catches a breaking change after it has been picked and pushed. This stops it at the candidate stage. |
 | `picks-blocked-unassessed` | rc | pass | An unassessed candidate must block rather than pass. Absence of evidence is not evidence of safety. |
 | `rc-blocked-offtip-red` | rc | pass | Filtering CI to the tip SHA hid a red "Validate C++ API Snapshots" on the very commit that shipped 0.88.0-rc.2, because a Podfile.lock-only tip did not re-trigger it. |
+| `picks-blocked-unannotated-breaking` | rc | pass | #58063 had no [BREAKING] tag and broke C++ codegen consumers. Judging a candidate by its changelog line alone passes it, so the gate inspects what the change actually touches. |
 
 ### Agenda coverage
 
@@ -28,12 +29,12 @@ Every step the release docs prescribe, the phase step implementing it and the sc
 
 | Documented step | Source | Implemented by | Exercised by |
 | --- | --- | --- | --- |
-| Check out release branch locally | guide-release-process.md Step 1 | `checkout` | `rc-incremental-clean`, `rc-blocked-breaking-change`, `rc-blocked-truncated-scan`, `rc-blocked-red-ci`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind`, `picks-blocked-breaking-candidate`, `picks-blocked-unassessed`, `rc-blocked-offtip-red` |
+| Check out release branch locally | guide-release-process.md Step 1 | `checkout` | `rc-incremental-clean`, `rc-blocked-breaking-change`, `rc-blocked-truncated-scan`, `rc-blocked-red-ci`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind`, `picks-blocked-breaking-candidate`, `picks-blocked-unassessed`, `rc-blocked-offtip-red`, `picks-blocked-unannotated-breaking` |
 | Update external dependencies table | guide-release-candidate.md 0 | `external-deps` | `branch-cut-rc0-clean` |
 | Create release branch + template branch | guide-release-candidate.md 1 | `create-branches` | `branch-cut-rc0-clean` |
 | Create a Hermes release and pin it | guide-release-candidate.md 2 | `hermes` | `branch-cut-rc0-clean` |
 | Trigger a nightly | guide-release-candidate.md 3 | `nightly` | `branch-cut-rc0-clean` |
-| Action cherry-picks and pull requests | guide-release-process.md Step 2 | `picks` | `rc-incremental-clean`, `rc-blocked-breaking-change`, `rc-blocked-truncated-scan`, `rc-blocked-red-ci`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind`, `picks-blocked-breaking-candidate`, `picks-blocked-unassessed`, `rc-blocked-offtip-red` |
+| Action cherry-picks and pull requests | guide-release-process.md Step 2 | `picks` | `rc-incremental-clean`, `rc-blocked-breaking-change`, `rc-blocked-truncated-scan`, `rc-blocked-red-ci`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind`, `picks-blocked-breaking-candidate`, `picks-blocked-unassessed`, `rc-blocked-offtip-red`, `picks-blocked-unannotated-breaking` |
 | Sweep for breaking changes (non-breaking series) | release-cadence.md gating | `breaking-sweep` | `branch-cut-rc0-clean`, `rc-incremental-clean`, `rc-blocked-breaking-change`, `rc-blocked-truncated-scan`, `rc-blocked-red-ci`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind`, `rc-blocked-offtip-red` |
 | Wait for Github Actions artifacts to build | guide-release-process.md Step 3 | `artifacts` | `branch-cut-rc0-clean`, `rc-incremental-clean`, `rc-blocked-red-ci`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind`, `rc-blocked-offtip-red` |
 | Test the release | guide-release-process.md Step 4 | `test` | `rc-incremental-clean`, `rc-blocked-hermes-mismatch`, `rc-blocked-open-pick`, `rc-blocked-prerelease-taking-latest`, `rc-blocked-workflow-dryrun-default`, `rc-blocked-tag-exists`, `rc-blocked-hermes-behind` |

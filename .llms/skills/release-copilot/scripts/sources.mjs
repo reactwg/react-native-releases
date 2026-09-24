@@ -258,10 +258,21 @@ export function liveSources() {
 
         let resolved = [];
         for (const sha of shas.slice(0, 4)) {
-          const raw = await gh(['api', `repos/${RN_REPO}/commits/${sha}`, '--jq', '.commit.message'])
-            .catch(() => '');
-          if (raw) {
-            resolved.push({sha: sha.slice(0, 11), message: raw});
+          // Message AND files: the annotation alone is not enough to judge a
+          // candidate. #58063 carried no [BREAKING] tag and was breaking.
+          const raw = await gh([
+            'api',
+            `repos/${RN_REPO}/commits/${sha}`,
+            '--jq',
+            '{message: .commit.message, files: [.files[] | {f: .filename, a: .additions, d: .deletions}]}',
+          ]).catch(() => '');
+          const parsed = parseJSON(raw, null);
+          if (parsed) {
+            resolved.push({
+              sha: sha.slice(0, 11),
+              message: parsed.message ?? '',
+              files: parsed.files ?? [],
+            });
           }
         }
         // A PR-only body cannot be resolved to a commit reliably, since Meta's
