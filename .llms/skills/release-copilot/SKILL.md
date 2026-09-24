@@ -147,11 +147,21 @@ specific incidents, so do not remove them as theoretical:
 - **`dryRunExplicit`**: the workflow's own `dry-run` input **defaults to true**.
 - **`distTagCorrect`**: `latest` belongs to the newest stable line. An RC goes to
   `next`.
-- **`ciGreen`**: on red, classify before acting. `scripts/gates.mjs` knows the
+- **`ciGreen`**: on red, classify before acting. It also fails when a path-filtered
+  workflow is red on an earlier commit and simply did not re-run on the tip, which
+  previously hid a red gate on the commit that shipped an RC. `scripts/gates.mjs` knows the
   rubygems DNS failure and the missing-artifact cascade as retryable and a
   release-branch-only test failure as structural. Anything unrecognised is
   **not** auto-retryable.
 - **`hermesConsistent`**: `version.properties` and `package.json` must agree.
+- **`hermesCurrent`**: the pinned tag must be current with its Hermes branch. Consistency
+  between the two pin files says nothing about whether the branch has moved on, which is
+  how two unreleased Hermes commits went unnoticed during 0.88. A re-landed back-out is
+  called out by name, since that needs a human rather than an automatic bump.
+- **`picksNotBreaking`**: assesses pick CANDIDATES before they land. `noBreakingChanges`
+  scans what is already on the branch, so on its own it only catches a breaking change
+  after it has been picked and pushed. An unresolvable candidate blocks rather than
+  passes.
 - **`breakingWindow`**: a breaking change must not ship in a non-breaking series.
 
 ## Verify, never trust the tick

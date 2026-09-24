@@ -106,7 +106,17 @@ const commonPublishSteps = [
   {
     id: 'pre-flight',
     title: 'Pre-flight checks',
-    gates: ['branchShape', 'tagFree', 'ciGreen', 'noOpenPicks', 'noBreakingChanges', 'hermesConsistent', 'distTagCorrect', 'dryRunExplicit'],
+    gates: [
+      'branchShape',
+      'tagFree',
+      'ciGreen',
+      'noOpenPicks',
+      'noBreakingChanges',
+      'hermesConsistent',
+      'hermesCurrent',
+      'distTagCorrect',
+      'dryRunExplicit',
+    ],
     actions: () => [],
     note: 'All gates are hard stops. A red CI failure must be classified, never blanket-retried.',
   },
@@ -295,10 +305,10 @@ export const PHASES = {
       {
         id: 'picks',
         title: 'Action pick requests',
-        gates: [],
+        gates: ['picksNotBreaking'],
         actions: () => [],
         note:
-          'Every change must be on the board before picking. Pick in dependency order, not chronological order. See reference/picks.md.',
+          'Every change must be on the board before picking. Pick in dependency order, not chronological order. The gate assesses candidates BEFORE they land; noBreakingChanges only sees what is already on the branch. See reference/picks.md.',
       },
       breakingSweepStep,
       artifactsStep,
@@ -348,7 +358,7 @@ export const PHASES = {
       {
         id: 'picks',
         title: 'Action pick requests',
-        gates: [],
+        gates: ['picksNotBreaking'],
         actions: () => [],
         note: 'Patch criteria are stricter than RC criteria. See reference/picks.md.',
       },

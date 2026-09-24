@@ -201,6 +201,21 @@ export async function deriveState(sources, {series, today} = {}) {
 
   const runs = await sources.workflowRuns(branch);
   const tipRuns = runs.filter(r => r.headSha && tip && r.headSha.startsWith(tip.slice(0, 11)));
+
+  // Path-filtered workflows do not re-run on every commit, so a workflow can be
+  // red on an older commit and simply be absent from the tip. Filtering CI to
+  // the tip SHA hid a red "Validate C++ API Snapshots" on the very commit that
+  // shipped 0.88.0-rc.2. Track the latest run per workflow as well.
+  const latestPerWorkflow = new Map();
+  for (const r of runs) {
+    if (!latestPerWorkflow.has(r.workflowName)) {
+      latestPerWorkflow.set(r.workflowName, r);
+    }
+  }
+  const staleRed = [...latestPerWorkflow.values()]
+    .filter(r => r.conclusion === 'failure')
+    .filter(r => !(tip && r.headSha && r.headSha.startsWith(tip.slice(0, 11))))
+    .map(r => ({workflow: r.workflowName, sha: r.headSha.slice(0, 11), at: r.createdAt}));
   const ci = [];
   for (const run of tipRuns) {
     const jobs = await sources.workflowJobs(run.databaseId);
@@ -317,6 +332,29 @@ export async function deriveState(sources, {series, today} = {}) {
     }
   }
 
+  // Is the pinned Hermes tag current with its branch? A consistency check
+  // between the two pin files cannot answer this.
+  let hermesUnreleased = null;
+  if (hermesPinned) {
+    try {
+      hermesUnreleased = await sources.hermesUnreleased(hermesPinned);
+    } catch {
+      hermesUnreleased = null;
+    }
+  }
+
+  // Resolve open picks to commits so candidates can be assessed before landing.
+  let pickCandidates = null;
+  if (picks.length) {
+    try {
+      pickCandidates = await sources.pickCandidates(picks);
+    } catch {
+      pickCandidates = null;
+    }
+  } else {
+    pickCandidates = [];
+  }
+
   const seriesSchedule = scheduleFor(schedule, resolvedSeries);
 
   const nextParsed = proposedNext ? parseVersion(proposedNext) : null;
@@ -395,6 +433,9 @@ export async function deriveState(sources, {series, today} = {}) {
     openPicks: picks.map(p => ({number: p.number, title: p.title})),
     board,
     hermes: {pinned: hermesPinned, compiler: hermesCompiler},
+    hermesUnreleased,
+    pickCandidates,
+    staleRed,
     breakingCommits,
     breakingBaseline,
     breakingScanComplete,
@@ -436,10 +477,20 @@ export function summarize(state) {
     `npm tags      latest=${distTags.latest ?? '?'}  next=${distTags.next ?? '?'}`,
   );
   L.push(`Hermes        ${hermes.pinned ?? '?'} (compiler ${hermes.compiler ?? '?'})`);
+  const hu = state.hermesUnreleased;
+  if (hu?.resolved && hu.commits.length) {
+    L.push(`              ${hu.commits.length} commit(s) on ${hu.branch} NOT in the pinned tag:`);
+    for (const c of hu.commits) {
+      L.push(`                ${c.sha} ${c.reland ? '[RE-LAND] ' : ''}${c.subject.slice(0, 54)}`);
+    }
+  }
 
   const red = ci.filter(r => r.conclusion === 'failure');
   const running = ci.filter(r => r.status !== 'completed');
   L.push(`CI on tip     ${ci.length} workflow(s), ${red.length} failing, ${running.length} running`);
+  for (const sr of state.staleRed ?? []) {
+    L.push(`              RED off-tip: ${sr.workflow} failed on ${sr.sha} and has not re-run`);
+  }
   for (const r of red) {
     L.push(`                ${r.workflow}: ${r.failedJobs.join(', ')}`);
   }

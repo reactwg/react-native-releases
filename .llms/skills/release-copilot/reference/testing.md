@@ -6,13 +6,17 @@ Only these:
 
 - **RC0**
 - **RC1**
-- **the golden RC** (the last one before `.0`, RC4 on a normal cadence, RC2 for 0.88)
+- **the golden RC**, meaning the last one before `.0`
 - **stable** `.0` and patches on the latest line
 
 Everything else needs no manual pass. One release crew member is enough.
 
-The golden RC number varies by series. Read `goldenRc` from
-`reference/schedule.json` rather than assuming RC4.
+The golden RC number is **not predictable and not stored**. Measured from tags it
+landed at rc.5, rc.5, rc.5, rc.7, rc.3 then rc.4 across 0.82 to 0.87, so any fixed
+value goes stale. For a released series `status` derives it from tags; for one in
+flight it reports *not decided* and you confirm with the captain. `schedule.json`
+carries only `expectedGoldenRc` as a planning default, which is never treated as a
+decision.
 
 ## E2E must be green regardless
 

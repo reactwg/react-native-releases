@@ -55,12 +55,28 @@ export function classifyFailure(text) {
   return {kind: 'unknown', id: null, reason: 'not a known signature, investigate before retrying', retryable: false};
 }
 
+/** True only for a real annotation, never the changelog template. */
+export function hasBreakingTag(message) {
+  const withoutComments = String(message ?? '').replace(/<!--[\s\S]*?-->/g, '');
+  return [...withoutComments.matchAll(/\[([^\]]*)\]/g)].some(
+    m => !m[1].includes('|') && /^\s*BREAKING\s*$/i.test(m[1]),
+  );
+}
+
 export const gates = {
   ciGreen(state) {
     const red = state.ci.filter(r => r.conclusion === 'failure');
     const running = state.ci.filter(r => r.status !== 'completed');
     if (running.length) {
       return FAIL(`CI still running: ${running.map(r => r.workflow).join(', ')}`);
+    }
+    const stale = state.staleRed ?? [];
+    if (!red.length && stale.length) {
+      return FAIL(
+        `tip is green but ${stale.length} workflow(s) are red on an earlier commit and have not re-run: ` +
+          stale.map(s2 => `${s2.workflow} (${s2.sha})`).join('; ') +
+          '. Path-filtered workflows skip commits that do not touch their paths, so this is still red.',
+      );
     }
     if (!red.length) {
       return PASS(`${state.ci.length} workflow(s) green on ${state.branchTip?.slice(0, 11)}`);
@@ -118,6 +134,74 @@ export const gates = {
       return PASS(`stable release not taking latest, confirm that is intended for ${seriesOf(next)}`);
     }
     return PASS(isLatest ? 'stable release taking latest' : 'prerelease going to next');
+  },
+
+  /**
+   * A [BREAKING] annotation, ignoring the changelog template.
+   *
+   * PR bodies carry `[ANDROID|GENERAL|IOS|INTERNAL] [BREAKING|ADDED|...]` as a
+   * fill-in-the-blank comment. Matching that produced a false positive on a
+   * plain androidx patch bump, so brackets containing a pipe do not count and
+   * HTML comments are stripped first.
+   */
+  hermesCurrent(state) {
+    const h = state.hermesUnreleased;
+    if (h == null) {
+      return FAIL('could not determine whether the pinned Hermes tag is current');
+    }
+    if (!h.resolved) {
+      return FAIL(`could not compare ${h.tag} against ${h.branch} on facebook/hermes`);
+    }
+    if (h.commits.length === 0) {
+      return PASS(`${h.tag} is current with ${h.branch}`);
+    }
+    const relands = h.commits.filter(c => c.reland);
+    return FAIL(
+      `${h.commits.length} commit(s) on ${h.branch} are not in the pinned ${h.tag}: ` +
+        h.commits.map(c => `${c.sha} ${c.subject}`).join('; ') +
+        (relands.length
+          ? `. ${relands.length} of these RE-LAND a previously backed-out change, which needs a human decision before pinning.`
+          : '') +
+        ' Cut a Hermes release and bump the pin or record why the branch is deliberately ahead.',
+    );
+  },
+
+  /**
+   * Assess pick CANDIDATES before they land.
+   *
+   * noBreakingChanges scans what is already on the branch, so on its own it can
+   * only catch a breaking change after it has been picked and pushed. That is
+   * how three of them reached 0.88.
+   */
+  picksNotBreaking(state) {
+    if (!state.schedule.isNonBreaking) {
+      return PASS(`${state.series} is a breaking release, no restriction on candidates`);
+    }
+    const cands = state.pickCandidates;
+    if (cands == null) {
+      return state.openPicks.length === 0
+        ? PASS('no open picks to assess')
+        : FAIL('could not resolve the open pick requests to commits, so they cannot be assessed');
+    }
+
+    const unresolved = cands.filter(c => c.resolved.length === 0);
+    const breaking = cands.filter(c => c.resolved.some(r => hasBreakingTag(r.message)));
+
+    if (breaking.length) {
+      return FAIL(
+        `${breaking.length} open pick(s) carry a [BREAKING] annotation and ${state.series} is non-breaking: ` +
+          breaking.map(c => `#${c.number} ${c.title}`).join('; ') +
+          '. Do not pick without a reviewed exception. See reference/breaking-changes.md',
+      );
+    }
+    if (unresolved.length) {
+      return FAIL(
+        `could not resolve ${unresolved.length} pick(s) to a commit, so they are unassessed: ` +
+          unresolved.map(c => `#${c.number}`).join(', ') +
+          '. Resolve them by hand before picking; an unassessed candidate is not a passing one.',
+      );
+    }
+    return PASS(`${cands.length} candidate(s) assessed, none annotated [BREAKING]`);
   },
 
   hermesConsistent(state) {

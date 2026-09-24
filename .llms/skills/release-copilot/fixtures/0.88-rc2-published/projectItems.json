@@ -289,6 +289,23 @@
         "repository": "https://github.com/reactwg/react-native-releases",
         "status": "Inbox",
         "title": "[0.88] Repair stale staged headers in the iOS prebuild"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/commit/d6a5f159c6ef81651d38af2a33338b921700e044\n\n### Description\n\nSince 0.87.0, `SurfaceMountingManager` keeps its view registry in a `MutableIntObjectMap` (#56646). `androidx.collection` 1.4.0 to 1.4.2 can corrupt `ScatterMap` and its primitive variants. Version 1.4.3 fixes this (https://issuetracker.google.com/issues/352560465). React Native pins 1.4.0, and a new app resolves 1.4.2 through `androidx.core` and `androidx.window`.\n\nWhen the map loses an entry, React Native logs `Unable to find viewState for tag N` and skips that mount instruction. The view does not get prop, layout or delete updates, and a stale view can stay on screen. Plain `View`s are enough to cause it. Libraries that remove many views at once, such as Reanimated layout animations, cause it sooner.\n\nAt the moment `0.88-stable` does not contain this fix yet. It still pins `androidx-collection = \"1.4.0\"`.\n\nThe fix from the linked commit (that's already on main) changes one line in `packages/react-native/gradle/libs.versions.toml` (1.4.0 → 1.4.4).\n\n- Issue: https://github.com/react/react-native/issues/58388\n- Reproducer: https://github.com/pawicao/rn-android-view-registry-corruption\n- Result with 1.4.2: 91 `Unable to find viewState` errors on 45 tags in two 40-round runs on a Pixel 9a, and a stale view on screen.\n- Result with 1.4.4: no errors in 120 rounds.",
+          "number": 1426,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Bump androidx.collection to 1.4.4 to fix lost view registry entries on Android",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1426"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg8gqpY",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Inbox",
+        "title": "[0.88] Bump androidx.collection to 1.4.4 to fix lost view registry entries on Android"
       }
     ]
   }

@@ -16,6 +16,7 @@ const exec = promisify(execFile);
 
 const RN_REPO = 'react/react-native';
 const RELEASES_REPO = 'reactwg/react-native-releases';
+const HERMES_REPO = 'facebook/hermes';
 const PROJECT_OWNER = 'reactwg';
 
 async function sh(cmd, args, {allowFail = false} = {}) {
@@ -192,6 +193,84 @@ export function liveSources() {
         {allowFail: true},
       );
       return raw || null;
+    },
+
+    /**
+     * Commits sitting on the Hermes stable branch beyond the tag React Native
+     * currently pins.
+     *
+     * Pinning a version that is behind its branch is invisible to a
+     * version.properties/package.json consistency check, which is how two
+     * unreleased Hermes commits (including a re-landed crash fix) went unnoticed
+     * during 0.88.
+     */
+    async hermesUnreleased(pinnedVersion) {
+      const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(pinnedVersion ?? '');
+      if (!m) {
+        return null;
+      }
+      const [, line, minor] = m;
+      const branch = `${line}.${minor}.0-stable`;
+      const tag = `hermes-v${pinnedVersion}`;
+      const raw = await gh([
+        'api',
+        `repos/${HERMES_REPO}/compare/${tag}...${branch}?per_page=100`,
+      ]).catch(() => '');
+      const cmp = parseJSON(raw, null);
+      if (!cmp) {
+        return {branch, tag, resolved: false, commits: []};
+      }
+      return {
+        branch,
+        tag,
+        resolved: true,
+        commits: (cmp.commits ?? []).map(c => ({
+          sha: c.sha.slice(0, 11),
+          subject: c.commit.message.split('\n')[0],
+          // A double back-out re-lands something previously reverted, which is
+          // exactly the case that needs a human rather than an auto-bump.
+          reland: /^Back out "Back out/i.test(c.commit.message),
+        })),
+      };
+    },
+
+    /**
+     * Resolve each open pick request to the commit it asks for, so a candidate
+     * can be assessed BEFORE it lands rather than after.
+     */
+    async pickCandidates(picks) {
+      const out = [];
+      for (const p of picks) {
+        const body = await gh([
+          'issue',
+          'view',
+          String(p.number),
+          '--repo',
+          RELEASES_REPO,
+          '--json',
+          'body',
+          '--jq',
+          '.body',
+        ]).catch(() => '');
+
+        const shas = [...body.matchAll(/commit\/([0-9a-f]{7,40})/g)].map(m => m[1]);
+        const prs = [...body.matchAll(/pull\/(\d+)/g)].map(m => Number(m[1]));
+
+        let resolved = [];
+        for (const sha of shas.slice(0, 4)) {
+          const raw = await gh(['api', `repos/${RN_REPO}/commits/${sha}`, '--jq', '.commit.message'])
+            .catch(() => '');
+          if (raw) {
+            resolved.push({sha: sha.slice(0, 11), message: raw});
+          }
+        }
+        // A PR-only body cannot be resolved to a commit reliably, since Meta's
+        // import rewrites SHAs. Report it unresolved rather than guessing.
+        const prOnly = resolved.length === 0 && prs.length > 0;
+
+        out.push({number: p.number, title: p.title, resolved, prOnly});
+      }
+      return out;
     },
 
     /**
@@ -378,6 +457,12 @@ export function fixtureSources(dir) {
     async changelogAt(ref) {
       return pick('changelogAt', ref);
     },
+    async hermesUnreleased(v) {
+      return pick('hermesUnreleased', v);
+    },
+    async pickCandidates(picks) {
+      return pick('pickCandidates', picks.map(p => p.number).join(','));
+    },
     async releaseArtifacts(version) {
       return pick('releaseArtifacts', version);
     },
@@ -436,6 +521,9 @@ export function recordingSources(inner, dir) {
       return put('commitsBetween', `${b}...${h}`, trimmed);
     },
     changelogAt: async r => put('changelogAt', r, await inner.changelogAt(r)),
+    hermesUnreleased: async v => put('hermesUnreleased', v, await inner.hermesUnreleased(v)),
+    pickCandidates: async ps =>
+      put('pickCandidates', ps.map(p => p.number).join(','), await inner.pickCandidates(ps)),
     releaseArtifacts: async (v, p) =>
       put('releaseArtifacts', v, await inner.releaseArtifacts(v, p)),
     flush() {

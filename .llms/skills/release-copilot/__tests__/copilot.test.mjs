@@ -35,6 +35,9 @@ const baseState = over => ({
   breakingCommits: [],
   breakingBaseline: 'v0.87.1',
   breakingScanComplete: true,
+  staleRed: [],
+  pickCandidates: [],
+  hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
   ...over,
 });
 
@@ -257,6 +260,83 @@ test('a prerelease publish says latest is untouched, a stable one says it moves'
 
   const [stable] = publishStep.actions({...state, proposedNext: '0.88.0'}, {isLatest: true});
   assert.ok(stable.impact.some(i => /moves the npm "latest" tag/.test(i)));
+});
+
+// ------------------------------------------- Hermes freshness / pick gates
+
+test('gate: a Hermes branch ahead of the pinned tag blocks and names the re-land', async () => {
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      commits: [
+        {sha: 'ace586d9008', subject: 'Back out "Back out D116775223"', reland: true},
+        {sha: 'e3371863eec', subject: 'doc comment', reland: false},
+      ],
+    },
+  });
+  const ev = await evaluate(['hermesCurrent'], state, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /RE-LAND/, 'a re-landed back-out needs a human, so say so');
+  // hermesConsistent passes on the same state: the two checks are not redundant.
+  assert.equal((await evaluate(['hermesConsistent'], state, {})).passed, true);
+});
+
+test('gate: an unresolvable Hermes comparison fails rather than passing', async () => {
+  const unresolved = baseState({
+    hermesUnreleased: {branch: 'b', tag: 't', resolved: false, commits: []},
+  });
+  assert.equal((await evaluate(['hermesCurrent'], unresolved, {})).passed, false);
+  assert.equal((await evaluate(['hermesCurrent'], baseState({hermesUnreleased: null}), {})).passed, false);
+});
+
+test('gate: a [BREAKING] pick candidate is caught before it lands', async () => {
+  const state = baseState({
+    openPicks: [{number: 1499, title: 'x'}],
+    pickCandidates: [
+      {
+        number: 1499,
+        title: 'x',
+        resolved: [{sha: 'abc', message: 'T\n\n[IOS] [BREAKING] - changes codegen output'}],
+      },
+    ],
+  });
+  const ev = await evaluate(['picksNotBreaking'], state, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /#1499/);
+});
+
+test('gate: the changelog template is not mistaken for a breaking annotation', async () => {
+  // This exact false positive fired on a plain androidx patch bump.
+  const template = 'bump androidx\n\n<!-- [ANDROID|GENERAL|IOS] [BREAKING|ADDED|FIXED] - Message -->';
+  const state = baseState({
+    openPicks: [{number: 1426, title: 'bump androidx'}],
+    pickCandidates: [{number: 1426, title: 'bump androidx', resolved: [{sha: 'd6a', message: template}]}],
+  });
+  assert.equal((await evaluate(['picksNotBreaking'], state, {})).passed, true);
+});
+
+test('gate: an unassessed pick candidate blocks', async () => {
+  const state = baseState({
+    openPicks: [{number: 1500, title: 'y'}],
+    pickCandidates: [{number: 1500, title: 'y', resolved: [], prOnly: true}],
+  });
+  const ev = await evaluate(['picksNotBreaking'], state, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /unassessed/);
+});
+
+test('gate: CI red on an earlier commit is not hidden by a green tip', async () => {
+  // A path-filtered workflow that did not re-run on the tip was invisible, and
+  // hid a red gate on the commit that shipped 0.88.0-rc.2.
+  const state = baseState({
+    ci: [{workflow: 'Test All', conclusion: 'success', status: 'completed', failedJobs: []}],
+    staleRed: [{workflow: 'Validate C++ API Snapshots', sha: '215169c51bf', at: 'x'}],
+  });
+  const ev = await evaluate(['ciGreen'], state, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /Validate C\+\+ API Snapshots/);
 });
 
 // ------------------------------------------------- breaking-change sweep
@@ -504,7 +584,10 @@ test('fixture: rc dry-run reaches publish once gates are clear, executing nothin
   const state = {
     ...derived,
     ci: [{workflow: 'Test All', conclusion: 'success', status: 'completed', failedJobs: []}],
+    staleRed: [],
     openPicks: [],
+    pickCandidates: [],
+    hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
   };
   const result = await runPhase(state, {
     mode: MODES.DRY_RUN,
@@ -525,7 +608,10 @@ test('golden plan: rc phase step order is stable', async () => {
   const clean = {
     ...state,
     openPicks: [],
+    pickCandidates: [],
     breakingCommits: [],
+    staleRed: [],
+    hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
     ci: [{workflow: 'Test All', conclusion: 'success', status: 'completed', failedJobs: []}],
   };
   const result = await runPhase(clean, {
