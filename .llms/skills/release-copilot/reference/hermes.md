@@ -28,6 +28,47 @@ patch line. `260318099.0.0-stable` holds `.0.0`, `.0.1`, `.0.2` and so on. Tags 
 
 React Native 0.87 consumed the `250829098` line; 0.88 moved to `260318099`.
 
+## The version bump goes through a PR, always
+
+`RN Build Static Hermes` has **no version input**. It reads the version verbatim from
+`npm/hermes-compiler/package.json`:
+
+```js
+// utils/scripts/hermes/version-utils.js
+async function getMainVersion() {
+  const packageJson = JSON.parse(await fs.readFile('npm/hermes-compiler/package.json'));
+  return packageJson.version;
+}
+async function getVersion(buildType) {
+  if (buildType === 'dry-run') return `${mainVersion}-${shortCommit}`;
+  return mainVersion;              // release: verbatim
+}
+```
+
+So the file must already name the version you want before you dispatch. Dispatching
+while it still names the released version re-cuts that version. Check it first:
+
+```sh
+curl -s https://raw.githubusercontent.com/facebook/hermes/<branch>/npm/hermes-compiler/package.json \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"
+```
+
+**Propose a PR for the bump, never a direct push.** The stable branches are protected and
+the remote rejects it outright:
+
+```
+remote: - Changes must be made through a pull request.
+remote: - Cannot update this protected ref.
+```
+
+Every previous bump went the same way (`.0.1` #2102, `.0.2` #2110, `.0.3` #2178). A
+feature branch pushes fine; only the stable ref is protected.
+
+Convention, from those three: title `Bump hermes-compiler version to <version>`, summary
+noting that the file should point at the **next** version to publish. Which means the
+bump is really the tail of the previous release, so if it is still on the released
+version, the last release skipped its follow-up.
+
 ## Releasing
 
 Workflow: **RN Build Static Hermes** (`rn-build-hermes.yml`), dispatched on the

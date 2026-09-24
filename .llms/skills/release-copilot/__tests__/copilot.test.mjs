@@ -283,6 +283,40 @@ test('gate: a Hermes branch ahead of the pinned tag blocks and names the re-land
   assert.equal((await evaluate(['hermesConsistent'], state, {})).passed, true);
 });
 
+test('gate: a stale hermes-compiler version warns that a cut would re-cut', async () => {
+  // RN Build Static Hermes has no version input; it reads this file verbatim.
+  // A stale value silently re-cuts an already-published version.
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      inTreeVersion: '260318099.0.3',
+      wouldRecut: true,
+      commits: [{sha: 'abc', subject: 'x', reland: false}],
+    },
+  });
+  const ev = await evaluate(['hermesCurrent'], state, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /would re-cut it/);
+  assert.match(ev.results[0].detail, /bump PR first/, 'the stable ref rejects direct pushes');
+});
+
+test('gate: a bumped version reports what the cut will produce', async () => {
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      inTreeVersion: '260318099.0.4',
+      wouldRecut: false,
+      commits: [{sha: 'abc', subject: 'x', reland: false}],
+    },
+  });
+  const ev = await evaluate(['hermesCurrent'], state, {});
+  assert.match(ev.results[0].detail, /would cut 260318099\.0\.4/);
+});
+
 test('gate: an unresolvable Hermes comparison fails rather than passing', async () => {
   const unresolved = baseState({
     hermesUnreleased: {branch: 'b', tag: 't', resolved: false, commits: []},

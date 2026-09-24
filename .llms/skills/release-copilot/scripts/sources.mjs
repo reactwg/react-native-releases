@@ -220,10 +220,22 @@ export function liveSources() {
       if (!cmp) {
         return {branch, tag, resolved: false, commits: []};
       }
+      // What the release workflow would actually cut right now. It reads this
+      // file verbatim and has no version input, so a stale value re-cuts an
+      // already-published version.
+      const pkgRaw = await sh(
+        'curl',
+        ['-s', `https://raw.githubusercontent.com/${HERMES_REPO}/${branch}/npm/hermes-compiler/package.json`],
+        {allowFail: true},
+      );
+      const inTreeVersion = parseJSON(pkgRaw, {}).version ?? null;
+
       return {
         branch,
         tag,
         resolved: true,
+        inTreeVersion,
+        wouldRecut: inTreeVersion != null && inTreeVersion === pinnedVersion,
         commits: (cmp.commits ?? []).map(c => ({
           sha: c.sha.slice(0, 11),
           subject: c.commit.message.split('\n')[0],

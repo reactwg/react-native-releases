@@ -210,13 +210,20 @@ export const gates = {
       return PASS(`${h.tag} is current with ${h.branch}`);
     }
     const relands = h.commits.filter(c => c.reland);
+    // Say what a dispatch would produce right now, not just that one is needed.
+    const cutNote = h.wouldRecut
+      ? ` NOTE: npm/hermes-compiler/package.json on ${h.branch} still reads ${h.inTreeVersion}, which is already released, so dispatching now would re-cut it. Land a version bump PR first; the stable ref is protected and rejects direct pushes.`
+      : h.inTreeVersion
+        ? ` A release dispatched now would cut ${h.inTreeVersion}.`
+        : '';
     return FAIL(
       `${h.commits.length} commit(s) on ${h.branch} are not in the pinned ${h.tag}: ` +
         h.commits.map(c => `${c.sha} ${c.subject}`).join('; ') +
         (relands.length
           ? `. ${relands.length} of these RE-LAND a previously backed-out change, which needs a human decision before pinning.`
           : '') +
-        ' Cut a Hermes release and bump the pin or record why the branch is deliberately ahead.',
+        ' Cut a Hermes release and bump the pin or record why the branch is deliberately ahead.' +
+        cutNote,
     );
   },
 
