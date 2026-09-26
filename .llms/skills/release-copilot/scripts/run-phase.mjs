@@ -48,7 +48,22 @@ export async function runPhase(state, {mode, shape, ctx = {}, confirm, log = con
     }
 
     for (const action of step.actions(state, ctx)) {
-      await runner.run(action);
+      const res = await runner.run(action);
+
+      // Declining is a decision not to do the release, not a decision to skip
+      // one command. Later steps assume the earlier ones happened: after
+      // declining a Hermes cut, the run offered to pin the release branch to a
+      // version that was never published. Stop the phase.
+      if (res?.skipped === 'declined') {
+        log('');
+        log(`STOP: declined "${action.why}". Not proceeding, since the remaining steps assume it happened.`);
+        stopped.push({
+          step: step.id,
+          declined: true,
+          failures: [{gate: 'declined', detail: action.why}],
+        });
+        return {phase: phase.id, plan: runner.plan(), stopped, completed: false};
+      }
     }
   }
 

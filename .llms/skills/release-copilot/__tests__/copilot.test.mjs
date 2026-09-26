@@ -612,6 +612,36 @@ test('cadence: a release past due is reported overdue', async () => {
   assert.equal(c.daysUntilDue, -3);
 });
 
+test('declining an action stops the phase, it does not skip to the next step', async () => {
+  // Declining a Hermes cut then continuing offered to pin the release branch to
+  // a version that was never published. Later steps assume the earlier ones
+  // happened, so a decline has to end the run.
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      inTreeVersion: '260318099.0.4',
+      wouldRecut: false,
+      commits: [{sha: 'abc', subject: 'x', reland: false}],
+    },
+  });
+  const result = await runPhase(state, {
+    mode: MODES.GUIDED,
+    shape: 'hermes-release',
+    ctx: {},
+    confirm: async () => false,
+    log: () => {},
+  });
+  assert.equal(result.completed, false);
+  assert.equal(result.stopped[0].step, 'hermes-cut');
+  assert.equal(result.stopped[0].declined, true);
+  const reached = [...new Set(result.plan.map(p => p.step))];
+  for (const later of ['hermes-verify-tag', 'hermes-pin', 'hermes-push']) {
+    assert.ok(!reached.includes(later), `must not reach "${later}" after declining the cut`);
+  }
+});
+
 // ---------------------------------------------------------- hermes release
 
 test('gate: cutting Hermes is blocked while the branch names a released version', async () => {
