@@ -119,6 +119,30 @@ git merge-base --is-ancestor <sha> v0.88.0-rc.1 && echo "shipped in rc.1 or earl
 
 A pick pushed after the last tag ships in the **next** RC, not the current one.
 
+## Describe a pick as what it is, not as what it resembles
+
+The heading a reader skims decides whether they look closer. Group a pick by its
+risk, not by the shape of its diff.
+
+**A re-land is not a fix.** A commit whose subject is `Back out "Back out ..."`
+puts a previously reverted change back into the release. Its risk profile is the
+opposite of a fix: something was wrong enough to revert it once and the question
+is whether that has actually been resolved. Filing it under a "fixes" heading
+means a reviewer skims "two fixes, good" and approves the riskiest thing in the
+release.
+
+Give it its own section, use the real commit subject rather than the original
+change's friendlier title and state the chain: what landed, what backed it out
+and why, what re-lands it. Then say whether the stated mitigation was verified.
+
+This happened on `260318099.0.4`. `ace586d90` was twice described as "Avoid
+unnecessary rescans of VariableScopes", which is the title of the *original*
+change, making a revert-of-a-revert read like a routine optimisation. It is the
+only risky commit in that release.
+
+The same applies to a revert, a partial pick or anything carried for bookkeeping.
+Label it so the reader's first guess is right.
+
 ## Closing
 
 Comment with where it landed, then close:
