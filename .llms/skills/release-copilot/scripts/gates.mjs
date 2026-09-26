@@ -245,8 +245,15 @@ export const gates = {
         : FAIL('could not resolve the open pick requests to commits, so they cannot be assessed');
     }
 
-    const unresolved = cands.filter(c => c.resolved.length === 0);
-    const annotated = cands.filter(c => c.resolved.some(r => hasBreakingTag(r.message)));
+    // A pick request stays open until someone closes it, so an open issue can
+    // already be on the branch. Its decision was made when it was picked; only
+    // the bookkeeping is outstanding and re-assessing it as a candidate blocks
+    // the release on a choice that was already taken.
+    const landed = cands.filter(c => c.landed);
+    const pending = cands.filter(c => !c.landed);
+
+    const unresolved = pending.filter(c => c.resolved.length === 0);
+    const annotated = pending.filter(c => c.resolved.some(r => hasBreakingTag(r.message)));
 
     if (annotated.length) {
       return FAIL(
@@ -258,7 +265,7 @@ export const gates = {
 
     // The annotation is necessary but not sufficient: #58063 broke C++ codegen
     // consumers with no [BREAKING] tag at all. Inspect what the change touches.
-    const touching = cands
+    const touching = pending
       .map(c => ({
         c,
         hits: c.resolved.flatMap(r => breakingSurfaces(r.files)),
@@ -285,8 +292,12 @@ export const gates = {
           '. Resolve them by hand before picking; an unassessed candidate is not a passing one.',
       );
     }
+    const note = landed.length
+      ? ` ${landed.length} already landed and only need closing: ${landed.map(c => `#${c.number}`).join(', ')}`
+      : '';
     return PASS(
-      `${cands.length} candidate(s) assessed: no [BREAKING] annotation and none touch a watched surface`,
+      `${pending.length} candidate(s) assessed: no [BREAKING] annotation and none touch a watched surface.` +
+        note,
     );
   },
 

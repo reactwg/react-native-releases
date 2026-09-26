@@ -347,7 +347,7 @@ export async function deriveState(sources, {series, today} = {}) {
   let pickCandidates = null;
   if (picks.length) {
     try {
-      pickCandidates = await sources.pickCandidates(picks);
+      pickCandidates = await sources.pickCandidates(picks, branch);
     } catch {
       pickCandidates = null;
     }

@@ -250,7 +250,22 @@ export function liveSources() {
      * Resolve each open pick request to the commit it asks for, so a candidate
      * can be assessed BEFORE it lands rather than after.
      */
-    async pickCandidates(picks) {
+    async pickCandidates(picks, branch) {
+      // A cherry-pick creates a NEW commit object, so the SHA a pick request
+      // cites (the main-side one) is never an ancestor of the release branch.
+      // `git cherry-pick -x` leaves "(cherry picked from commit <sha>)" in the
+      // message, which is the only reliable trail back to the cited SHA.
+      let branchMessages = '';
+      if (branch) {
+        const raw = await gh([
+          'api',
+          `repos/${RN_REPO}/commits?sha=${branch}&per_page=100`,
+          '--jq',
+          '[.[].commit.message] | join("\n")',
+        ]).catch(() => '');
+        branchMessages = raw ?? '';
+      }
+
       const out = [];
       for (const p of picks) {
         const body = await gh([
@@ -291,7 +306,46 @@ export function liveSources() {
         // import rewrites SHAs. Report it unresolved rather than guessing.
         const prOnly = resolved.length === 0 && prs.length > 0;
 
-        out.push({number: p.number, title: p.title, resolved, prOnly});
+        // A pick request stays open until someone closes it, so an open issue
+        // can already be on the branch. Re-assessing a landed pick as a
+        // candidate is wrong: the decision was made when it was picked and the
+        // only thing left is bookkeeping.
+        let landed = false;
+
+        // A cherry-picked RN commit keeps the PR number in its subject, e.g.
+        // "Stop re-creating library package roots on every sync (#58597)", so a
+        // pick request that cites only a PR is still checkable.
+        for (const pr of prs) {
+          if (branchMessages.includes(`(#${pr})`)) {
+            landed = true;
+            break;
+          }
+        }
+
+        for (const r of landed ? [] : resolved) {
+          // The cherry-pick trailer, which survives the SHA rewrite.
+          if (branchMessages.includes(r.sha)) {
+            landed = true;
+            break;
+          }
+          // Fall back to ancestry, which covers a pick merged directly rather
+          // than cherry-picked.
+          if (branch) {
+            const raw = await gh([
+              'api',
+              `repos/${RN_REPO}/compare/${r.sha}...${branch}`,
+              '--jq',
+              '.status',
+            ]).catch(() => '');
+            const status = (raw || '').trim().replace(/"/g, '');
+            if (status === 'ahead' || status === 'identical') {
+              landed = true;
+              break;
+            }
+          }
+        }
+
+        out.push({number: p.number, title: p.title, resolved, prOnly, landed});
       }
       return out;
     },
@@ -534,7 +588,11 @@ export function recordingSources(inner, dir) {
           const lines = String(c.message).split('\n');
           const keep = [lines[0]];
           for (const l of lines.slice(1)) {
-            if (/\[BREAKING\]/i.test(l) || /This reverts commit [0-9a-f]{7,40}/.test(l)) {
+            if (
+              /\[BREAKING\]/i.test(l) ||
+              /This reverts commit [0-9a-f]{7,40}/.test(l) ||
+              /cherry picked from commit [0-9a-f]{7,40}/.test(l)
+            ) {
               keep.push(l);
             }
           }
@@ -545,8 +603,8 @@ export function recordingSources(inner, dir) {
     },
     changelogAt: async r => put('changelogAt', r, await inner.changelogAt(r)),
     hermesUnreleased: async v => put('hermesUnreleased', v, await inner.hermesUnreleased(v)),
-    pickCandidates: async ps =>
-      put('pickCandidates', ps.map(p => p.number).join(','), await inner.pickCandidates(ps)),
+    pickCandidates: async (ps, b) =>
+      put('pickCandidates', ps.map(p => p.number).join(','), await inner.pickCandidates(ps, b)),
     releaseArtifacts: async (v, p) =>
       put('releaseArtifacts', v, await inner.releaseArtifacts(v, p)),
     flush() {
