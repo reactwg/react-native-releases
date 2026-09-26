@@ -1,0 +1,2242 @@
+{
+  "v0.87.1...0.88-stable": {
+    "commits": [
+      {
+        "sha": "d06174fbfe478efa28b97bc219d1167bfdf8112c",
+        "message": "xplat/js/react-native-github/packages/react-native/ReactAndroid/src/main/jni/react/jni/ModuleRegistryBuilder.cpp (#57457)"
+      },
+      {
+        "sha": "347f8d081eee8792ae23d87ae04be1cfc7b3fdcb",
+        "message": "Harden `window` and `navigator` global property descriptors (#57447)"
+      },
+      {
+        "sha": "ef1462904d21924ccfa1710a0c9c24f4b1d9fce6",
+        "message": "Add direct-event fast path to EventTarget dispatch (rnIsDirect) (#57448)"
+      },
+      {
+        "sha": "58ffd188c6686556c4e1b14477fc091ba2ac9bab",
+        "message": "Bump Hermes version to 250829098.0.15 for 0.87 branch cut (#57462)"
+      },
+      {
+        "sha": "ca5375178085593177cde3f5b5a945828e599cd4",
+        "message": "Run AnimationBackend commit hook on ReactRevisionMerge commits (#57410)"
+      },
+      {
+        "sha": "857c3d24c1f8fad091c00d906e3a6275d056c4e2",
+        "message": "Fix visibility of NativeMap/Array internal symbols (#57455)"
+      },
+      {
+        "sha": "554baba159e33b414d8b8dee15c5ef2173e97c0b",
+        "message": "Expose 'react-native/setup-env' to replace InitializeCore (#57461)"
+      },
+      {
+        "sha": "0015d1e4f9f812f775b9eb78e6da63beea7dc34c",
+        "message": "Remove Touchable (base) from public API (#57420)\n[General][Breaking] - The `Touchable` root export (undocumented) is removed. If you are extending `Touchable` as a type, please use `ViewProps` instead."
+      },
+      {
+        "sha": "5d6776b685c581ecfb8aaba49904b819a09ec9cf",
+        "message": "Revert D110488985: Remove Touchable (base) from public API"
+      },
+      {
+        "sha": "904f0aeb66abb484ad876d5f99e8a8cdf7f4a414",
+        "message": "Revert D110890810: Expose 'react-native/setup-env' to replace InitializeCore"
+      },
+      {
+        "sha": "b67b7ba621a5a47e6d3be4266a4f87e1bb40c9b2",
+        "message": "fix(podspec): remove duplicate scrollview subspec in React-FabricComponents (#57452)"
+      },
+      {
+        "sha": "5e64e9075147050181c4c9afe31f276e9509850b",
+        "message": "Remove ReactNativeElement from Fantom tests (nullthrows/HostInstance/HTMLElement) (#57468)"
+      },
+      {
+        "sha": "7a5ab34451caec6145454d16a2fce56e752ad26b",
+        "message": "Document Fantom convention: prefer testing through the public API (#57467)"
+      },
+      {
+        "sha": "537d8673165071e35d7443853b391ab0894fbd63",
+        "message": "Bump to latest prettier (#57473)"
+      },
+      {
+        "sha": "9ee21ddd9b0d6b997709786fda4bd0b67be1ec7d",
+        "message": "Remove react-native/jest-preset subpath (#57481)\n[General][Breaking] - `react-native/jest-preset` is removed — all projects must now migrate to `react-native/jest-preset` (package)"
+      },
+      {
+        "sha": "b6a535afee1e099db00e62b904e3611f41227544",
+        "message": "Remove react-native/rn-get-polyfills subpath (#57482)\n[General][Breaking] - `react-native/rn-get-polyfills` is removed — please use `react-native/js-polyfills` (package)"
+      },
+      {
+        "sha": "ba71ce815e5ed64d9f8823d0169f2672fd79d72c",
+        "message": "Add changelog for v0.87.0 (#57485)"
+      },
+      {
+        "sha": "c0806193534cf3f264472f59446b7fe8a59da409",
+        "message": "Fix skipped post-publish jobs in release mode (#57479)"
+      },
+      {
+        "sha": "a69badd4682f06fb164717b78eb8a972cce9df35",
+        "message": "Add missing LogBox method declarations to LogBox.d.ts (#57472)"
+      },
+      {
+        "sha": "0df0be24efc16e1608e12c21f8220041b50d9a8e",
+        "message": "Fix markdown formatting in react-native-fantom docs README (#57486)"
+      },
+      {
+        "sha": "d2ac190411877e7a1bc94ffac346c5fd35b65a7c",
+        "message": "Persist Change Bundle Location host setting (#57425)"
+      },
+      {
+        "sha": "bfa679f0ea5431c92894d236b8e414f2feb70280",
+        "message": "Expose 'react-native/setup-env' to replace InitializeCore (#57475)"
+      },
+      {
+        "sha": "6fbf3062f9085c93bcb35c6a61c76029abbc16a5",
+        "message": "Remove Touchable (base) from public API (#57476)\n[General][Breaking] - The `Touchable` root export (undocumented) is removed. If you are extending `Touchable` as a type, please use `ViewProps` instead."
+      },
+      {
+        "sha": "c1652651c09506b8dda0b9515b5f0e5829220f0d",
+        "message": "Remove src/* exports mapping (#57484)"
+      },
+      {
+        "sha": "24e4b2cae070a27adb5948355ae4ffdbc52de950",
+        "message": "translation auto-update for batch 3/64 on master"
+      },
+      {
+        "sha": "7d2ef7815d92db9bb04460212794ef5da51de0ac",
+        "message": "Fix HelloWorld Jest preset after react-native/jest-preset removal (#57491)"
+      },
+      {
+        "sha": "eb987ef5504d85ff862b5a679056157888c56960",
+        "message": "Keep react-native/setup-env reachable in the module graph (#57492)"
+      },
+      {
+        "sha": "918fb15bfe5ff434d036c91be957de62cf8f8449",
+        "message": "Fix custom font weight rendering heaviest face on iOS Fabric (#57483)"
+      },
+      {
+        "sha": "d70113ff6e57012970dce52421ee6fa8d049641b",
+        "message": "Flow: Fix `@babel/types` libdef for `getBindingIdentifiers` (#57488)"
+      },
+      {
+        "sha": "5976273f1c0a7fc968528fdaeb895b289a5a06db",
+        "message": "Move shadow-node ref update thread tag to Fabric install (#57497)"
+      },
+      {
+        "sha": "0a60ec9deab31bcefa7ca9947276222f078b0c36",
+        "message": "fix: decimal values in transformOrigin string parser (#57487)"
+      },
+      {
+        "sha": "102fde7b6bf699dac9769b5336d9bbde2e228109",
+        "message": "Deprecate InputAccessoryView (#57402)"
+      },
+      {
+        "sha": "9160010d1f35266ddc18004f7fb945958aa16be6",
+        "message": "Fix ScrollView recycled content inset (#57494)"
+      },
+      {
+        "sha": "b7edeb71269aae339d656b0c9b03dc5e2b23f265",
+        "message": "Expose react-private-interface subpath (#57495)"
+      },
+      {
+        "sha": "4b7fa49c27a2d280ec08ca7326b34d9f242a9c41",
+        "message": "Add unstable-internals entry point (#57489)"
+      },
+      {
+        "sha": "4237f1a90d69a15299decc1d0044a0947c932b0d",
+        "message": "Simplify react-native/setup-env require in community-cli-plugin (#57498)"
+      },
+      {
+        "sha": "c948b61c051a2d5cfc79925e93eb49904db972c8",
+        "message": "Enable Strict TS API by default (#57490)\n[General][Breaking] - React Native's default JavaScript API is now the [Strict TypeScript API](https://reactnative.dev/docs/strict-typescript-api). Use `customConditions: [\"react-native-legacy-deep-imports\"]` to opt out."
+      },
+      {
+        "sha": "0ed6c560da56f208bddd604a4881f745bfb15f44",
+        "message": "Consolidate package checks into one Jest test (#57509)"
+      },
+      {
+        "sha": "042833e6995f81abe8edb8f55aac52693e60332c",
+        "message": "Extend check-packages-test to validate additional required fields (#57510)"
+      },
+      {
+        "sha": "1790c61ac39843948959a3cfbfc75dd60be754c9",
+        "message": "Fix incorrect asset path in WS test server (#57519)"
+      },
+      {
+        "sha": "b31ba29d2d3d527d7c63fe7c05338ce1d056ba39",
+        "message": "Update ktfmt component on FBS:master"
+      },
+      {
+        "sha": "798b550dd4724e399d64522de19502b88ba09ff9",
+        "message": "Enable/mark enableBridgelessArchitecture flag as stable (#57529)"
+      },
+      {
+        "sha": "4970200a192197687a6b7e94abde88374ced2d99",
+        "message": "Decouple network inspection from enableBridgelessArchitecture (#57530)"
+      },
+      {
+        "sha": "4be68ef785b9b0e8f6a2c9e2247ff51f7e9b8163",
+        "message": "Promote fuseboxFrameRecordingEnabled to experimental (#57531)"
+      },
+      {
+        "sha": "e7bb11ae162411ece7569603f1628d24e08a2616",
+        "message": "Fix RNTesterUnitTests build by importing react/bridging/ArrayBuffer.h (#57518)"
+      },
+      {
+        "sha": "fe511aba7cc9a5152092493eec38bc06a0b39c6d",
+        "message": "Bump Metro to 0.87.0 (#57534)"
+      },
+      {
+        "sha": "2235b8ec3faf9d80c8f2a14ec77e04b2635b3c6c",
+        "message": "Stop using `prettier-plugin-hermes-parser` for formatting (#57505)"
+      },
+      {
+        "sha": "65af886291309f1fbdb84d3fe68f06c5bbf60ce8",
+        "message": "Revert D111190630: Stop using `prettier-plugin-hermes-parser` for formatting"
+      },
+      {
+        "sha": "a016e94b590b625577509c6d5919e2d144f69e0e",
+        "message": "Redo D111190630: Stop using `prettier-plugin-hermes-parser` for formatting (#57537)"
+      },
+      {
+        "sha": "7d855222cd8ccfaf50d1daed2ceeb0986943ff20",
+        "message": "Perform AnimationEndSync commits on the React revision (#57493)"
+      },
+      {
+        "sha": "cb0cf07c2162b1805048b57748aff2b9f5c0e65a",
+        "message": "Deploy 0.322.0 to xplat (#57538)"
+      },
+      {
+        "sha": "8ce269b28d1655136000aca4670478998013e6c4",
+        "message": "translation auto-update for batch 3/64 on master"
+      },
+      {
+        "sha": "bbb5be9b416efc9b1c365b08a0bcf932c14562ca",
+        "message": "Remove SceneTracker module and its use in AppRegistry (#57417)\nChangelog: [General][Breaking] - Remove the `SceneTracker` module from `Libraries/Utilities`, stop setting the active scene from `AppRegistry.runApplication`, and pass the app key as an optional second argument to `WrapperComponentProvider`"
+      },
+      {
+        "sha": "96d3f911246f81a00644379da364a373fae1f0ca",
+        "message": "Fix Dependabot security update for concurrent-ruby in react-native (#57355)"
+      },
+      {
+        "sha": "1ecff7769638bc25cd3dd6bbc2dacc4dab510547",
+        "message": "Document why EventTarget feature flags stay at ossReleaseStage 'none' (#57527)"
+      },
+      {
+        "sha": "79962854d749bc73c5a5c6a457dd6519f1191d1f",
+        "message": "Remove enableDirectEventsInEventTarget feature flag (#57528)"
+      },
+      {
+        "sha": "17e55f6b8fe91077ff6ccb24c56852805fb76408",
+        "message": "Add Fantom integration tests for core public APIs (#57466)"
+      },
+      {
+        "sha": "704e286c8934a56a6803888a7c50de3b4878d51e",
+        "message": "Add Fantom tests for Animated components and value hooks (#57547)"
+      },
+      {
+        "sha": "8149e22f4fcac0ea55db70f191d77b2c59998f23",
+        "message": "Add Fantom tests for ActivityIndicator and Switch (#57548)"
+      },
+      {
+        "sha": "ef54f74deb598ba6c751c2fba61627280f5cb82c",
+        "message": "Extend Image Fantom tests for alt, aria-label and prefetchWithMetadata (#57549)"
+      },
+      {
+        "sha": "08c323346be6c0fbbd70900d48435f977a78a1bb",
+        "message": "Bootstrap Metro from InitializeCore until setup-env is graph-reachable (#57557)"
+      },
+      {
+        "sha": "2dfdcbf082316e0a5d174f7a9377223ca5d5435f",
+        "message": "Fix local release testing: publish with --tag for prerelease versions (#57552)"
+      },
+      {
+        "sha": "020512bf1581136854ff9311e0c58c044e73332c",
+        "message": "Add CDP support for WebSocket events (iOS) (#57543)"
+      },
+      {
+        "sha": "cfd0e359a6747de4266c003099ddacebb8f89a50",
+        "message": "Add CDP support for WebSocket events (Android) (#57541)"
+      },
+      {
+        "sha": "1475725dc75e05ddc01f85ef87e164e928cf1a53",
+        "message": "Resolve initiator for WebSocket CDP events (#57542)"
+      },
+      {
+        "sha": "713ae6b1b9699ea738592a27f0f75d931c27b443",
+        "message": "Promote fuseboxWebSocketEventsEnabled to canary (#57544)"
+      },
+      {
+        "sha": "376bd0e464b7785b4bcf8673a96746ec8107f1eb",
+        "message": "refactor(ios): remove clang VFS overlay, resolve headers via new ReactNativeHeaders framework (#57285)"
+      },
+      {
+        "sha": "77b75122ef9ed172012d7c6acb335f966d4ede79",
+        "message": "refactor(iOS): include resources like bundles into the precompiled XCFrameworks (#57305)"
+      },
+      {
+        "sha": "a8156acf8bbc9ee15901cf0d8935d73454768aa7",
+        "message": "feat(iOS): serve third-party deps from the prebuilt ReactNativeDependencies pod via dependency-only facades (#57440)"
+      },
+      {
+        "sha": "6aa147f6c95337d930c6a4bca363449972f5c771",
+        "message": "feat(iOS): ReactNativeDependenciesHeaders sidecar + pure-RN ReactNativeHeaders, published to Maven (#57442)"
+      },
+      {
+        "sha": "47fad096a4f89adf8f10121556d942e9cc06a8dd",
+        "message": "feat(iOS) swiftpm support in iOS (#57332)"
+      },
+      {
+        "sha": "00efc0a440bada590ce7b110c80c7840d8b0ce97",
+        "message": "Promote fuseboxScreenshotCaptureEnabled to stable (#57540)"
+      },
+      {
+        "sha": "de778b9fd775f3a39dfd522230157974dedfe2c4",
+        "message": "Add changelog for v0.87.0-rc.1 (#57562)"
+      },
+      {
+        "sha": "27b5f761b1972c93e0d12df5d213a2f43a695861",
+        "message": "avoid copying extended file attributes when inside virtiofs (#57555)"
+      },
+      {
+        "sha": "a693f41e5b73a6031ea080c24093e249278e7ede",
+        "message": "fix(iOS): fix Prettier lint failure after SwiftPM support landed (#57564)"
+      },
+      {
+        "sha": "724fbdd5b31575a69ddaeb470a75c86d0b67d27c",
+        "message": "fix(iOS): classify CFNetwork as a system framework in the header include-health ratchet (#57565)"
+      },
+      {
+        "sha": "30d9593c7b16beac8e93ef86ffc68b5e26422263",
+        "message": "Update hermes-parser and related packages in fbsource to 0.37.0 (#57567)"
+      },
+      {
+        "sha": "7fa49077c8dec723b3cf9c894d95c90585ef73ea",
+        "message": "Add `cancelBubble` to `Event` and adopt it in LegacySyntheticEvent (#57561)"
+      },
+      {
+        "sha": "dd5dc6b2313425e81f21f49c32bf68c4fa79e5a2",
+        "message": "Uninstall prettier-plugin-hermes-parser (#57569)"
+      },
+      {
+        "sha": "62a2b386c91985a46ee048dfa6e2216ba42a7e89",
+        "message": "Fix debug Hermes being embedded in iOS Release builds after hermes-engine pod re-install (#57574)"
+      },
+      {
+        "sha": "afa2a60c534e627c4363ad0268c0dd3332ec7fde",
+        "message": "Restore react-native/setup-env references on main (#57560)"
+      },
+      {
+        "sha": "1cdf784a068e2ed16842b74c0b87b7ff7532fe03",
+        "message": "fix(iOS): prevent UUID collision corrupting Pods project in spm_dependency (#57576)"
+      },
+      {
+        "sha": "9847238e3fc2badce8eeea659c4990aba1366d9b",
+        "message": "fix(iOS): exclude C++-guarded foreign-namespace headers from React umbrella (#57575)"
+      },
+      {
+        "sha": "3f8f5c216ac02e91119544f2901a4438c81857e3",
+        "message": "add missing mutex include to HostTarget.h (#57572)"
+      },
+      {
+        "sha": "9f7af3e0887104d2775e187c92dee53dd929ce8e",
+        "message": "Clean up network inspection feature flags (#57577)"
+      },
+      {
+        "sha": "e979b0ef8dc805240482338e72f77f0284cca3ff",
+        "message": "remove backticks in NativeDOM.cpp (#57573)"
+      },
+      {
+        "sha": "afc165129ef46f77189930fc12af0b27bdd306e3",
+        "message": "Require the NativePerformance module and drop the legacy performance fallback (#57566)"
+      },
+      {
+        "sha": "b33de750b0c436feca48f9e801aa23a9cd1c7abc",
+        "message": "Allow arbitrary values in ReactCxxPlatform NativeExceptionsManager extraData (#57586)"
+      },
+      {
+        "sha": "2bc248c535d8ae35eb8a2c27a606bbff13e7b2d3",
+        "message": "Propage startJSSamplingProfiler error (#57587)"
+      },
+      {
+        "sha": "7825d51ee62f6db023c8e2b9424fa8fc2c21f195",
+        "message": "Revert D112116429 (#57591)"
+      },
+      {
+        "sha": "c086431a4bc3a4968c747c761610f4d2ec9025d2",
+        "message": "Add TypeScript declarations for requestIdleCallback and cancelIdleCallback (#57545)"
+      },
+      {
+        "sha": "b587763f40af54d8aef959afcf02257aa9172006",
+        "message": "Pause RedBox auto-retry reload while app is backgrounded (#57593)"
+      },
+      {
+        "sha": "9f3108d61fe4ba241a8b1688363ed1979a883b7d",
+        "message": "translation auto-update for batch 1/64 on master"
+      },
+      {
+        "sha": "e64027865ec7a809f5ba07ecd5a535a17f02ee2f",
+        "message": "Flow: Add node: aliases to Node.js libdefs (#57600)"
+      },
+      {
+        "sha": "4a6620703c30b3f53917812720528684838d3bbf",
+        "message": "fix(iOS): dedupe SPM package module maps by building spm_dependency pods into the shared products dir (#57602)"
+      },
+      {
+        "sha": "f2a6db9fce1cad5c10b0e010ee30ec7586218bef",
+        "message": "Export jserrorhandler headers in the reactnative prefab (#57608)"
+      },
+      {
+        "sha": "566c7ac2d1722a4be33f3618cf53b00088ca14ca",
+        "message": "fix: stabilize CXX API generator on MacOS, make parser indempotent for nested enums (#57536)"
+      },
+      {
+        "sha": "b8e45a59667735fe1fcc5880b96a0d927dadb499",
+        "message": "Fix feature flag categorization metadata (#57610)"
+      },
+      {
+        "sha": "11dc60c3004c3a019422611ae18be902c9752133",
+        "message": "Re-apply \"Require the NativePerformance module and drop the legacy performance fallback\" (#57609)"
+      },
+      {
+        "sha": "507023622bbd0b9d2752332f71d1303b5e67af6b",
+        "message": "Localize keyboard return-key labels on numeric-keypad input accessory view (#57168)"
+      },
+      {
+        "sha": "d13d2b0a5f7329d5fe9262259e8f846a86312f03",
+        "message": "Blur focused TextInput before unregistering it on unmount (fixes Android keyboard staying open) (#57584)"
+      },
+      {
+        "sha": "9195e5270605e77d979d6e6bcdcb5a9d987545f1",
+        "message": "fix: show the soft keyboard when a long-press starts text selection in TextInput on Android (#57471)"
+      },
+      {
+        "sha": "45fb51c2aad207ca914b77766f1168143f3c84df",
+        "message": "Fix bump-hermes-version.js to write hermes-v prefixed tag to .hermesv1version (#57619)"
+      },
+      {
+        "sha": "7bb31ff7becad0c18b8d79b24414bd9a40a6367c",
+        "message": "Bump Hermes version to 250829098.0.16 to align with 0.87 rc2 (#57621)"
+      },
+      {
+        "sha": "c4b92cf77aa0e8dceba22ce902e9506ecf42850c",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "38611186f5867bd578a269872986a5753c8b41fe",
+        "message": "fix(iOS): make jsinspector-modern tracing state types move-only for Swift C++ interop (#57605)"
+      },
+      {
+        "sha": "63064687e2b024ed03bb48b5077478df99201a05",
+        "message": "Fix adjustsFontSizeToFit clipping when container height shrinks on Android (#57597)"
+      },
+      {
+        "sha": "95df50034ba5ce11f4b70bbb6bf692e3691297dc",
+        "message": "fix(iOS): stamp the React Native version in the prebuild compose job (#57603)"
+      },
+      {
+        "sha": "e410ff547179f5c7ad198744f7be88117ccdef0c",
+        "message": "Fix parentNode for nested root host views like <Modal> (#57623)"
+      },
+      {
+        "sha": "94d208d96f967a2d80cc4c1b07a51268710e8c30",
+        "message": "Upgrade Flow in fbsource (#57625)"
+      },
+      {
+        "sha": "89300acb9c280e5bdbd470163c828cbb2faedb03",
+        "message": "Migrate Node.js builtin imports to node: scheme (#57611)"
+      },
+      {
+        "sha": "527698f2e5742a189f4b4ff6753aa3eeb645b5ca",
+        "message": "Drop stale $FlowFixMe suppressions for node: imports (#57612)"
+      },
+      {
+        "sha": "60fac2e14db88477f0b939a06ecf651da65044e6",
+        "message": "Fix post-release workflow failures (#57627)"
+      },
+      {
+        "sha": "49f0db4394445b6ffa8e17b90c60d5d8c7731c67",
+        "message": "Guard forced-native animations from JS updates (#57617)"
+      },
+      {
+        "sha": "0a1a06c5eae38b9d4faaae16fdcdfdc1b52983dd",
+        "message": "fix(requestIdleCallback): timeout not assigned at NativeIdleCallbacks (#57571)"
+      },
+      {
+        "sha": "59d6947aa766f0a0c22e97ca385b81badbbc354b",
+        "message": "Add changelog for v0.87.0-rc.2 (#57626)"
+      },
+      {
+        "sha": "5e86c323cefb728bba0a21c3b2a65af93e5868d6",
+        "message": "Use NSData for the JS->ObjC ArrayBuffer argument path (#57596)"
+      },
+      {
+        "sha": "eb4d3892abf79cd01757b6c3021d39be58d64ea2",
+        "message": "fix(ios): add log advice back when using shadow w/o a background (#57618)"
+      },
+      {
+        "sha": "677f571059cbbd53b943d5b7176c3732bb19aa3f",
+        "message": "Fix stack-use-after-return in TaskDispatchThread Android ctor (#57629)"
+      },
+      {
+        "sha": "53b933fecac5c51118f55983f82c622aede1d682",
+        "message": "fix(android): convert outlineColor values before delegation (#57558)"
+      },
+      {
+        "sha": "fcac53fe87c02899701202f29eb4f30af9a73ab1",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "0fc76bb5278098649672e0407a3de580b8706fa4",
+        "message": "Fix TS exactOptionalPropertyTypes compatibility for generated types (#57628)"
+      },
+      {
+        "sha": "9efcdfc2b448d990c0267bd547d2bb48bb0f0869",
+        "message": "Drop chrome-launcher dependency (#57630)"
+      },
+      {
+        "sha": "41b375eb0410e41e05ff21b4dc09163568bc513c",
+        "message": "Report a fatal JS error instead of aborting the process when reading its extra data fails (#57636)"
+      },
+      {
+        "sha": "1b92b02f99a3513a3ebe1526b090da9075b563ad",
+        "message": "fix(ios): align text to the right by default in RTL (#57634)"
+      },
+      {
+        "sha": "5421c5eb37504f9a3dbdd7f95f60f730fe9a8f71",
+        "message": "Fix flex-growing content sizing in <ScrollView> (#57601)"
+      },
+      {
+        "sha": "9e71c443acb0cb8a865862dac1281fa6dd8bf83b",
+        "message": "Downgrade RCTStatusBarManager error to a warning under VC-based status bar (#57631)"
+      },
+      {
+        "sha": "e0d8e63aafa7deaeb7535fc38c1375f343e108e0",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "e46189e1e1cb07ced47afbeb4a3cbdc361417b01",
+        "message": "fix(android): use the active locale to detect RTL direction (#57635)"
+      },
+      {
+        "sha": "ad870dab7a56cd67ddc7e1fda8bb9f97a247c8ec",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "711a9a5e07f4a4e924a66c186059cefc8aaa7f6e",
+        "message": "fix(ios): reset `EmptyLayoutMetrics` on Fabric view recycle (#57590)"
+      },
+      {
+        "sha": "26769a00b23d2484807f0b008b46dfd61ea43142",
+        "message": "Use asset catalog for iOS images (#30129)"
+      },
+      {
+        "sha": "50a35dbc7de24926617a1b58dff0a9b1a3c4599c",
+        "message": "RN: Overflow.fromString accepts null and returns non-null (#57638)"
+      },
+      {
+        "sha": "855548c640d21bdfc157c71fadea083585f74fea",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "bf691fa53c2faf2fc9825ea25625871b65808647",
+        "message": "Remove RN metro-config migration checks (#57648)"
+      },
+      {
+        "sha": "a44196daf1eb2d0632bcf7f3299ec19baf129fcd",
+        "message": "Fix CQS signal facebook-hte-CArray in xplat/yoga/java/jni (#57651)"
+      },
+      {
+        "sha": "c1265dfe9dfb9f5e690232f3bf7fc9a991de04b7",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "3be254a8af9e1aa5eba56fdf646ac8bb87ba2993",
+        "message": "Drop --version arg from bundle script wrapper (#57644)"
+      },
+      {
+        "sha": "02315146f283fcdc42826d4257609af0616a00cb",
+        "message": "Remove commander dependency from main package (#57645)"
+      },
+      {
+        "sha": "a8f68dac70e7c92a4af65c4a25ac45bf781819fc",
+        "message": "Bump Hermes V1 to 260318099.0.1 (#57647)"
+      },
+      {
+        "sha": "f1026bb83a3f71da2cdd22d4e5f9f84d2c6381f4",
+        "message": "translation auto-update for batch 0/64 on master"
+      },
+      {
+        "sha": "8f5fa1c5e2470ebf7edf817f9fddc8080c29488d",
+        "message": "RN: populate IMPORTANT_FOR_INTERACTION_DONT_CLIP_DESCENDANTS (#57649)"
+      },
+      {
+        "sha": "07dc003d3107d2b357d2c6b29be1d7f4b2a4b627",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "c66ed6689e0a343c3593bc08151e84be6d6b19e2",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "a32c098f93357e74868f2623e6c8534be38e0df5",
+        "message": "xplat/js/react-native-github/packages/react-native/ReactCommon/react/renderer/mounting/MountingTransaction.cpp (#57585)"
+      },
+      {
+        "sha": "5f00e92e1a5f53781c89aed38094557205301b49",
+        "message": "RN: hook up ImportantForInteractionHelper to ScrollViews and TextViews (#57658)"
+      },
+      {
+        "sha": "df89ac5b3a408158087d9ea10cb39da97b473b02",
+        "message": "Don't register unused RCTTimingCls in RN iOS (#57657)"
+      },
+      {
+        "sha": "2c4d4215b3e35327a97536c1155178aa0156ae07",
+        "message": "Fix UnsatisfiedLinkError in BaseViewManagerDelegateTest (#57665)"
+      },
+      {
+        "sha": "72432a2b613937b1fe452d04cbe52d6d3d447e09",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "2b992a0d4b8897022a5a58a192e643666a8ada7f",
+        "message": "Flush created animated nodes before handling events (#57656)"
+      },
+      {
+        "sha": "834721f124636c3d326a25e9ff6608026ab856df",
+        "message": "Fix src/main/res warnings due to AGP9 (#57637)"
+      },
+      {
+        "sha": "f46ace878a004e17b07d00dbd035d92a1ad5900c",
+        "message": "codegen: ios platform extensions (#57189)"
+      },
+      {
+        "sha": "cec7c453fb0b532abd4cf99812c9e813fa25ecac",
+        "message": "Move codegen and spm command wrappers into community-cli-plugin (#57652)"
+      },
+      {
+        "sha": "aee0ec3bd552a7a8f3be595e5373589c37e510c6",
+        "message": "Relocate CLI plugin server modules (#57654)"
+      },
+      {
+        "sha": "14c3bd831dc20d1af45c089482d59e51ff128338",
+        "message": "Drop legacy cli-server-api reference in dev server (#57653)"
+      },
+      {
+        "sha": "c1843c4db71481a4b3fed893acda00422954caf7",
+        "message": "Deploy 0.324.0 to xplat (#57689)"
+      },
+      {
+        "sha": "20d04aefa17acbbbf89ff055adf798827bd7787b",
+        "message": "Fix ConcurrentModificationException in IntentModule.getInitialURL re-entrancy (#57667)"
+      },
+      {
+        "sha": "43b44ed7c30ebe331ba58ef841a89dcae37301d8",
+        "message": "fix(iOS): stage Hermes headers in prebuild compose job so ReactNativeHeaders resolves <hermes/...> (#57661)"
+      },
+      {
+        "sha": "e9eac585e2995b086e5322d478b90a7c96ba6832",
+        "message": "SPM: fix raw Flow type annotations in bare-node scripts (#57660)"
+      },
+      {
+        "sha": "a7ba4ce5224493067a5e767008c0bc0f309932c6",
+        "message": "SPM: allow overriding the autolinking config command (#57662)"
+      },
+      {
+        "sha": "25ee70a11dc6071e73c9a2de2a0353c60a8fd506",
+        "message": "fix(iOS): gate prebuilt headers on Swift C++-interop importability (#57606)"
+      },
+      {
+        "sha": "5d62ca4296feb613ee5f155296789261e75e8700",
+        "message": "Compile out `RCTGetModuleClasses`/`RCTRegisterModule` when both legacy interops are removed (#57670)"
+      },
+      {
+        "sha": "3e7e74a86bb3189efce3c9a795f973bcedee689b",
+        "message": "Drop RCT_EXPORT_METHOD from RCTClipboard TurboModule (#57671)"
+      },
+      {
+        "sha": "abaf309a286e6b357e604bb8bc851336f966a507",
+        "message": "Drop RCT_EXPORT_METHOD from RCTAccessibilityManager TurboModule (#57672)"
+      },
+      {
+        "sha": "15b4cb02c2f915f9f45bdc9bd0a59388b62b2739",
+        "message": "Drop RCT_EXPORT_METHOD from RCTActionSheetManager TurboModule (#57673)"
+      },
+      {
+        "sha": "92e8d22d6c738c3a981cbdad726e3ccef16b5d2b",
+        "message": "Drop RCT_EXPORT_METHOD from RCTAlertManager TurboModule (#57675)"
+      },
+      {
+        "sha": "c8c4d6eb5be5a6eed2d82e2b27f02fb72573990c",
+        "message": "Drop RCT_EXPORT_METHOD from RCTAppState TurboModule (#57676)"
+      },
+      {
+        "sha": "dc93ed0c4bcd9b636050972cf1d1f65409b532db",
+        "message": "Drop RCT_EXPORT_METHOD from RCTAppearance TurboModule (#57679)"
+      },
+      {
+        "sha": "50c21113845ba2b8a9296fe9f07526474eec331b",
+        "message": "Drop RCT_EXPORT_METHOD from RCTDevLoadingView TurboModule (#57680)"
+      },
+      {
+        "sha": "b13d489d849b5fdf53f913379baf82db12dd9e1b",
+        "message": "Drop RCT_EXPORT_METHOD from RCTDevMenu TurboModule (#57681)"
+      },
+      {
+        "sha": "455c32254c8acf19156bd1bda15dc80af40379ef",
+        "message": "Drop RCT_EXPORT_METHOD from RCTDevSettings TurboModule (#57682)"
+      },
+      {
+        "sha": "42cc2ecc74d3172a12eae4653f5ee0d1c2e45871",
+        "message": "Drop RCT_EXPORT_METHOD from RCTDevToolsRuntimeSettingsModule TurboModule (#57683)"
+      },
+      {
+        "sha": "a27d495b7c85f709cea4d8d470c63d4a20583171",
+        "message": "Drop RCT_EXPORT_METHOD from RCTExceptionsManager TurboModule (#57684)"
+      },
+      {
+        "sha": "051702f336aeb4b6ff8e8e218c0b702541ce080d",
+        "message": "Drop RCT_EXPORT_METHOD from RCTI18nManager TurboModule (#57685)"
+      },
+      {
+        "sha": "4800be1d8b52fbac0fcba97cd05729a5faf7aeb2",
+        "message": "Drop RCT_EXPORT_METHOD from RCTLogBox TurboModule (#57677)"
+      },
+      {
+        "sha": "d9e4908aeb421fe695cdda808a417ea9d0b8c988",
+        "message": "Drop RCT_EXPORT_METHOD from RCTRedBox TurboModule (#57678)"
+      },
+      {
+        "sha": "2cf34f879935d1935a3d2c24993d592d4ace233d",
+        "message": "Drop RCT_EXPORT_METHOD from RCTStatusBarManager TurboModule (#57686)"
+      },
+      {
+        "sha": "eda6f4f8ecd78408fd7b535662e3c0bdeed740df",
+        "message": "Drop RCT_EXPORT_METHOD from RCTWebSocketModule TurboModule (#57687)"
+      },
+      {
+        "sha": "6d0612c27ca8a4d828cdcb156f9f4e92cca96865",
+        "message": "fix(rn-tester): use framework-style import for RCTFabricComponentsPlugins.h (#57697)"
+      },
+      {
+        "sha": "3e2403327c0878037243eb5850b306c1f1fed2d5",
+        "message": "Add missing strictMode prop to FlatList TypeScript types (#57674)"
+      },
+      {
+        "sha": "433e79d2f41a02e36761b8d47bf6e665a8b17651",
+        "message": "fix(ios): replace crash-causing RCTAssert with RCTLogWarn in touch handler (#57696)"
+      },
+      {
+        "sha": "98dc7d64238fcc66a2250368b2650f6600531c6b",
+        "message": "Forward host:didInitializeRuntime: callback to user delegate (#57438)"
+      },
+      {
+        "sha": "5e40a1771e676169db9abcec623bc0e740da6628",
+        "message": "fix(ios): prevent pixel-grid rounding from clipping text (#57698)"
+      },
+      {
+        "sha": "4043e818f160fad894532f099beffaa46c9f1b52",
+        "message": "feat(a11y): automatically set `accessible` prop with `role` prop (#57633)"
+      },
+      {
+        "sha": "4501979c1aed7ff5d8dd2e7544cccec57e79e114",
+        "message": "Preserve negative values in transformOrigin strings (#57691)"
+      },
+      {
+        "sha": "6f6efed3e72fb694b47cb00ff71aca2c15becfaf",
+        "message": "Fix main-thread watchdog hang in PushNotificationIOS.setApplicationIconBadgeNumber (#57707)"
+      },
+      {
+        "sha": "f91191160497e431798bbb87b0c7c220ffd857bc",
+        "message": "Add changelog for v0.87.0-rc.3 (#57704)"
+      },
+      {
+        "sha": "908872a68ea3707dc9df9ba39e6669d62b3c472b",
+        "message": "Fix build-from-source on Windows: use JVM temp dir instead of hardcoded /tmp (#57706)"
+      },
+      {
+        "sha": "54656471a5426095d04339ae286470ccdd6f0d1b",
+        "message": "Declare RCTBundleURLProviderAllowPackagerServerAccess unconditionally (#57517)"
+      },
+      {
+        "sha": "3958c7fa97b31396499f61b984a21fce31df959b",
+        "message": "Fix npm package build for docs-only changes (#57719)"
+      },
+      {
+        "sha": "97727ba67f1a4fbf5105f18bca695e272b48b836",
+        "message": "Fix compat with extensionless scripts/* imports (#57718)\n[General][Breaking] - Extensionless `react-native/scripts/*` imports are now **mandated**; explicit `.js` import specifiers are rejected."
+      },
+      {
+        "sha": "3bfb277fec221e88d4ec1b918c664d675edf616b",
+        "message": "Download React Native artifacts from the proxy cache server first (#57325)"
+      },
+      {
+        "sha": "2ab916fb2d4d6f8da99b57e516f6f5401e37afa2",
+        "message": "Add changelog for v0.86.2 (#57703)"
+      },
+      {
+        "sha": "26eb36c657fee965543f903c2d6bdec5a0956efe",
+        "message": "PlatformColor lazy fallback: honor a raw-color fallback on iOS and macOS (native) (#57556)"
+      },
+      {
+        "sha": "00e27b732293f8e6c665df4f3fcab836d030c697",
+        "message": "PlatformColor lazy fallback: honor a raw-color fallback on Android (native) (#57655)"
+      },
+      {
+        "sha": "3b90423076cfa5d5310bb0190cd1abb69f72dc40",
+        "message": "Fix maintainVisibleContentPosition calculations and add tests + docs [fixes #25239] (#57294)"
+      },
+      {
+        "sha": "e92816c5a56d9d1c0019fdcd939b236630ef9275",
+        "message": "Keep FileReader in DONE state after abort (#57692)"
+      },
+      {
+        "sha": "a44d68ec6da1d0bf460a8af88f947ee428cd3c82",
+        "message": "Split Android build from release publishing (#57714)"
+      },
+      {
+        "sha": "ca750feefb1f6f6cc7ac151825c76db6fc9dc66e",
+        "message": "Format React Native maintain-visible tests (#57747)"
+      },
+      {
+        "sha": "544141efab9f880f7306a76f7e0eb28ee4a37e3e",
+        "message": "Close remaining File API spec gaps in FileReader (#57745)"
+      },
+      {
+        "sha": "adde1e58884b34a2547049ef62da610fcb530b6a",
+        "message": "Revert: Automatically set acessible prop when role prop is set (except none/presenation) (#57743)"
+      },
+      {
+        "sha": "56c284e152aedd3155ae34ed959fc745f970a451",
+        "message": "Preserve TextInput selection color when changing multiline (#57748)"
+      },
+      {
+        "sha": "ece0efe837943f82e0dc49bbfe4b8ce40d159a29",
+        "message": "Add enableMountingCoordinatorPullModelAndroid feature flag (#57581)"
+      },
+      {
+        "sha": "3fd02591bfda7b6b5d7a6cdc37d4b258c66f9f44",
+        "message": "Fix typo \"becuase\" -> \"because\" in processFilter comment (#57746)"
+      },
+      {
+        "sha": "6515647d9456fb2781d0e50e810b1c4741b0ba4c",
+        "message": "Add inert Java plumbing for the Android pull model (#57580)"
+      },
+      {
+        "sha": "67a813a94845c2536f210f87532bc9a42c06dbc6",
+        "message": "Make Maestro iOS retries flow-specific (#57749)"
+      },
+      {
+        "sha": "9da1a011530faa45b23bb18a382252e196011120",
+        "message": "Wire the Android pull model in C++ behind the feature flag (#57579)"
+      },
+      {
+        "sha": "6aac2b7422a305dda1791920989eada3f48ea685",
+        "message": "Add JVM tests for the Android pull model plumbing (#57583)"
+      },
+      {
+        "sha": "c5bd054983749f287c35b9fa5be5b5ea1eaed2e8",
+        "message": "Add enableImageTransparentTintColor feature flag (#57607)"
+      },
+      {
+        "sha": "8e744641272db0d28b7d1e197e34aa88373443b1",
+        "message": "Switch to the new glob system of ignore in react-native flowconfig (#57758)"
+      },
+      {
+        "sha": "5306e9229c27550214e336b93dcdb2bc3575dbf3",
+        "message": "Add missing `ListItemComponent` prop to VirtualizedList/FlatList/SectionList TypeScript types (#57754)"
+      },
+      {
+        "sha": "e55da68478ee869a92452be735e81c5c6fdc7c5b",
+        "message": "Add new hook shadowTreeDidCommit (#57721)"
+      },
+      {
+        "sha": "fa0e6756d3deae41aeda7d988d8e099ecb9e1245",
+        "message": "Update ReactPrivate and InitializeCore imports (0.87 Strict API) (#36986) (#57753)"
+      },
+      {
+        "sha": "0dec9e275e8fcbd33077958e5702c23e53640802",
+        "message": "fix: UB when upcasting yoga sentinel value (#57761)"
+      },
+      {
+        "sha": "0b0eb8d0126cc1700f6c772f0f204386882578de",
+        "message": "fix(codegen): empty ReactCodegen input_files when no Native spec files found (#57759)"
+      },
+      {
+        "sha": "3365667479145e6fa299a2ddb76583ac4c8c4980",
+        "message": "Install `flow-{estree,eslint,parser,transform}` counterparts to the hermes-* packages (#57769)"
+      },
+      {
+        "sha": "55195ca43fe030026b2a540b188f29b633d584b0",
+        "message": "Layout event emitter (#57722)"
+      },
+      {
+        "sha": "aadcadeec7bbe8b597355919af6eb9800b38f59e",
+        "message": "Deploy 0.325.0 to xplat (#57767)"
+      },
+      {
+        "sha": "58bf844967904d1cb3ccdfba6cb2810895867ddf",
+        "message": "Fix XMLHttpRequest.setRequestHeader to append duplicate headers per spec"
+      },
+      {
+        "sha": "663c191e477f9be8dcdc704a18c8a9b4a7acc91e",
+        "message": "Expose releaseLevel within RNTester-iOS (#57768)"
+      },
+      {
+        "sha": "7b5d1bc9717b714c9f52a59d4c11398d35ced6e1",
+        "message": "Switch over to `flow-parser/babel-plugin` for compilation (#57770)"
+      },
+      {
+        "sha": "3bdc478cb74ff6500d4097f456ad3027e36dd857",
+        "message": "Switch over to flow-eslint for linting (#57771)"
+      },
+      {
+        "sha": "e6fd1a3e7c617ad13373008956317be8bc370a8f",
+        "message": "Replace `hermes-{parser,eslint}` with `flow-{parser,eslint}` in OSS projects (#57772)"
+      },
+      {
+        "sha": "14fe96ab51554cac899ca49c8d50629aea421d54",
+        "message": "Write the prebuilt module-map flag to OTHER_CPLUSPLUSFLAGS too (#57742)"
+      },
+      {
+        "sha": "1208178d3c2e613cd65b91bbb173594d9413d10b",
+        "message": "CI: add SwiftPM iOS e2e workflows (RNTester, HelloWorld, new app) (#57659)"
+      },
+      {
+        "sha": "fc365f6e72111fe17b1f4c2a14bab7e7711b3a99",
+        "message": "Flow: Prefer imported types from `@babel/types` over global `BabelNode*` types (#57752)"
+      },
+      {
+        "sha": "ed3229aa6418121fa0ff7e89dfb5b3f6adf32f01",
+        "message": "fix(swiftpm): persist --config-command so the in-build sync keeps using it (#57756)"
+      },
+      {
+        "sha": "db11646c94a78a82765f3811823c6e829fc7e1d7",
+        "message": "Drop RCT_EXPORT_METHOD from RCTImageEditingManager (#57773)"
+      },
+      {
+        "sha": "f535c9790444a03df5b091f1b94d54889d1922da",
+        "message": "fix(android): props 2.0 image tintColor=transparent broken (#57668)"
+      },
+      {
+        "sha": "c7d62a125c1225802b55ca52e020a73e67f3ac98",
+        "message": "Deprecate fabricEnabled from ReactFragment (#57764)"
+      },
+      {
+        "sha": "8e995e8dacbb35a17226e01a607bdb29fa0f9bd2",
+        "message": "Fix keyboard focus for interactive rows (#57750)"
+      },
+      {
+        "sha": "63e9c1544834a43b1b44af4033184b1eab6f2ffa",
+        "message": "Update ktfmt component on FBS:master"
+      },
+      {
+        "sha": "3b5d0a652695f0c370fd5dbdd488a37f2c647f9f",
+        "message": "fix: consider extralight fonts in RCTGetFontWeight (#57775)"
+      },
+      {
+        "sha": "c3caea9b5e2a3ae45e5f6be547d70910e40d2ab9",
+        "message": "fix(ios): extract Image.ios.js props once (#57710)"
+      },
+      {
+        "sha": "2bb56dc94bc13820d31692baa051c96c0371027f",
+        "message": "Add `enableConditionalUseWarning` React feature flag (#57783)"
+      },
+      {
+        "sha": "146aaac7eed016eb89e750cd2144f47806ee5863",
+        "message": "Treat NaN border widths as unset (#57789)"
+      },
+      {
+        "sha": "c2dac6abcc73dbbb63cd6fcc744e9139666695da",
+        "message": "Download artifacts from Mirror first on SwiftPM builds (#57763)"
+      },
+      {
+        "sha": "568eaa6b69c7700011633b740c01176a1629ef1b",
+        "message": "Fix premature blob deallocation during FileReader reads (#57796)"
+      },
+      {
+        "sha": "917d97eb1256fc8258f7f7f057c9ed6f6c1e30f9",
+        "message": "Fix iOS Codegen fallback for libraries without an iOS config (#57790)"
+      },
+      {
+        "sha": "3a95e0e93c80537d519dd7e9a771544396d4ab6b",
+        "message": "fix(android): Image `defaultSource` & `loadingIndicatorSrc` broken with props 2.0 (#55210)"
+      },
+      {
+        "sha": "88feed55c014b686f5dad2be74a3e64ca645f53e",
+        "message": "Decrease amount of requests send to Maven repos (#57765)"
+      },
+      {
+        "sha": "f2a250ad895ffd4478f0668f56867b78be21ea2f",
+        "message": "fix(android): crash when setting a percentage borderRadius on Image (#57795)"
+      },
+      {
+        "sha": "df5e6f6a42eeaa431d9130aa185d0f3540aee961",
+        "message": "fix(iOS): keep prebuilt Headers/ in place on a Debug/Release swap (#57814)"
+      },
+      {
+        "sha": "f2188610c6cb8e7cab840ca5940c53869c5c0a94",
+        "message": "Add viewToFocus support for backed views (#57823)"
+      },
+      {
+        "sha": "d89c4326594cdce0ff88b7ceae77436bfcaad4b2",
+        "message": "Set always_out_of_date on hermes-engine Replace Hermes phase (#56912)"
+      },
+      {
+        "sha": "7bb684d26140ca755524bf8a269cfe610512243a",
+        "message": "xplat/js/react-native-github/packages/react-native/ReactAndroid/src/main/jni/first-party/yogajni/jni/corefunctions.cpp (#57828)"
+      },
+      {
+        "sha": "d2dfb47c1e9c1387412dbf28e2ba373c8ce64f61",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Settings/RCTSettingsManager.mm (#57827)"
+      },
+      {
+        "sha": "0b3ca28d7734addb5372ebd56b951849ebf5b0f2",
+        "message": "Deflake TaskDispatchThreadTest.MultipleDelayedTasksOrder (#57830)"
+      },
+      {
+        "sha": "1bb746c29bd8488090dfb22399195dc125476fd5",
+        "message": "Add changelog for v0.87.0-rc.4 (#57824)"
+      },
+      {
+        "sha": "05b97de823708907fd2efd3a859610fe6f2b2169",
+        "message": "Make role-based interactive views keyboard-focusable on iOS (#57822)"
+      },
+      {
+        "sha": "a3f20d888cdff6f7c08460abdf318c574eedd3c7",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Network/RCTNetworking.mm (#57832)"
+      },
+      {
+        "sha": "f7a836069639a55a8065ce47c9077464c83a0fb6",
+        "message": "translation auto-update for Apps/Wilde/scripts/intl-config.json on master"
+      },
+      {
+        "sha": "471c612b57d9d601fba9f5d327995f7a645791d2",
+        "message": "Construct the shared animation backend after the UIManager has a delegate (#57817)"
+      },
+      {
+        "sha": "ee56f1e1f6752c3d0585f0e2cc300751d0171e03",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Vibration/RCTVibration.mm (#57819)"
+      },
+      {
+        "sha": "7115c2b97eba100ccb1230aaaeba6c0a5f73c498",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/NativeAnimation/RCTNativeAnimatedTurboModule.mm (#57821)"
+      },
+      {
+        "sha": "65008fcdd000d9f55229798526de15cdc2749523",
+        "message": "Support a lazy raw color fallback for PlatformColor (#57701)"
+      },
+      {
+        "sha": "f8216139caa3a13c033b45efe3a72fad8263ae9c",
+        "message": "Fix use-after-move of ContextContainer in PointerEventsProcessorTest (#57812)"
+      },
+      {
+        "sha": "bf14b9435271af897ba5d847574c273567a8e3d1",
+        "message": "Deploy 0.326.0 to xplat (#57845)"
+      },
+      {
+        "sha": "31e119a2a122bd660bf3351e297a1b35e2683a98",
+        "message": "PlatformColor lazy fallback: lint rule + RNTester example (#57705)"
+      },
+      {
+        "sha": "85e07db3e8295ccf59779fc82a4f953e54ebeb45",
+        "message": "Add tests for the PlatformColor lazy color fallback (#57708)"
+      },
+      {
+        "sha": "72e63803701a1fb5ccd3e2690a3c18800f7a0607",
+        "message": "translation auto-update for batch 4/64 on master"
+      },
+      {
+        "sha": "942d07bc1938a895f7255f183b9150ae2fbea01e",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Network/RCTNetworking.mm (#57820)"
+      },
+      {
+        "sha": "3f3425e24602e4a8e6b8568c3c9e3b9a6e20a9a4",
+        "message": "Remove unused NativeModalManager spec and all related code (#57806)"
+      },
+      {
+        "sha": "5fb3ebce1ac4125e55f270a18dbc4f873b0eb09f",
+        "message": "ArrayBuffer support to Java TurboModules"
+      },
+      {
+        "sha": "100f8fc4fd6604cc38180a81481b977766012bbc",
+        "message": "fix(accessibility): Derive accessibilityTraits from role and state (#57515) (#57516)"
+      },
+      {
+        "sha": "44e590f5e324b9179ae92a92c402c45f748f72d6",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Image/RCTImageLoader.mm (#57854)"
+      },
+      {
+        "sha": "fff4994af813feebebb77d3fa3792a8b59999159",
+        "message": "Harden on-demand JS segment load path against missing cache file (#57855)"
+      },
+      {
+        "sha": "e2a4c684493c9ee4a3e567809d5b34b1b168c51e",
+        "message": "refactor(iOS): persist bundle as local file on par with Android (#57751)"
+      },
+      {
+        "sha": "914cabb702f57b9a017f528edfe271e2f8400203",
+        "message": "Enable Perfetto by default for Android dev builds"
+      },
+      {
+        "sha": "190e16cc329e472c3183382d05fc57e14b071a65",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Blob/RCTBlobManager.mm (#57857)"
+      },
+      {
+        "sha": "1492a6080f640a94c0a5f97e013f1a9c3ec475ac",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/LinkingIOS/RCTLinkingManager.mm (#57856)"
+      },
+      {
+        "sha": "85a81818c6b9aa19e3d19453640e6ea58afb0357",
+        "message": "Avoid copying surface props when starting or updating a surface (#57813)"
+      },
+      {
+        "sha": "4bf9d4e9b079a3b77842727c68b82f55415898ac",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Blob/RCTFileReaderModule.mm (#57847)"
+      },
+      {
+        "sha": "6d34b7aaffe748008afbcb017fb2aba760894780",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/Image/RCTImageStoreManager.mm (#57842)"
+      },
+      {
+        "sha": "db662caeadc4b173c1f94dcffd4fe5cea5bc3296",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/PushNotificationIOS/RCTPushNotificationManager.mm (#57833)"
+      },
+      {
+        "sha": "266034847033d90da67fa22e60a030ebe94fba05",
+        "message": "Update ktfmt component on FBS:master"
+      },
+      {
+        "sha": "19f7d144b9a57efa249b744269ea9b875aab35a6",
+        "message": "Add Android text font variation settings (#57804)"
+      },
+      {
+        "sha": "a68860809024511ed7dae963aadba8eba4b0e73b",
+        "message": "Add font variation settings support to TextInput (#57805)"
+      },
+      {
+        "sha": "8415753e21c9e88f2a3a46e3da7cfd20b6a4d4a9",
+        "message": "Add variable font settings support (#57815)"
+      },
+      {
+        "sha": "0f1bdddfb3151a602114678b9d84cf5f83938d67",
+        "message": "iOS: reload input views when keyboardType/returnKeyType change on a focused TextInput (Fabric) (#57868)"
+      },
+      {
+        "sha": "3f553d76bc3f4f57e62653d11bab415a21cd02a8",
+        "message": "Fix IllegalStateException in SurfaceMountingManager.removeViewAt (#57860)"
+      },
+      {
+        "sha": "b0b5409e42870660027ae6c8c8c03e7088c806f8",
+        "message": "fix(swiftpm): actually read the artifacts version pin back (#57762)"
+      },
+      {
+        "sha": "6ff47ef95864d0e10be8b9a196a06e6acf7ba174",
+        "message": "feat(swiftpm): let autolinking plugins declare build-time script phases (#57757)"
+      },
+      {
+        "sha": "ad3755894ff2abafcb6137faaae4aef4ab92ebb9",
+        "message": "Daily `arc lint --take KTFMT` (#57880)"
+      },
+      {
+        "sha": "727e87ed265495711ee611079b6862948bdcace0",
+        "message": "Fully replace hermes-(estree|parser|eslint|transform) packages with flow-* counterparts in react-native (#57851)"
+      },
+      {
+        "sha": "66f27eb93ef32e4b3cd8e2f16e5fa7ffbdd4ef7c",
+        "message": "Fix radial-gradient position being dropped after an explicit size (#57873)"
+      },
+      {
+        "sha": "5821fcaf5d3f60c2f7d136bfe4dde8be7c38ea31",
+        "message": "Reject percentage radius for circle radial gradients (#57874)"
+      },
+      {
+        "sha": "a772a7ca16eb3cafb77b7fb8f75f21f85ed696b1",
+        "message": "fix: make an interrupted React-Core-prebuilt swap recoverable (#57831)"
+      },
+      {
+        "sha": "ebfcd8805aa596b12b94a614027f6fdba6317d80",
+        "message": "Add external contributor agent guidelines (#57889)"
+      },
+      {
+        "sha": "b743a8a35baedab3e5f615e83349811b8dbc6ec0",
+        "message": "Refresh DeviceInfo constants on resize"
+      },
+      {
+        "sha": "7bfe32fd331449270eafc5f0d71bade125097d59",
+        "message": "Add SceneDelegate support (#57700)"
+      },
+      {
+        "sha": "93f1e6af74c9d044308af22202f6e0db3768427f",
+        "message": "Drop outdated links to wiki (#57898)"
+      },
+      {
+        "sha": "c0a4e1444ab7125565f80c25c232a811fc74ff9d",
+        "message": "Consolidate v0.87.0-RC changelog entries into a single v0.87.0 section (#57901)"
+      },
+      {
+        "sha": "00a5aa92237a3199d5aab771c133742449f205a2",
+        "message": "Fix RCTAppearance setColorScheme crashing CarPlay apps (non-UIWindowScene guard) (#57876)"
+      },
+      {
+        "sha": "b933d18177cb09fe64881a9f223adc9af87c2124",
+        "message": "Allow opting into RCT_REMOVE_LEGACY_*_INTEROP on iOS OSS (#57892)"
+      },
+      {
+        "sha": "3e962d38009336e3a6021cc278c0c576c27725c7",
+        "message": "guard shrink-factor division against floating-point near-zero (#57175)"
+      },
+      {
+        "sha": "22cfb5caec78cb21b4a66b0ab82b03cc5f99a4dd",
+        "message": "Drop RCT_EXPORT_METHOD/RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD from RCTSampleTurboModule (#57903)"
+      },
+      {
+        "sha": "e71fc4e32ff6fdd0ebac20ba26b567f0814c803d",
+        "message": "Fix RCTDevSettings init (#57409)"
+      },
+      {
+        "sha": "d3daf111e0724ba6c0e4f5e3d485a33b5c0547a9",
+        "message": "Let third-party pods resolve the C++ stable API guard headers (#57846)"
+      },
+      {
+        "sha": "93284f5c5abeb73584fe01a64899f926ac1f9b30",
+        "message": "Define RN_BUILDING for React Native's own CocoaPods targets (#57858)"
+      },
+      {
+        "sha": "5906cfb06085a4ae7ae2e5ac5bb190e0c1e90a42",
+        "message": "Fix Text truncation at NULL character on iOS and Android (#24129) (#57906)"
+      },
+      {
+        "sha": "f4803df9ecf56118d994c4d760a944edea0fee97",
+        "message": "Daily `arc lint --take KTFMT` (#57918)"
+      },
+      {
+        "sha": "189bb445f6ef67a16a4f22ce41bd73e2934255da",
+        "message": "Add Maestro Cloud CI for RNTester (#57919)"
+      },
+      {
+        "sha": "7cdac2a15c1f6d8e12beea5528b714259334b6f4",
+        "message": "Relocate manual .d.ts definitions under types_DEPRECATED/ (#57513)"
+      },
+      {
+        "sha": "7f18ad0f8486bf90cc77c38ee1097250218f7f8e",
+        "message": "Ellipsize single-line TextInput placeholders (#57909)"
+      },
+      {
+        "sha": "e59a1d252c9e69958989ef41d88418f194348983",
+        "message": "fix(virtualized-lists): invalidate content length on orientation change (#57871)"
+      },
+      {
+        "sha": "aeee662b620f6cff2e02755c5a9af1eb4246eac6",
+        "message": "Deploy 0.327.0 to xplat (#57927)"
+      },
+      {
+        "sha": "aa96fa64d11d58808524be90d4302055d9aaf5f4",
+        "message": "Fix AccessibilityRole list conversion (#57926)"
+      },
+      {
+        "sha": "a4733b1ca13c5b4bcce280c079343f27636a033a",
+        "message": "Fix crash when accessibilityRole=\"tabbar\" is used on Android (#57915)"
+      },
+      {
+        "sha": "4433cdbe62c193da974ad49e42e6cb6b2d2d84cc",
+        "message": "Set SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG when injecting SPM (#57914)"
+      },
+      {
+        "sha": "2b995be46429aff84cf7b6e07cd2b3d3b37e5b8f",
+        "message": "Make BabelNode* types module-local within `@babel/types` (remove ambient globals) (#57866)"
+      },
+      {
+        "sha": "551d12a787f925aa0b9c7d7fa9a5703b28a64cbc",
+        "message": "Fix Android inline Text views with small font scale"
+      },
+      {
+        "sha": "e774f0d623085d94632f9c600c6280f5ef77eaa2",
+        "message": "Stabilize sampling-profiler tracing test (#57924)"
+      },
+      {
+        "sha": "1c4a46f4e3199c140da8b91d107e6a559b1f5c07",
+        "message": "Ignore stale minimum-view-time viewability updates (#57923)"
+      },
+      {
+        "sha": "e334b9318d07eb2845372d0bde353947ada0a852",
+        "message": "Wait for images before box-shadow screenshots (#57922)"
+      },
+      {
+        "sha": "b80bc19dc72fa421c71eb97b64fea6e69f8c18e7",
+        "message": "Fix CQS signal facebook-hte-BadImplicitCast in xplat/jsi/jsi/test (#57942)"
+      },
+      {
+        "sha": "9c770f57182479ad55f3ad1fc2185febbe791813",
+        "message": "Fix Maestro Cloud project ID reference (#57943)"
+      },
+      {
+        "sha": "2e4e8303ea65c9fde0f5b5fc2b38cfe224a6e242",
+        "message": "Update agent guidance, move to AGENTS.md (#57944)"
+      },
+      {
+        "sha": "a9df3d540865f1bbcb28938e72df762372c3fb0e",
+        "message": "Define RN_BUILDING for React Native's own CMake, SwiftPM, and Buck targets (#57861)"
+      },
+      {
+        "sha": "b7f0baf8f926e8bf9b41b35f882372b7815c8bea",
+        "message": "Emit a real framework for React-cxxstableapi under use_frameworks! (#57936)"
+      },
+      {
+        "sha": "789e54c8279d86ba44905017771bf55ee3b85c1c",
+        "message": "Back out \"Fix Maestro Cloud project ID reference\" (#57947)"
+      },
+      {
+        "sha": "bc35168d1bb26313b2284208d6d53c7810879c02",
+        "message": "Back out \"Add Maestro Cloud CI for RNTester\" (#57948)"
+      },
+      {
+        "sha": "092734772a2a17234491c3d86a3fba526d782175",
+        "message": "perf: Cache normalisedColors output (#57896)"
+      },
+      {
+        "sha": "8a7dfce60485b2e1b028aea1d329d783349ad0a5",
+        "message": "Update debugger-frontend from 571dc30...dbc1c52 (#57954)"
+      },
+      {
+        "sha": "579aedcbd5d146508dba89a8734c14452d895c40",
+        "message": "Add TextInput placeholder screenshot coverage (#57925)"
+      },
+      {
+        "sha": "704c2b195472290b35a71ccd8df804b797cebd62",
+        "message": "Bump `flow-{estree,parser,eslint,transform,api-translator}` to latest (#57932)"
+      },
+      {
+        "sha": "e0aa7a8b0a15d6896f5f7f607a78172166e65155",
+        "message": "Fix keyboard inset state across ScrollView recycling (#57811)"
+      },
+      {
+        "sha": "1291d7ce8e136bebca126b58b314f864fad0e979",
+        "message": "fix(ios): make the unmountChildComponentView assert message bounds-safe (#57865)"
+      },
+      {
+        "sha": "88043334e382760f256995e692955d1fdb48282d",
+        "message": "Remove unused babel-plugin-syntax-hermes-parser (#57958)"
+      },
+      {
+        "sha": "ead93778a1a06bc1b09ac2ac61bee5224837bf4c",
+        "message": "Fix Hermes bytecode version mismatch in SwiftPM Release builds (#57928)"
+      },
+      {
+        "sha": "b74adf051fcd18b118264de28cbcfc4c38a8b998",
+        "message": "Add idle frame support to Performance timeline (#57952)"
+      },
+      {
+        "sha": "d07bd6f83a55f6aa28636cfc3b096cdd9bfa0a4e",
+        "message": "Promote fuseboxFrameRecordingEnabled to canary (#57953)"
+      },
+      {
+        "sha": "40c06121a1ddd79b3b574e99eac3512b22839280",
+        "message": "Inline `Platform` within RN’s Babel preset (#57848)"
+      },
+      {
+        "sha": "376b99ff1404ea2c00f6d8db542dc95658c7588c",
+        "message": "Accept object font variation settings (#57929)"
+      },
+      {
+        "sha": "f63b2a1cb53bc3e83154b19d91214b4ebd016600",
+        "message": "Babel preset: Make Platform inlining opt-in via inlinePlatform (default on via `@react-native/metro-babel-transformer`) (#57973)"
+      },
+      {
+        "sha": "5cb65244dc561b3dd95ffa10689be5b423d4b9c9",
+        "message": "Fix maintainVisibleContentPosition with rapid data updates (#53542) (#57955)"
+      },
+      {
+        "sha": "37dd4044fd5ac2780588657f6bee57d12004d266",
+        "message": "Run the ReactAndroid JNI gtests as instrumentation tests (#57976)"
+      },
+      {
+        "sha": "88820254e59b11deb5216fdb5a9e026f6979d670",
+        "message": "Align ref helper flow types (#57850)"
+      },
+      {
+        "sha": "c467843ed0eacf980b181b2413a4471f1ea9b6c5",
+        "message": "Fix DOMHighResTimeStamp round-trip truncation in timing primitives (#57975)"
+      },
+      {
+        "sha": "4bf55754905dfdcd6460867dca9ad45bfb9fae45",
+        "message": "Make codegen'd TurboModule event emitters no-op when the emitter callback is absent (#57893)"
+      },
+      {
+        "sha": "5bb9639594952de0893c22130eb0654b5c4594b5",
+        "message": "JArrayBuffer zero-copy class for Java TM (#57897)"
+      },
+      {
+        "sha": "d84c13d5111eef037a196e8e9d5393cfb0d17982",
+        "message": "Enforce the ArrayBuffer borrow contract for Java TurboModules (#57982)\n[Android][Breaking] - TurboModule methods taking or returning an `ArrayBuffer`"
+      },
+      {
+        "sha": "11f9a7f4491eb1b01955298851d5a87a3bb311cc",
+        "message": "RCTArrayBuffer zero-copy class for ObjC TM (#57879)\n[IOS] [BREAKING] - Add `RCTArrayBuffer`, the ObjC representation of a JS `ArrayBuffer` for TurboModules, with an explicit byte-ownership contract"
+      },
+      {
+        "sha": "5e11ed122aa081e9a263b692637c12f0e9e02024",
+        "message": "Add guards for react/renderer/components/view (#57357) (#57357) (#57357)"
+      },
+      {
+        "sha": "6660f4aa24bd59079b141d6816599e5efe54939c",
+        "message": "Refresh README (#57946)"
+      },
+      {
+        "sha": "72e8874c13fef40376e7fbe7cd6f192b8e3bbffe",
+        "message": "Replace ECOSYSTEM.md with Foundation site link (#57949)"
+      },
+      {
+        "sha": "385fa849258e084647c89dda3d259f39a314a67c",
+        "message": "Add stable API guards to text and textinput components (#57363)"
+      },
+      {
+        "sha": "8ac3e2fa58c10891cac734c6fa8a2947dd9fb0fe",
+        "message": "fix(swiftpm): fix two ways array build settings were mishandled (#57744)"
+      },
+      {
+        "sha": "2ce2c0794b9e7550d1b62bf049860155a5244a31",
+        "message": "Remove accidental ref callback return values (#57849)"
+      },
+      {
+        "sha": "3eb330a36558be3345f60699a1e2bf4852e1a410",
+        "message": "Type Animated.event() as an event handler instead of any (#57991)"
+      },
+      {
+        "sha": "3eab03df4c06087b984d393dbe807c478eee8378",
+        "message": "Type Animated.Value.addListener callback (#57992)"
+      },
+      {
+        "sha": "526016d95038b7a70f72c93d4bf16b9a90aa2263",
+        "message": "Support committing debugger-frontend sync under Git checkouts (#57997)"
+      },
+      {
+        "sha": "2dd6d4b482c2512d3e92fbaf0a10a9f8ac055e5d",
+        "message": "Use macOS 26 runners for iOS E2E tests (#57993)"
+      },
+      {
+        "sha": "2ec447a5c4fdda5a775e4b3d10aec326229273b6",
+        "message": "Remove enableAndroidFontWeightAdjustment feature flag (#57990)"
+      },
+      {
+        "sha": "7844386bbdfe8a8540e64d5d670bcfbb426debe9",
+        "message": "feat(style): remove `experimental_` prefix from `backgroundSize`, `backgroundPosition` and `backgroundRepeat` (#57563)"
+      },
+      {
+        "sha": "42be7452d5852eb0f04e51613d7750184d2f1874",
+        "message": "fix(codegen): infinite loop on type aliases that shadow CodegenTypes member names (#57986)"
+      },
+      {
+        "sha": "4338af051488205ab3113c00cfefad5cabb8fb6b",
+        "message": "Migrate to new variance syntax in libdef files (#57987)"
+      },
+      {
+        "sha": "b03652af789b5e2d0d31554dc61230cd4ad9964d",
+        "message": "ResizeObserver Web API implementation (#57723)"
+      },
+      {
+        "sha": "71c6bfbfdc0b502ccabb8a83fbc5f17c3890a321",
+        "message": "- Keep the quotes on header search paths (#57981)"
+      },
+      {
+        "sha": "8c64de2cafaa9c82b083e6984c0299986f2275e5",
+        "message": "Fix ResizeObserver SwiftPM iOS builds (#58010)"
+      },
+      {
+        "sha": "b95c5db26b6e5f105b186f912c50264a426f94cd",
+        "message": "Cover `oscompat` with Stable API guards (#57960)"
+      },
+      {
+        "sha": "a6898cc4cf3cbf916c1bfca3ad0b7646c5dca693",
+        "message": "docs(swiftpm): rename __doc__ to __docs__, drop two superseded docs, correct the rest (#58006)"
+      },
+      {
+        "sha": "0c86952e40bce9651795feacefe2f772a0c6f21f",
+        "message": "docs(ios-prebuild): correct how SwiftPM consumes the prebuilt React headers (#58007)"
+      },
+      {
+        "sha": "22e0eaf4e740f4cfe0f9fb75f7d352e3bada92e5",
+        "message": "Pin `clang-format` 21.1.2 for OSS formatting (#58001)"
+      },
+      {
+        "sha": "83d0be8958bf19120cd0cc92880175bfe5dbafbd",
+        "message": "Expose InspectorNetworkReporter integration point to Frameworks (Android) (#58012)"
+      },
+      {
+        "sha": "4c022bbf7dd51a4e8359057155b81c08b8700095",
+        "message": "Retry only failed Android E2E flows (#57998)"
+      },
+      {
+        "sha": "14938717e6ce59bf63a1788526ad8f2c72b93b9e",
+        "message": "fix(animated): keep user-registered listeners when an Animated node detaches (#57941)"
+      },
+      {
+        "sha": "57c8285d40a11e693c872ff63d1e09550b537174",
+        "message": "Fix viewability for zero-sized lists (#58000)"
+      },
+      {
+        "sha": "6c4cf29689d6c330239bdaf1b974eff80552f35f",
+        "message": "Revert D116356139: Fix viewability for zero-sized lists"
+      },
+      {
+        "sha": "63b58b4df79f8ad3c4762ea1600be1b75c35fba4",
+        "message": "Cover `react/renderer/viewtransition:viewtransition` with Stable API guards (#57996)"
+      },
+      {
+        "sha": "06eb1fefabc17816d23fa7393667277bcc684d94",
+        "message": "fix: prevent programmatic scrolls from cancelling active touches on iOS (#57546)"
+      },
+      {
+        "sha": "af6b0306c6d26cf0de29fe64e860a33c7e149066",
+        "message": "Cover `hermes/inspector-modern:chrome` with Stable API guards (#57978)"
+      },
+      {
+        "sha": "6e41084ab8df1e024bd3f234f631177de7297ae1",
+        "message": "Cover `react/renderer/dom` with Stable API guards (#57961)"
+      },
+      {
+        "sha": "54696dd9764230ce2d404a88c98a27f696f26965",
+        "message": "Add stable API guards for the Image component (#57966)"
+      },
+      {
+        "sha": "2d427ba77bbf17bc487e25bef4d011097ba4fff5",
+        "message": "Cover `jsinspector-modern/network:jsinspector_network` with Stable API guards (#57962)"
+      },
+      {
+        "sha": "b743cb59a83877714810209a7f13688ee6bd9e97",
+        "message": "Add umbrella for public components in `react/renderer/components/*` subtree. (#57312)"
+      },
+      {
+        "sha": "ef28a2c9d582702d9e730378c3008415df61ef3c",
+        "message": "Add DEBUG guard and production error logging to UnimplementedView (#57980)"
+      },
+      {
+        "sha": "b2cd5ea54a46348f055a43a2dd0dc7a0dce7859d",
+        "message": "Add strict API support for `react/renderer/components/*` private targets (#58009)"
+      },
+      {
+        "sha": "26f7074526fc31bcd5e7a8d2017cf41359ed7367",
+        "message": "Align SampleTurboModuleExample UI with NativeCxxModuleExampleExample (#57985)"
+      },
+      {
+        "sha": "9f31d5ae9f3580238be8b79d18a9ae47e1ba82d4",
+        "message": "fix: render dotted and dashed outlines on iOS views without border radii (#58028)"
+      },
+      {
+        "sha": "83dde23b33dad83dfa29601b05a87b68ae898e8f",
+        "message": "Restore `ECOSYSTEM.md` as Foundation redirect (#58048)"
+      },
+      {
+        "sha": "dc2d4ecb24cc23a4d3d2971f38b527c51318889a",
+        "message": "Add stable public MapBuffer C++ entry point (#58013)"
+      },
+      {
+        "sha": "6bee68d37ed4393f283a59339309eddffe1d27bb",
+        "message": "Add umbrella for `react/renderer/uimanager` subtree (#58025)"
+      },
+      {
+        "sha": "6e7d5bfebb36951ee16ff9d0ad65e13e426be029",
+        "message": "Cover `react/nativemodule/featureflags` with Stable API guards (#58041)"
+      },
+      {
+        "sha": "f4ec9dcb538ef70e04c15ad88658f5f0238deeac",
+        "message": "Cover `react/runtime/hermes:hermes` with Stable API guards (#58050)"
+      },
+      {
+        "sha": "d36aa4961d7ff73736da0b9f9ff6c43707069b46",
+        "message": "Derive the generated SPM manifests from shared name constants (#58035)"
+      },
+      {
+        "sha": "8d23b14da65f7bc3de2ac7279306711ea62e9a3c",
+        "message": "Fix nullable float props crashing ViewManagers on Android (#58038)"
+      },
+      {
+        "sha": "091ac613cebafde540d9c1e56284d782029d3d35",
+        "message": "Fix DimensionValue props crashing ViewManagers on Android (#58039)"
+      },
+      {
+        "sha": "0c7f63a4e31eae10219a85f003db481b7bb9b58b",
+        "message": "Upgrade Flow in fbsource (#58076)"
+      },
+      {
+        "sha": "e47416c73c46b3f07358dd88d83a14e3da9d8891",
+        "message": "Deploy 0.329.0 to xplat (#58082)"
+      },
+      {
+        "sha": "7de7b7795812387b2999bbf05bb2cfec992e886d",
+        "message": "Cover the resize observer modules with Stable API guards (#58040)"
+      },
+      {
+        "sha": "ed76640ba60b528f048def85a0f8a5907de417ce",
+        "message": "Read both export styles from a library's react-native.config.js (#58034)"
+      },
+      {
+        "sha": "5168f5f83102a98b1a3f8dac4ce2173d7f8fca90",
+        "message": "Drop the inert publicHeadersPath from spm.modules (#58059)"
+      },
+      {
+        "sha": "5858a0535ad6f06706b209fdeff3422a3d62a48a",
+        "message": "Cover `jsinspector-modern/tracing:profile` with Stable API guards (#57977)"
+      },
+      {
+        "sha": "847b44353a2229b8e3ba86151576bb426307d549",
+        "message": "Cover `jsinspector-modern/cdp:jsinspector_cdp` with Stable API guards (#58042)"
+      },
+      {
+        "sha": "e877b16c8d649e590768922cbf234187e2241a43",
+        "message": "Cover `jsinspector-modern/tracing` with Stable API guards (#58043)"
+      },
+      {
+        "sha": "802cdd95ac4463a220af4fe26b5bc58b348292be",
+        "message": "Cover `react/runtime/nativeviewconfig` with Stable API guards (#58045)"
+      },
+      {
+        "sha": "c057b1fa0164458dea49333d5a521f79156b394d",
+        "message": "Fix viewability for zero-sized lists (#58074)"
+      },
+      {
+        "sha": "3f9cc72309967585d1145e34da9d75a383379049",
+        "message": "Prevent DeviceInfo crash when WindowMetrics API is missing (#58077)"
+      },
+      {
+        "sha": "25ebffd1f737ddfe96352f81dbc74ec4b6611303",
+        "message": "Run Android E2E with ARM64 APKs (#58092)"
+      },
+      {
+        "sha": "90a539c92db5f6dc094fc3d23abbc5c6d9eec763",
+        "message": "Fail with clear error message when a dep depends on an autolinking plugin host (#58087)"
+      },
+      {
+        "sha": "6f90ef7f07f675c1902896705682be52d200c08a",
+        "message": "Add asset utils resource identifier tests (#57999)"
+      },
+      {
+        "sha": "74b984729b3e21225d1c54f7671644c37bbeb026",
+        "message": "Fix asset catalog scale-to-file pairing for assets with non-standard scales (#57825)"
+      },
+      {
+        "sha": "482acee824d2ff32e12c2a98f9c34110e05f3fe8",
+        "message": "Honor a library's spm.name when scaffolding its Package.swift (#58033)"
+      },
+      {
+        "sha": "2c4278d83b2cf2de31d8d5a4d9f259e5cf0134f6",
+        "message": "Fix Double prop defaults losing precision in generated Android delegates (#58070)"
+      },
+      {
+        "sha": "ab2ea649e65cac6bce00770eeebd65a47f88d65a",
+        "message": "Align TurboModule EventEmitter payload types across platforms (#58063)\n[General][Breaking] - Reject `ArrayBuffer` as a TurboModule `EventEmitter` payload on all platforms"
+      },
+      {
+        "sha": "4f9f24e9576ad94992b90a19fbc53fc48750cafb",
+        "message": "Use legacy JNI packaging for ARM64 Android E2E APKs (#58103)"
+      },
+      {
+        "sha": "c35d3b44951c08747727e3c7194493f507aa87f7",
+        "message": "Remove glob: prefix in oss projects (#58100)"
+      },
+      {
+        "sha": "f66a39d1cdcb1776f657907669fe592061a2c921",
+        "message": "Update AGENTS.md (#58099)"
+      },
+      {
+        "sha": "a2f0a4330eb56b3b26e6696a3ce027d5477edae4",
+        "message": "Add changelog for v0.86.3 (#58098)"
+      },
+      {
+        "sha": "5a29c68af88895ca29d6e601f39d268b742349d0",
+        "message": "Animate filter without forcing a Fabric commit every frame (#58071)"
+      },
+      {
+        "sha": "a106fdf0a6813aaba0bce32fbcba0bb2007526ad",
+        "message": "Cover `react/renderer/leakchecker` with Stable API guards (#58090)"
+      },
+      {
+        "sha": "5b680c5f9fe5eae0f257939bd4a1fdbc543af419",
+        "message": "Cover `react/renderer/bridging` with Stable API guards (#58086)"
+      },
+      {
+        "sha": "e3598fac12d4a1169a8b25519e0669fb9e2e37c2",
+        "message": "Remove FileIoHandler (#58096)"
+      },
+      {
+        "sha": "e519d03e3f34a075a3081bb6e81167d1e006df57",
+        "message": "Cover the Hermes executor with Stable API guards (#58055)"
+      },
+      {
+        "sha": "cc5dd59742862d863361fef5c308f774eada4872",
+        "message": "Give devsupport networking its own dispatcher and pool (#58094)"
+      },
+      {
+        "sha": "70f172d29f7cce44ffac06a28ff17910485e967e",
+        "message": "Cover `react/timing:timing` with Stable API guards (#58026)"
+      },
+      {
+        "sha": "e988b12176abba7cde3d5f338a42260ea5186139",
+        "message": "Cover `react/nativemodule/defaults:defaults` with Stable API guards (#58118)"
+      },
+      {
+        "sha": "969f9bec457cf48119d053c1694694b99020353d",
+        "message": "Document the Native Animated architecture (#58106)"
+      },
+      {
+        "sha": "5d91707cfbb35b73ba08f73f0d11e145022925d4",
+        "message": "Fix Core dSYM Maven URLs in GitHub release notes (#58114)"
+      },
+      {
+        "sha": "27518025a75309c424810e3264be8c8789a0cc51",
+        "message": "Cover `react/renderer/scheduler` with Stable API guards (#58135)"
+      },
+      {
+        "sha": "9b12ba4b6736a59e5620777655ecece8853e5b80",
+        "message": "Cover 'react/performance' subtree with C++ stable API guards (#58116)"
+      },
+      {
+        "sha": "9d10e39d32b5fa3d7b9af69552238150e0d6b827",
+        "message": "Refresh DeviceInfo constants on each read (#57715)"
+      },
+      {
+        "sha": "609bdddabf9bfd87f6056a6f96eef52c9ee99266",
+        "message": "Update apps for SceneDelegate support (#57717)"
+      },
+      {
+        "sha": "21f08892b898b4a5197f3e6365d079f4af25f1a5",
+        "message": "Drop RCT_EXPORT_METHOD from RCTTestModule TurboModule (#58095)"
+      },
+      {
+        "sha": "962aeec5e58a52ad35dc812d4bbf502c75dab0b8",
+        "message": "Resolve SwiftPM manifest naming collisions (#58044)"
+      },
+      {
+        "sha": "39cd1dfc4cf851e846483282726d7801f1957ee0",
+        "message": "Hold an app's spm.modules names to the same rules as a library's (#58060)"
+      },
+      {
+        "sha": "14184ec643a41b36d716df088da3eb12a5afd8d9",
+        "message": "Enable RuntimeScheduler queue clearing on error by default (#58129)"
+      },
+      {
+        "sha": "ea06a3191f988fb12f49367486fe9855078a9d8e",
+        "message": "Stabilize Android E2E tests for ARM64 APKs (#58140)"
+      },
+      {
+        "sha": "d83d10674dc63c49783e804b1007291a0ce3f80f",
+        "message": "Cover `react/networking:networking` with Stable API guards (#58008)"
+      },
+      {
+        "sha": "38cd932272f62bb0efa47c26aeeaf664718aae1a",
+        "message": "Remove enableRuntimeSchedulerQueueClearingOnError feature flag (#58132)"
+      },
+      {
+        "sha": "9682967a09a8c5f7fdb7fe903666b56bd371652a",
+        "message": "Remove enableSchedulerDelegateInvalidation feature flag and guard (#58138)"
+      },
+      {
+        "sha": "60b08c60f1ebdec52dae5dd8b38b3e020b20f19d",
+        "message": "Cover `react/nativemodule/webperformance` with Stable API guards (#58123)"
+      },
+      {
+        "sha": "94566e2b892abb55f5fa9d69310373de2a730a89",
+        "message": "Cover `react/renderer/observers/events:events` with Stable API guards (#58121)"
+      },
+      {
+        "sha": "f826318c5fdcaa7ce5758e9f1fecfda0955efaaa",
+        "message": "Add changelog for v0.87.1 (#58153)"
+      },
+      {
+        "sha": "391723e869451b0d9b479dc4f39c5beb48de4315",
+        "message": "fix: make `codegenNativeComponent`'s return type nameable by consumers (#58102)"
+      },
+      {
+        "sha": "d6ba88e16d1cc42c0e90a31eb6586586df2e9d5e",
+        "message": "Eliminate untyped section in react-native (#58155)"
+      },
+      {
+        "sha": "7eafaa2db7267dacb5cc73367da63c93a7fcc182",
+        "message": "Cover the intersection observer modules with Stable API guards (#58125)"
+      },
+      {
+        "sha": "4eee1cd4f1b6f2f36d2fecbd7143f378759616b2",
+        "message": "Add Maestro Cloud CI for RNTester (#58151)"
+      },
+      {
+        "sha": "593ae0258d75ae98c42ebe786e9b449464c94a65",
+        "message": "Convert additional Props/Style types to interface (#58062)"
+      },
+      {
+        "sha": "cec189bd3444cd010513417631618e054bbf2981",
+        "message": "Support 'react-native/react-private-interface' in build-types (#58075)"
+      },
+      {
+        "sha": "8a75a4defeda047afc0de977d382f9d205a85d8e",
+        "message": "Skip device-specific screenshot flows in Maestro Cloud (#58166)"
+      },
+      {
+        "sha": "fea5e11d9c9e9b62a14d25779e122c1505cb47a0",
+        "message": "fix: upgrade shell-quote to 1.8.4 (CVE-2026-9277) (#57663)"
+      },
+      {
+        "sha": "6f03ca54f2e6a57292b0aba5b423d6a0a9c289c8",
+        "message": "Skip non-owned subtrees in roundLayoutResultsToPixelGrid (#58144)"
+      },
+      {
+        "sha": "04e50d540d11f04a39b6c37aba3765ea249fcf36",
+        "message": "Android: default User-Agent includes app name and version (#58147)"
+      },
+      {
+        "sha": "ac2f12bf6197494fa5c032bdb8bbfbaa8368f6e7",
+        "message": "Cover the mutation observer modules with Stable API guards (#58126)"
+      },
+      {
+        "sha": "ba398a5581f9322e060f533929456366955fe85e",
+        "message": "docs(readme): use relative links for LICENSE and SUPPORT.md (#58179)"
+      },
+      {
+        "sha": "eda9f45105c5d46f5cd0c52a985cfbe2388a4b9b",
+        "message": "Cover `jsiexecutor` with Stable API guards (#58133)"
+      },
+      {
+        "sha": "2f5a8332cf2efcff8c67f2a7718807a679fe7061",
+        "message": "Defer the pull model's synchronous mount batch until the root view is attached (#58152)"
+      },
+      {
+        "sha": "42a37214b671ba113c8fe35a9c83fbb38f93104f",
+        "message": "Add stable public CallInvoker C++ entry point (#58159)"
+      },
+      {
+        "sha": "20d0605c9a6629fe255f5f4a2f6bdebb0b7da915",
+        "message": "Add stable public Debug C++ entry point (#58160)"
+      },
+      {
+        "sha": "183969b7ddb6c716cfcab78d0e06008cc305fc65",
+        "message": "Cover react/renderer/runtimescheduler with Stable API guards (#58150)"
+      },
+      {
+        "sha": "c6b137cac9fea8cb0124d0a374e8f60316895d16",
+        "message": "Remove unimplemented sendIntent from RCTLinkingManager (#58154)"
+      },
+      {
+        "sha": "2fa055f6a70bba26391cb42cd4b37923724e44b8",
+        "message": "Upgrade Flow in fbsource (#58192)"
+      },
+      {
+        "sha": "bea8d9efc15e6a8110a74413dee224dbc99bbf16",
+        "message": "Cover `jsc:JSCRuntime` with Stable API guards (#58023)"
+      },
+      {
+        "sha": "4f95564c727906c09f805d56183768a951c297c0",
+        "message": "Add @expo/code-review-cli (#58021)"
+      },
+      {
+        "sha": "a862ba7286518b48abdad3469ccc37c2a7487d7f",
+        "message": "Cover `devtoolsruntimesettings` with Stable API guards (#58131)"
+      },
+      {
+        "sha": "2fa37b15e9b74317f7a82c38dd161b9c69b6bc0f",
+        "message": "translation auto-update for batch 4/65 on master"
+      },
+      {
+        "sha": "4f003c4fb2a01b3797324af9024d2361f90e5de4",
+        "message": "Cover `jserrorhandler` with Stable API guards (#58180)"
+      },
+      {
+        "sha": "049c24f773f5958ab9e41aa6c47bf520a51ae110",
+        "message": "xplat/js/react-native-github/packages/react-native/ReactCommon/hermes/inspector-modern/chrome/HermesRuntimeSamplingProfileSerializer.cpp (#58276)"
+      },
+      {
+        "sha": "a344b4b2ceee94849bfe28e3da66aa994a7996d7",
+        "message": "Fix Maestro image flow keyboard handling (#58272)"
+      },
+      {
+        "sha": "621ced78e9c4aaed1e72053ad4ad8e5aee7a9f04",
+        "message": "Make native event type cache prototype-safe (#58203)"
+      },
+      {
+        "sha": "790289c1d6ad03d42dc9e06280b4b93600af23ea",
+        "message": "Fix EventEmitter prototype-key event types (#58229)"
+      },
+      {
+        "sha": "ee32dfc8b928565c7aef2083dda718140ad619ae",
+        "message": "Sort IntersectionObserver thresholds numerically (#58245)"
+      },
+      {
+        "sha": "ea291d7422e90b9ebf4ebbac056cf735c4cda63a",
+        "message": "Pass a top-level JS null TurboModule arg to ObjC as nil, not NSNull (#58190)"
+      },
+      {
+        "sha": "671705dfb13209653bada83887e0319bbf161402",
+        "message": "Fix intermittent CoreServices XPC crash in RCTBlobManager blob name derivation (#58172)"
+      },
+      {
+        "sha": "082d787a1effbcfd351f5624ab559356323f94d0",
+        "message": "fix: stale VoiceOver value from async UI updates to Text (#58169)"
+      },
+      {
+        "sha": "ebdd848017620bdb481e42bf8d39f3714ac0bfd8",
+        "message": "Deploy 0.330.0 to xplat (#58268)"
+      },
+      {
+        "sha": "90b2ba556dfb11a46bc9dcc152a2a57f183925f4",
+        "message": "Reduce MatrixMathHelper allocations (#58275)"
+      },
+      {
+        "sha": "79d9ffe6f13348211e6755245ada002775aa1c21",
+        "message": "Cover `react/renderer/element` with Stable API guards (#58178)"
+      },
+      {
+        "sha": "66de16dc6e15e8513158be82c1315390185a14a0",
+        "message": "Upgrade UIManager visibility to \"for frameworks\" (#58273)"
+      },
+      {
+        "sha": "3557ce1de3a8d4a72f56e8a48a308f63a19bd3dd",
+        "message": "Cover `jsitooling` with guards (#58262)"
+      },
+      {
+        "sha": "73778b3e80c3110da72f6c8b369c840222c7410a",
+        "message": "Cover `react/renderer/animations` with guards (#58185)"
+      },
+      {
+        "sha": "e54aea474ff005612ab767fbcf0b3d785cda088a",
+        "message": "Cover `nativemodule/cputime` with guards (#58142)"
+      },
+      {
+        "sha": "1b404433f87cf03d765a3b14585df8f297ee312f",
+        "message": "xplat/js/react-native-github/packages/react-native/Libraries/TypeSafety/RCTConvertHelpers.h (#58263)"
+      },
+      {
+        "sha": "619c8aed24e7d4ba472d228d7d21ad2b7ab6a738",
+        "message": "Detect formatted React.createClass calls (#58256)"
+      },
+      {
+        "sha": "92cd588a5c4e0d8b68fe43b94b02658ba7878774",
+        "message": "Fix Cxx WebSocket write queue state (#58201)"
+      },
+      {
+        "sha": "be2c14b055bc7025084f87351961ebbe231d5064",
+        "message": "Make the umbrella context nest (#58261)"
+      },
+      {
+        "sha": "8e1559a8fb1152cd7e65ca64bebf70365bae45d1",
+        "message": "Update umbrella subspecs configuration (#58260)"
+      },
+      {
+        "sha": "ce621bbd5b78f41d637cea02a6a8bb60390f151a",
+        "message": "Fix Animated listeners on nodes derived from Animated.Value (#58037)"
+      },
+      {
+        "sha": "db1d29e9791b9d656897b038d28e438f89ac0e24",
+        "message": "Cover `react/nativemodule/devtoolsruntimesettings` with Stable API guards (#58122)"
+      },
+      {
+        "sha": "911e8fc29354d2d19522a01cf967b353600dea5c",
+        "message": "Cover `react/nativemodule/dom` with Stable API guards (#58127)"
+      },
+      {
+        "sha": "99944312fc82489a2ccf84ae714cdab81c950b84",
+        "message": "Cover `componentregistry/native` with guards (#58141)"
+      },
+      {
+        "sha": "16f8889908e8b6e23a66f3d8e727e67d688b95a8",
+        "message": "Cover `react/nativemodule/microtasks:microtasks` with Stable API guards (#58027)"
+      },
+      {
+        "sha": "c148be6ece5f987ceffff69ae9c779806ae93b8f",
+        "message": "Cover `idlecallbacks` with Stable API guards (#58139)"
+      },
+      {
+        "sha": "fdcce4f673b6bce65d7f62ec8a5e510ee1c413f2",
+        "message": "Turn on `experimental.new_this_typing` in xplat (#58293)"
+      },
+      {
+        "sha": "9ad8c830bdaefb52ce42b0274458421657fc556b",
+        "message": "Apply preset defaults without a Babel API (#58254)"
+      },
+      {
+        "sha": "9c6efa25c1be7e3ba8d8f869942cd68a88051b0d",
+        "message": "Include preset dependencies in main cache keys (#58251)"
+      },
+      {
+        "sha": "6306c4abd900d6337958106afc25717c77438702",
+        "message": "Revert D118438065: Apply preset defaults without a Babel API"
+      },
+      {
+        "sha": "bdce09d494e6b48e6ecc9a4de41f52692a6f0f61",
+        "message": "Revert D118563281: Revert D118438065: [react-native][PR] Apply preset defaults without a Babel API"
+      },
+      {
+        "sha": "d4c85694acaffb957702872733dc7bc8f884ddc9",
+        "message": "Stop reading `buttons` back out of the pointer payload under construction (#58297)"
+      },
+      {
+        "sha": "e0921e987b7b1f769fb3882a26354ade035f5b26",
+        "message": "xplat/js/react-native-github/packages/react-native/ReactAndroid/src/main/jni/react/reactnativeblob/BlobCollector.cpp (#58300)"
+      },
+      {
+        "sha": "ebab8d9fb9b1c7ddd9d56f9ed0d6367cdf4329b0",
+        "message": "Make Maestro keyboard dismissal Android-only (#58288)"
+      },
+      {
+        "sha": "49bcae1763c497c7329371f350510d777fbe94f5",
+        "message": "Wait for Maestro template app startup (#58289)"
+      },
+      {
+        "sha": "bbdeb7dc1dfd5e2c8a911a874811b6393ca2088b",
+        "message": "Inline the last duplicate Platform.select key (#58249)"
+      },
+      {
+        "sha": "0c0e9f0840c5ee62e9681a3d330ac5b1d03b7ac1",
+        "message": "Guard private syntax preservation by transform profile (#58253)"
+      },
+      {
+        "sha": "d3b7893998d3f41039db76381ea34413e698e0a5",
+        "message": "Upgrade Image visibility to \"for frameworks\" (#58283)"
+      },
+      {
+        "sha": "3f9f385a0eb678f7d932f95aae0aa6ae3c4b00a0",
+        "message": "Add an internal option to skip Native Animated frames while inactive (#58295)"
+      },
+      {
+        "sha": "253a84c8d1c8987e3f95716eaada95548b23689b",
+        "message": "Attach TurboModule identity to exceptions rethrown from async and void calls (#58264)"
+      },
+      {
+        "sha": "19e1cc749b7bf84a14fa0a34f5e1969cd1ab131d",
+        "message": "Cover `react/renderer/animated` with guards (#58269)"
+      },
+      {
+        "sha": "e70d9e04253dc1bdc77b03172803a1bc8bb9738d",
+        "message": "Upgrade Modal visibility to \"for frameworks\" (#58285)"
+      },
+      {
+        "sha": "02cb3cadc8bd62848defe31010bc49d7f3c83f18",
+        "message": "Upgrade Text visibility to \"for frameworks\" (#58284)"
+      },
+      {
+        "sha": "2994ff28e4fcaf7b556be046912d9e13b63933d4",
+        "message": "Upgrade Root visibility to \"for frameworks\" (#58282)"
+      },
+      {
+        "sha": "6302cfe2d93dae67b68727a545424533548458a0",
+        "message": "Upgrade ScrollView visibility to \"for frameworks\" (#58287)"
+      },
+      {
+        "sha": "556e648fb2fc3fe16a8c918b8be3341da0f7a069",
+        "message": "Upgrade RendererBridging visibility to \"for frameworks\" (#58286)"
+      },
+      {
+        "sha": "f970054a8ad9da47bfb4a7cf46ae95294c9dfd1a",
+        "message": "Cover `react/featureflags` with Stable API guards (#58083)"
+      },
+      {
+        "sha": "904812016fdf61c7e5077374026ff6b367cbb7e3",
+        "message": "Stop using `paperComponentName` in React Native core component specs (#58188)"
+      },
+      {
+        "sha": "8cf8e094f3b5c5add5928d48fc8be9496111a78a",
+        "message": "Fold optional TextAttributes fields into a presence mask when hashing (#57984)"
+      },
+      {
+        "sha": "d9ad3f0b2fbae43357bfd67fa85e6748c735995e",
+        "message": "Replace UAF death test with deterministic stale-delegate assertion (#58321)"
+      },
+      {
+        "sha": "477e14af1bda1748b735813caf33219b580ca3c5",
+        "message": "Cover `react/renderer/telemetry` with guards (#58301)"
+      },
+      {
+        "sha": "9be9186da1666fa218855132bc8bad05ca292479",
+        "message": "Cover `react/renderer/mounting` with guards (#58303)"
+      },
+      {
+        "sha": "1b30a1f5a2cd9d7905c2aff20680e4304191c620",
+        "message": "Cover react/runtime with Stable API guards (#58167)"
+      },
+      {
+        "sha": "bf0e377c0aec0619f2f3066e231fa56d81bd17f9",
+        "message": "Reduce JNI allocations when importing native maps (#58274)"
+      },
+      {
+        "sha": "fcbeda11094192c1402c9c9da06c7d0ef255d911",
+        "message": "stop baking an absolute HERMES_CLI_PATH into the app pbxproj (#58292)"
+      },
+      {
+        "sha": "5e9cce8b1211ab57fe544ff1146997ee44a8511d",
+        "message": "Cover react/renderer/animationbackend with Stable API guards (#58304)"
+      },
+      {
+        "sha": "63d118af72b274680a4771a19fb8c6a2ac1ad5af",
+        "message": "Fix per-node memory regression caused by Grid styles (#58311)"
+      },
+      {
+        "sha": "0d64c9a13a9a87593a497131ae87abc92810a2bb",
+        "message": "Run codegen for formatted native component calls (#58257)"
+      },
+      {
+        "sha": "1a7c318ffc8cb9ed13a8a424b3d47b6c46ae170a",
+        "message": "Make deprecated native module specs Flow strict-local (#57724)"
+      },
+      {
+        "sha": "c72e8c7c659fbae9482afff2c888e75586b41dd1",
+        "message": "Make Blob/File/URL modules Flow strict-local (#57728)"
+      },
+      {
+        "sha": "590ca972e01ea9beddfa2a4a39b2bc6e24af30d8",
+        "message": "Make StyleSheet modules Flow strict-local (#57731)"
+      },
+      {
+        "sha": "a593f1a5271d6ec3ed0dbe973ecdcb19edee6f13",
+        "message": "Make Utilities modules Flow strict-local (#57729)"
+      },
+      {
+        "sha": "2920b6e8e06194fa53677bc852d1f8ba100c7d88",
+        "message": "Make assorted Components Flow strict-local (#57732)"
+      },
+      {
+        "sha": "5211157ab7dcec0a931a497895a6d033b63796f9",
+        "message": "Make AppRegistry and Core timers Flow strict-local (#57735)"
+      },
+      {
+        "sha": "a9dc32ce58e7cb01a492fb1db4b137122927f249",
+        "message": "Make element inspector dev support modules Flow strict-local (#57741)"
+      },
+      {
+        "sha": "50a7d464fbad2342d4db514c7dd2b84e2bb8b14d",
+        "message": "Make assorted Libraries modules Flow strict-local (#57733)"
+      },
+      {
+        "sha": "38fd9d57dfcf2d393f668de12331a0d6ce98175d",
+        "message": "Restore `paperComponentName: 'RCTSwitch'` to fix `@testing-library/react-native` queries (#58323)"
+      },
+      {
+        "sha": "d44efb09c1fa7604b601de0c98abc00ae5d6e37c",
+        "message": "Cover react/renderer/imagemanager with Stable API guards (#58307)"
+      },
+      {
+        "sha": "c300f84f2cbcce428b6fdb4cfae252945eb02459",
+        "message": "fix(text): avoid mutating accessibilityState (#58318)"
+      },
+      {
+        "sha": "d5dcd2f999b6201da8f8ef42f5aa8bc73f020a46",
+        "message": "Fix require cycle (#58330)"
+      },
+      {
+        "sha": "f072ddb17c6154109cfa8d62e5f1a1dccfa58354",
+        "message": "Deploy 0.331.0 to xplat (#58332)"
+      },
+      {
+        "sha": "3ca6ea3eca08918e966ba02b67c873f76744f24f",
+        "message": "Buffer async CallInvoker work with module calls (#58313)"
+      },
+      {
+        "sha": "08c7781e5a5cf413344f0cc46885a4b7c34ddd14",
+        "message": "fix(image): preserve source headers with crossOrigin and referrerPolicy (#58319)"
+      },
+      {
+        "sha": "8cfde6d0834baf27cc14efff45bf853434acb3aa",
+        "message": "Fix Image.getSize failing for data: URIs on Android (#58353)"
+      },
+      {
+        "sha": "b113cf58648cc42f4875b13e6f4228d61cd533a3",
+        "message": "[LOCAL] Bump hermes-v1 to 260318099.0.1"
+      },
+      {
+        "sha": "981724d016f67daa4c90685318d9b75c6bfbfa0b",
+        "message": "Bump hermes version"
+      },
+      {
+        "sha": "f065722abe7851175eeafebedc7b55d9dee78c7d",
+        "message": "Release 0.88.0-rc.0"
+      },
+      {
+        "sha": "ab7dde8242abc4a7c736529e0db379db71439791",
+        "message": "[LOCAL] Bump Podfile.lock"
+      },
+      {
+        "sha": "b4e7d025c0dee9e81db392a7daa63e3f55b35f29",
+        "message": "Export the native Fabric UI manager for React (#58398)"
+      },
+      {
+        "sha": "0b0ce740cb3c86815f28ad02084c879131d74ee0",
+        "message": "React 19.3.0 sync int React Native OSS (#58446)"
+      },
+      {
+        "sha": "760b5daf5f9e6d4927c3f4e62d1abfa88a522721",
+        "message": "Ship enableNativeEventTargetEventDispatching by default (#58450)"
+      },
+      {
+        "sha": "a855c0431f18881e5c320e2519555cb8929d8809",
+        "message": "Enable the imperative EventTarget API in canary (#58479)"
+      },
+      {
+        "sha": "79024f7c590446d3ef13bc1288faedb736957654",
+        "message": "Bump Hermes to 260318099.0.3"
+      },
+      {
+        "sha": "a07219cbcc78ed01a66971a1c09801d25ede4310",
+        "message": "fix(codegen): skip node_modules and symlinks when crawling for components (#58518)"
+      },
+      {
+        "sha": "38302c95345d69b9e61350c0f30a4ee7c3e5ea95",
+        "message": "Derive an SPM library's Swift name from its podspec (#58290)"
+      },
+      {
+        "sha": "903c4ab7636289fd97d391b646c1068283694580",
+        "message": "Run SPM-generated shell scripts under bash, not /bin/sh (#58362)"
+      },
+      {
+        "sha": "6069149f2570a3db095747690a9b4f04fa11a113",
+        "message": "Derive the generated manifests' iOS platform floor from the app (#58379)"
+      },
+      {
+        "sha": "ad7b17d8eef55add5392db81d326430f26829646",
+        "message": "Fix cache-key test on release branches"
+      },
+      {
+        "sha": "05a41cdc674b1a51a67bfce9be4b79ae3395f795",
+        "message": "Release 0.88.0-rc.1"
+      },
+      {
+        "sha": "74760de04c1f466230e14a00b522149c90c0445c",
+        "message": "[LOCAL] Bump Podfile.lock"
+      },
+      {
+        "sha": "579212e15c9197d6c614cfeb4561e4a85956ee3b",
+        "message": "Restore .js fallback for legacy deep imports of untyped modules"
+      },
+      {
+        "sha": "f2439a83cffc8f2bf8355a984a055ae7174bb4d9",
+        "message": "[0.88][LOCAL] Bump Metro minimum to 0.87.1"
+      },
+      {
+        "sha": "639cdedb506d6441e27eeb579225aa6a7def3ff9",
+        "message": "Revert \"RCTArrayBuffer zero-copy class for ObjC TM (#57879)\"\nThis reverts commit 11f9a7f4491eb1b01955298851d5a87a3bb311cc."
+      },
+      {
+        "sha": "19a31849817b8cf0eaef56305330c4b39d826fe8",
+        "message": "Revert \"Use NSData for the JS->ObjC ArrayBuffer argument path (#57596)\"\nThis reverts commit 5e86c323cefb728bba0a21c3b2a65af93e5868d6."
+      },
+      {
+        "sha": "070af03ab3b9584473b0ffb1a837ac252d127ec9",
+        "message": "Revert \"Align TurboModule EventEmitter payload types across platforms (#58063)\"\nThis reverts commit ab2ea649e65cac6bce00770eeebd65a47f88d65a."
+      },
+      {
+        "sha": "215169c51bfe7b395a73454d65d5ff20e60113d6",
+        "message": "Release 0.88.0-rc.2"
+      },
+      {
+        "sha": "62f0e0b54abd2b405e154b2b3e6ce2b17dfbdef5",
+        "message": "[LOCAL] Bump Podfile.lock"
+      }
+    ],
+    "total": 556,
+    "complete": true
+  },
+  "v0.88.0-rc.2...0.88-stable": {
+    "commits": [
+      {
+        "sha": "62f0e0b54abd2b405e154b2b3e6ce2b17dfbdef5",
+        "message": "[LOCAL] Bump Podfile.lock"
+      }
+    ],
+    "total": 1,
+    "complete": true
+  }
+}
