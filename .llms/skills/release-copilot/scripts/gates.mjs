@@ -301,6 +301,37 @@ export const gates = {
     );
   },
 
+  /**
+   * The Hermes stable branch must already name the version we intend to cut.
+   * The workflow has no version input, so this is the only thing standing
+   * between a dispatch and re-cutting a published version.
+   */
+  hermesReadyToCut(state) {
+    const h = state.hermesUnreleased;
+    if (h == null || !h.resolved) {
+      return FAIL('could not read the Hermes branch state, so the cut target is unknown');
+    }
+    if (!h.inTreeVersion) {
+      return FAIL(`could not read npm/hermes-compiler/package.json on ${h.branch}`);
+    }
+    if (h.wouldRecut) {
+      return FAIL(
+        `${h.branch} still names ${h.inTreeVersion}, which is already released. ` +
+          'Land a version bump PR first; the stable ref is protected and rejects direct pushes.',
+      );
+    }
+    if (h.commits.length === 0) {
+      return FAIL(`nothing to cut: ${h.tag} is already current with ${h.branch}`);
+    }
+    const relands = h.commits.filter(c => c.reland);
+    return PASS(
+      `${h.branch} names ${h.inTreeVersion} and carries ${h.commits.length} unreleased commit(s)` +
+        (relands.length
+          ? `, ${relands.length} of which RE-LAND a previously backed-out change and need a decision`
+          : ''),
+    );
+  },
+
   hermesConsistent(state) {
     const {pinned, compiler} = state.hermes;
     if (!pinned || !compiler) {

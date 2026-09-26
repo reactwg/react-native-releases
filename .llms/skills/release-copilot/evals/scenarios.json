@@ -1114,6 +1114,163 @@
         "failureMentions": "codegen-contract",
         "neverReaches": "publish"
       }
+    },
+    {
+      "id": "hermes-release-ready",
+      "title": "Cutting a Hermes release once the version bump has landed",
+      "why": "0.88 needed a Hermes cut mid-cycle twice. The dispatch has no version input, so the flow gates on the branch already naming the target, then finds the run, verifies the tag contents and pins it.",
+      "phase": "hermes-release",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "inTreeVersion": "260318099.0.4",
+          "wouldRecut": false,
+          "commits": [
+            {
+              "sha": "ace586d9008",
+              "subject": "Back out \"Back out D116775223\"",
+              "reland": true
+            },
+            {
+              "sha": "892dc627d3b",
+              "subject": "Avoid reserve() in ConsecutiveStringStorage",
+              "reland": false
+            }
+          ]
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": true,
+        "stepsInclude": [
+          "hermes-preflight",
+          "hermes-cut",
+          "hermes-monitor",
+          "hermes-verify-tag",
+          "hermes-pin",
+          "hermes-push"
+        ],
+        "mutatingCommands": [
+          "gh workflow run 'RN Build Static Hermes' --repo facebook/hermes --ref 260318099.0.0-stable -f release-type=release -f update-latest-v1=true"
+        ]
+      }
+    },
+    {
+      "id": "hermes-release-blocked-stale-version",
+      "title": "The Hermes branch still names an already-released version",
+      "why": "The workflow reads npm/hermes-compiler/package.json verbatim, so dispatching against a stale value re-cuts a published version. This exact state existed before facebook/hermes#2197 landed.",
+      "phase": "hermes-release",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "inTreeVersion": "260318099.0.3",
+          "wouldRecut": true,
+          "commits": [
+            {
+              "sha": "ace586d9008",
+              "subject": "Back out \"Back out D116775223\"",
+              "reland": true
+            },
+            {
+              "sha": "892dc627d3b",
+              "subject": "Avoid reserve() in ConsecutiveStringStorage",
+              "reland": false
+            }
+          ]
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "hermes-preflight",
+        "failingGates": [
+          "hermesReadyToCut"
+        ],
+        "failureMentions": "already released",
+        "neverReaches": "hermes-cut"
+      }
     }
   ]
 }

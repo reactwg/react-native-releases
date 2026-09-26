@@ -612,6 +612,104 @@ test('cadence: a release past due is reported overdue', async () => {
   assert.equal(c.daysUntilDue, -3);
 });
 
+// ---------------------------------------------------------- hermes release
+
+test('gate: cutting Hermes is blocked while the branch names a released version', async () => {
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      inTreeVersion: '260318099.0.3',
+      wouldRecut: true,
+      commits: [{sha: 'abc', subject: 'x', reland: false}],
+    },
+  });
+  const ev = await evaluate(['hermesReadyToCut'], state, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /already released/);
+  assert.match(ev.results[0].detail, /bump PR first/);
+});
+
+test('gate: cutting Hermes is blocked when there is nothing to cut', async () => {
+  const state = baseState({
+    hermesUnreleased: {
+      branch: 'b',
+      tag: 't',
+      resolved: true,
+      inTreeVersion: '260318099.0.4',
+      wouldRecut: false,
+      commits: [],
+    },
+  });
+  assert.equal((await evaluate(['hermesReadyToCut'], state, {})).passed, false);
+});
+
+test('gate: a ready Hermes cut names the version and flags any re-land', async () => {
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      inTreeVersion: '260318099.0.4',
+      wouldRecut: false,
+      commits: [
+        {sha: 'ace586d9008', subject: 'Back out "Back out D116775223"', reland: true},
+        {sha: '892dc627d3b', subject: 'Avoid reserve()', reland: false},
+      ],
+    },
+  });
+  const ev = await evaluate(['hermesReadyToCut'], state, {});
+  assert.equal(ev.passed, true);
+  assert.match(ev.results[0].detail, /260318099\.0\.4/);
+  assert.match(ev.results[0].detail, /RE-LAND/, 'a re-land must be named even when the gate passes');
+});
+
+test('the Hermes cut surfaces the re-land at the confirmation and demands the version', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const state = baseState({
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.3',
+      resolved: true,
+      inTreeVersion: '260318099.0.4',
+      wouldRecut: false,
+      commits: [{sha: 'ace586d9008', subject: 'Back out "Back out D116775223"', reland: true}],
+    },
+  });
+  const [a] = phaseFor('hermes-release').steps.find(s => s.id === 'hermes-cut').actions(state, {});
+  assert.equal(a.confirmToken, '260318099.0.4', 'the version must be retyped, not accepted as y');
+  assert.ok(a.impact.some(i => /INCLUDES A RE-LAND/.test(i)), 'the re-land must be in the impact');
+  assert.ok(a.impact.some(i => /publicly and permanently/.test(i)));
+  assert.match(a.reversible, /^no\./);
+});
+
+test('the Hermes cut sets both non-default workflow inputs', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const state = baseState({
+    hermesUnreleased: {
+      branch: 'b',
+      tag: 't',
+      resolved: true,
+      inTreeVersion: '1.2.3',
+      wouldRecut: false,
+      commits: [{sha: 'x', subject: 'y', reland: false}],
+    },
+  });
+  const [withLatest] = phaseFor('hermes-release').steps
+    .find(s => s.id === 'hermes-cut')
+    .actions(state, {});
+  // release-type defaults to dry-run and update-latest-v1 to false, so both
+  // must be explicit or the cut silently does the wrong thing.
+  assert.ok(withLatest.args.includes('release-type=release'));
+  assert.ok(withLatest.args.includes('update-latest-v1=true'));
+
+  const [without] = phaseFor('hermes-release').steps
+    .find(s => s.id === 'hermes-cut')
+    .actions(state, {hermesLatestV1: false});
+  assert.ok(without.args.includes('update-latest-v1=false'));
+});
+
 // ------------------------------------------------------------------ doctor
 
 test('doctor: every failing check explains how to fix itself', async () => {

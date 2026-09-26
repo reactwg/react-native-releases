@@ -61,6 +61,42 @@ It never posts. It prints the block for you to paste.
 Copying the previous RC's message is how rc.2's draft ended up carrying rc.1's
 upgrade-helper link and four ticks for steps that had not happened.
 
+## Cutting a Hermes release
+
+A Hermes cut is not tied to a branch cut. 0.88 needed one at rc.1 and again before
+rc.3 and the RN release cannot proceed until the new pin lands, so it is its own
+phase:
+
+```sh
+node scripts/cli.mjs plan --series 0.88 --shape hermes-release
+node scripts/cli.mjs run  --series 0.88 --shape hermes-release
+```
+
+Six steps: gate the cut, dispatch it, find the run so you have something to watch,
+verify the tag before trusting it, pin it into the release branch, push and wait
+for CI.
+
+The gate that matters is `hermesReadyToCut`. `RN Build Static Hermes` has **no
+version input**: it reads `npm/hermes-compiler/package.json` verbatim, so a stale
+value re-cuts an already-published version. The gate refuses until the branch names
+the version you intend to cut and tells you the bump has to go through a PR because
+the stable ref is protected.
+
+A re-land is named in the confirmation, since that is the last cheap moment to stop:
+
+```
+    changes:  publishes hermes-compiler@260318099.0.4 to npm, publicly and permanently
+              creates the tag hermes-v260318099.0.4 on 260318099.0.0-stable
+              moves the npm "latest-v1" dist-tag onto this version
+              INCLUDES A RE-LAND: ace586d9008 Back out "Back out D116775223 ..."
+    undo:     no. npm deprecates rather than unpublishes ...
+    type "260318099.0.4" to confirm, anything else to skip:
+```
+
+Verifying the tag means checking what it **contains**, not that it exists.
+`hermes-v260318099.0.2` was tagged eight hours before a crash fix was backed out and
+shipped the bad version anyway.
+
 ## How it decides what to do
 
 Nothing is stored between runs. Every invocation re-derives state from npm

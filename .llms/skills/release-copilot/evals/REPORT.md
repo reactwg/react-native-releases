@@ -1,6 +1,6 @@
 ## release-copilot evals
 
-16/16 scenarios pass.
+18/18 scenarios pass.
 
 ### Scenarios
 
@@ -22,6 +22,8 @@
 | `picks-blocked-unassessed` | rc | pass | An unassessed candidate must block rather than pass. Absence of evidence is not evidence of safety. |
 | `rc-blocked-offtip-red` | rc | pass | Filtering CI to the tip SHA hid a red "Validate C++ API Snapshots" on the very commit that shipped 0.88.0-rc.2, because a Podfile.lock-only tip did not re-trigger it. |
 | `picks-blocked-unannotated-breaking` | rc | pass | #58063 had no [BREAKING] tag and broke C++ codegen consumers. Judging a candidate by its changelog line alone passes it, so the gate inspects what the change actually touches. |
+| `hermes-release-ready` | hermes-release | pass | 0.88 needed a Hermes cut mid-cycle twice. The dispatch has no version input, so the flow gates on the branch already naming the target, then finds the run, verifies the tag contents and pins it. |
+| `hermes-release-blocked-stale-version` | hermes-release | pass | The workflow reads npm/hermes-compiler/package.json verbatim, so dispatching against a stale value re-cuts a published version. This exact state existed before facebook/hermes#2197 landed. |
 
 ### Agenda coverage
 

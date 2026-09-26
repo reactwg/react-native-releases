@@ -13,6 +13,7 @@
 import {declare} from './actions.mjs';
 
 const RN = 'react/react-native';
+const HERMES = 'facebook/hermes';
 
 const triggerCreateRelease = (state, ctx) =>
   declare({
@@ -260,7 +261,8 @@ export const PHASES = {
             args: ['see reference/hermes.md'],
           }),
         ],
-        note: 'Do not proceed until the branch carries the Hermes bump. See reference/hermes.md for the latest-v1 rule.',
+        note:
+          'Run the hermes-release phase for this: `plan --shape hermes-release`. It gates the cut, dispatches it, finds the run to watch, verifies the tag contents then pins it. Do not proceed until the branch carries the bump.',
       },
       breakingSweepStep,
       {
@@ -293,6 +295,190 @@ export const PHASES = {
             args: ['js1 publish react-native 0.<next>.0-main'],
           }),
         ],
+      },
+    ],
+  },
+
+
+  /**
+   * Cutting a Hermes release and pinning it into the RN release branch.
+   *
+   * Separate from branch-cut because it is not tied to one: 0.88 needed a
+   * Hermes cut at rc.1 and again before rc.3. The RN release cannot proceed
+   * until the pin lands, so this runs to completion on its own.
+   */
+  'hermes-release': {
+    id: 'hermes-release',
+    title: 'Cut a Hermes release and pin it into the release branch',
+    steps: [
+      {
+        id: 'hermes-preflight',
+        title: 'Pre-flight the Hermes cut',
+        gates: ['hermesReadyToCut'],
+        actions: () => [],
+        note:
+          'RN Build Static Hermes has no version input: it reads npm/hermes-compiler/package.json verbatim. A stale value re-cuts a published version. See reference/hermes.md.',
+      },
+      {
+        id: 'hermes-cut',
+        title: 'Cut the Hermes release',
+        gates: [],
+        actions: (state, ctx) => {
+          const h = state.hermesUnreleased ?? {};
+          const v = h.inTreeVersion ?? 'UNKNOWN';
+          const latestV1 = ctx.hermesLatestV1 !== false;
+          return [
+            declare({
+              step: 'hermes-cut',
+              why: `Cut Hermes ${v} from ${h.branch}`,
+              cmd: 'gh',
+              args: [
+                'workflow',
+                'run',
+                'RN Build Static Hermes',
+                '--repo',
+                HERMES,
+                '--ref',
+                h.branch ?? '',
+                '-f',
+                'release-type=release',
+                '-f',
+                `update-latest-v1=${latestV1 ? 'true' : 'false'}`,
+              ],
+              impact: [
+                `publishes hermes-compiler@${v} to npm, publicly and permanently`,
+                `creates the tag hermes-v${v} on ${h.branch}`,
+                latestV1
+                  ? 'moves the npm "latest-v1" dist-tag onto this version'
+                  : 'leaves the "latest-v1" dist-tag where it is',
+                'publishes the Android and Apple artifacts for this version',
+                ...(h.commits ?? [])
+                  .filter(c => c.reland)
+                  .map(c => `INCLUDES A RE-LAND: ${c.sha} ${c.subject}`),
+              ],
+              reversible:
+                'no. npm deprecates rather than unpublishes and the tag is public the moment it is pushed.',
+              confirmToken: v,
+            }),
+          ];
+        },
+        note:
+          'Both inputs are non-default. release-type defaults to dry-run and update-latest-v1 defaults to false, so omitting either silently produces a dry run or the wrong dist-tag.',
+      },
+      {
+        id: 'hermes-monitor',
+        title: 'Find the run and watch it',
+        gates: [],
+        actions: () => [
+          declare({
+            step: 'hermes-monitor',
+            mutates: false,
+            why: 'get the dispatched run so you have a link to watch',
+            cmd: 'gh',
+            args: [
+              'run',
+              'list',
+              '--repo',
+              HERMES,
+              '--workflow',
+              'RN Build Static Hermes',
+              '--limit',
+              '1',
+              '--json',
+              'databaseId,status,conclusion,url',
+            ],
+          }),
+        ],
+        note:
+          'The dispatch returns nothing, so the run has to be looked up. It takes a while: the Apple slices and the Android build dominate. Watch with `gh run watch <id> --repo facebook/hermes`.',
+      },
+      {
+        id: 'hermes-verify-tag',
+        title: 'Verify the tag before pinning',
+        gates: [],
+        actions: state => {
+          const h = state.hermesUnreleased ?? {};
+          const v = h.inTreeVersion ?? 'UNKNOWN';
+          return [
+            declare({
+              step: 'hermes-verify-tag',
+              mutates: false,
+              why: `confirm hermes-v${v} exists on the remote`,
+              cmd: 'git',
+              args: ['ls-remote', '--tags', `https://github.com/${HERMES}.git`, `refs/tags/hermes-v${v}`],
+            }),
+            declare({
+              step: 'hermes-verify-tag',
+              mutates: false,
+              why: 'confirm the version resolves on npm',
+              cmd: 'curl',
+              args: [
+                '-s',
+                '-o',
+                '/dev/null',
+                '-w',
+                '%{http_code}\\n',
+                `https://registry.npmjs.org/hermes-compiler/${v}`,
+              ],
+            }),
+            declare({
+              step: 'hermes-verify-tag',
+              mutates: false,
+              why: 'confirm the dist-tags moved as intended',
+              cmd: 'curl',
+              args: ['-s', 'https://registry.npmjs.org/hermes-compiler'],
+            }),
+          ];
+        },
+        note:
+          'Check the tag CONTAINS the commits you expect, not just that it exists. hermes-v260318099.0.2 was tagged eight hours before a crash fix was backed out and shipped the bad version anyway. Use `git merge-base --is-ancestor <sha> hermes-v<version>`.',
+      },
+      {
+        id: 'hermes-pin',
+        title: 'Pin the new Hermes into the release branch',
+        gates: [],
+        actions: state => {
+          const h = state.hermesUnreleased ?? {};
+          const v = h.inTreeVersion ?? 'UNKNOWN';
+          return [
+            declare({
+              step: 'hermes-pin',
+              why: `bump the two Hermes pins on ${state.branch} to ${v}`,
+              cmd: 'echo',
+              args: [
+                `edit packages/react-native/sdks/hermes-engine/version.properties and packages/react-native/package.json to ${v}, then commit`,
+              ],
+              impact: [
+                `changes which Hermes ${state.branch} consumes, from ${state.hermes?.pinned ?? '?'} to ${v}`,
+                'both files must agree or the hermesConsistent gate fails',
+              ],
+              reversible: 'yes before pushing',
+            }),
+          ];
+        },
+        note:
+          'Do not hand-commit packages/rn-tester/Podfile.lock. publish-npm.yml regenerates it and a hand-written bump just gets overwritten.',
+      },
+      {
+        id: 'hermes-push',
+        title: 'Push the pin and wait for CI',
+        gates: [],
+        actions: state => [
+          declare({
+            step: 'hermes-push',
+            why: `push the Hermes pin to ${state.branch}`,
+            cmd: 'git',
+            args: ['push', 'origin', state.branch],
+            impact: [
+              `publishes the pin to the protected branch ${state.branch}`,
+              'triggers full branch CI and invalidates the current test artifacts',
+            ],
+            reversible: 'not in practice. a bad commit comes out by a follow-up revert',
+            confirmToken: state.branch,
+          }),
+        ],
+        note:
+          'The RC cannot proceed until this is green. Re-run `plan` afterwards: hermesCurrent and hermesConsistent should both pass and the RC phase picks up from there.',
       },
     ],
   },
