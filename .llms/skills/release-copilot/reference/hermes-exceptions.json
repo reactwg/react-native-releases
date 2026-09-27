@@ -1,0 +1,63 @@
+{
+  "_comment": "Acknowledged reasons for the Hermes branch being deliberately ahead of the pinned tag. An entry here means a human looked at the unreleased commits and decided NOT to cut a Hermes release for this RC. Entries are keyed by commit and scoped to the `version` they were taken for, so a commit landing after the decision, or the next release of the series (a patch included), turns hermesCurrent red again and needs its own decision. Never add one to make a red gate go away: if you cannot state why shipping without these is fine, cut the release instead.",
+  "exceptions": [
+    {
+      "series": "0.88",
+      "version": "0.88.0",
+      "pinned": "hermes-v260318099.0.4",
+      "branch": "260318099.0.0-stable",
+      "decision": "ship 0.88.0 on 260318099.0.4, do not cut 260318099.0.5",
+      "reason": "rc.5 is the golden RC, so the remaining work is validation rather than change. Cutting Hermes would add a publish plus a pin PR to the critical path of the release we are trying to stabilise and every commit below is either a graft or infrastructure. None is a reported 0.88 regression. The GC graft (14e0378fddb) landed on 2026-10-12 after the original decision and was reviewed separately: it does not change the pin and rc.5 still ships on 260318099.0.4. Re-reviewed 2026-10-13 for rc.6: three further commits landed (b137297d244, 32a1a15b969, 31b0dadae8c). rc.6 was cut for the AssetRegistry TS fix only and does not move the Hermes pin, so all nine carry to 0.89. Re-reviewed 2026-10-15 for 0.88.0: two more grafts landed (30377221e21, adb297cb257). Hermes was deliberately not cut so nothing changes after the golden RC, and 0.88.0 ships on the same 260318099.0.4 as rc.6.",
+      "acknowledged": [
+        {
+          "sha": "a2200396a42",
+          "subject": "pick: Fix external ArrayBuffer context lookup (#2221)"
+        },
+        {
+          "sha": "c2834a81138",
+          "subject": "Graft \"[SH] Fix handle accumulation in (de)serialization loops\" to shermes/stable"
+        },
+        {
+          "sha": "4d739cf131f",
+          "subject": "Graft \"[SH] Easy: update Github CI to use VS 2026\" to shermes/stable (#2224)"
+        },
+        {
+          "sha": "31b516b69b0",
+          "subject": "Forward String::length in RuntimeDecorator and WithRuntimeDecorator (#2225)"
+        },
+        {
+          "sha": "09d3bf22976",
+          "subject": "Run the With hooks around WithRuntimeDecorator::createArrayBuffer (#2204)"
+        },
+        {
+          "sha": "14e0378fddb",
+          "subject": "Graft \"[SH] GC: Skip the HV64 dead-zone freelist bucket in OldGen\" to shermes/stable"
+        },
+        {
+          "sha": "b137297d244",
+          "subject": "Use createError in JSError and forward it in RuntimeDecorator"
+        },
+        {
+          "sha": "32a1a15b969",
+          "subject": "Forward createValueFromJsonUtf8 in RuntimeDecorator (#2229)"
+        },
+        {
+          "sha": "31b0dadae8c",
+          "subject": "Graft \"[hermes][PR] Fix out-of-bounds dense store for arrays\""
+        },
+        {
+          "sha": "30377221e21",
+          "subject": "Graft \"[SH] Fix BigInt deserialization bug\" to shermes/stable"
+        },
+        {
+          "sha": "adb297cb257",
+          "subject": "Graft \"[SH] Fix array literal length when a hole precedes a spread\" to shermes/stable"
+        }
+      ],
+      "carryTo": "0.89. The version bump to 260318099.0.5 already landed, so hermesReadyToCut is satisfied whenever the next cut is wanted.",
+      "reviewedBy": "fabriziocucci",
+      "reviewedOn": "2026-10-15",
+      "shipOn": "0.88.0 on 260318099.0.4"
+    }
+  ]
+}
