@@ -1,0 +1,19 @@
+{
+  "260318099.0.3": {
+    "branch": "260318099.0.0-stable",
+    "tag": "hermes-v260318099.0.3",
+    "resolved": true,
+    "commits": [
+      {
+        "sha": "ace586d9008",
+        "subject": "Back out \"Back out D116775223 (Hermes VariableScope rescan pick) fixing AR-effect SIGSEGV [messenger_android_crashes/d87df40cdec9aa1e29f2e6e1aaf0d3b5]\"",
+        "reland": true
+      },
+      {
+        "sha": "e3371863eec",
+        "subject": "Easy: Update IEventLoopControl::scheduleTask doc comment",
+        "reland": false
+      }
+    ]
+  }
+}
