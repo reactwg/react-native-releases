@@ -1,0 +1,33 @@
+{
+  "1424,1421,1422,1426": [
+    {
+      "number": 1424,
+      "title": "[0.88] Repair stale staged headers in the iOS prebuild",
+      "resolved": [],
+      "prOnly": true
+    },
+    {
+      "number": 1421,
+      "title": "[0.88] Stop re-creating library package roots on every sync",
+      "resolved": [],
+      "prOnly": true
+    },
+    {
+      "number": 1422,
+      "title": "[0.88] Fix `Attempted to import the module \"...ReactNativeFeatureFlags\"` in apps using virtualized-lists",
+      "resolved": [],
+      "prOnly": true
+    },
+    {
+      "number": 1426,
+      "title": "[0.88] Bump androidx.collection to 1.4.4 to fix lost view registry entries on Android",
+      "resolved": [
+        {
+          "sha": "d6a5f159c6e",
+          "message": "fix(android): bump androidx.collection to 1.4.4 to avoid MutableIntObjectMap corruption in SurfaceMountingManager (#58389)\n\nSummary:\nsince https://github.com/react/react-native/issues/56646 the view registry is a `MutableIntObjectMap`; `androidx.collection` 1.4.0 to 1.4.2 corrupt `ScatterMap` and its primitive variants after remove-heavy sequences, fixed in 1.4.3 (https://issuetracker.google.com/issues/352560465). Apps resolve 1.4.0 or 1.4.2 and lose registry entries; RN then drops mount instructions and can leave stale views.\n\nFixes https://github.com/react/react-native/issues/58388.\n\n## Changelog:\n\n<!-- Help reviewers and the release process by writing your own changelog entry.\n\nPick one each for the category and type tags:\n\n[ANDROID|GENERAL|IOS|INTERNAL] [BREAKING|ADDED|CHANGED|DEPRECATED|REMOVED|FIXED|SECURITY] - Message\n\nFor more details, see:\nhttps://reactnative.dev/contributing/changelogs-in-pull-requests\n-->\n\n`[ANDROID] [FIXED] - Bump androidx.collection to 1.4.4 to fix view registry entries getting lost in SurfaceMountingManager`\n\nPull Request resolved: https://github.com/react/react-native/pull/58389\n\nTest Plan:\nReproducer: https://github.com/pawicao/rn-android-view-registry-corruption\n- RN 0.87.1 app resolving androidx.collection 1.4.2: 91 `Unable to find viewState` soft exceptions on 45 tags over two 40-round runs on a Pixel 9a, and a stale view left on screen.\n- Same screen with androidx.collection pinned to 1.4.4: none over 120 rounds.\n\nReviewed By: cortinico\n\nDifferential Revision: D119149754\n\nPulled By: javache\n\nfbshipit-source-id: afb13330bac575218a07a030bb1bcd5bf7e00824\n"
+        }
+      ],
+      "prOnly": false
+    }
+  ]
+}
