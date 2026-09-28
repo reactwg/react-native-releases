@@ -1,0 +1,1276 @@
+{
+  "_comment": "Eval scenarios for release-copilot. Each one is a named release situation, the state it puts the skill in and what the skill MUST decide. Written as data so a reviewer can read the assertion without reading test code. The runner (evals/run.mjs) executes each against the real phase/gate code.",
+  "scenarios": [
+    {
+      "id": "branch-cut-rc0-clean",
+      "title": "Branch cut and RC0, everything ready",
+      "why": "The once-per-8-weeks flow. Exercises the steps no other scenario reaches: external deps, branch creation, the Hermes gate and the main version bump.",
+      "phase": "branch-cut",
+      "state": {
+        "series": "0.89",
+        "branch": "0.89-stable",
+        "branchTip": "aaaaaaaaaaa",
+        "current": null,
+        "proposedNext": "0.89.0-rc.0",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.88.0",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "270000000.0.0",
+          "compiler": "270000000.0.0"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.89",
+            "type": "breaking"
+          },
+          "isNonBreaking": false,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "270000000.0.0-stable",
+          "tag": "hermes-v270000000.0.0",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": true,
+        "stepsInclude": [
+          "external-deps",
+          "create-branches",
+          "hermes",
+          "nightly",
+          "breaking-sweep",
+          "pre-flight",
+          "publish",
+          "verify-publish",
+          "bump-main"
+        ],
+        "mutatingCommands": [
+          "gh api repos/react/react-native/git/refs -f ref=refs/heads/0.89-stable -f sha=MAIN_SHA",
+          "gh workflow run nightly.yml --repo react/react-native --ref main",
+          "gh workflow run 'Create release' --repo react/react-native --ref 0.89-stable -f version=0.89.0-rc.0 -f is-latest-on-npm=false -f dry-run=false"
+        ],
+        "metaOnlySteps": [
+          "hermes",
+          "announce",
+          "bump-main"
+        ]
+      }
+    },
+    {
+      "id": "rc-incremental-clean",
+      "title": "An RC after RC0, nothing blocking",
+      "why": "The weekly flow. Must reach publish with the right arguments and must NOT re-run branch-cut work.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": true,
+        "stepsInclude": [
+          "checkout",
+          "picks",
+          "breaking-sweep",
+          "artifacts",
+          "test",
+          "pre-flight",
+          "publish",
+          "status-message",
+          "board"
+        ],
+        "stepsExclude": [
+          "create-branches",
+          "nightly",
+          "bump-main"
+        ],
+        "mutatingCommands": [
+          "git switch 0.88-stable",
+          "gh workflow run 'Create release' --repo react/react-native --ref 0.88-stable -f version=0.88.0-rc.2 -f is-latest-on-npm=false -f dry-run=false"
+        ]
+      }
+    },
+    {
+      "id": "rc-blocked-breaking-change",
+      "title": "An RC carrying a breaking change in a non-breaking series",
+      "why": "0.88 shipped three of these. The sweep must hard-stop before publish, not warn.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [
+          {
+            "sha": "11f9a7f4491",
+            "title": "RCTArrayBuffer zero-copy class for ObjC TM (#57879)"
+          }
+        ],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "breaking-sweep",
+        "failingGates": [
+          "noBreakingChanges"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-truncated-scan",
+      "title": "The breaking-change scan could not see the whole range",
+      "why": "The compare API caps at 250 commits over a 554-commit range. A partial scan must refuse to judge rather than report clean.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": null,
+        "breakingScanComplete": false,
+        "breakingBaseline": "v0.87.1",
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "breaking-sweep",
+        "failingGates": [
+          "noBreakingChanges"
+        ],
+        "failureMentions": "truncated",
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-red-ci",
+      "title": "An RC with red CI on the branch tip",
+      "why": "Never publish on red. The stop must come before the artifacts step, since release testing uses artifacts from the last run.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "failure",
+            "status": "completed",
+            "failedJobs": [
+              "test_js (24)"
+            ]
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "artifacts",
+        "failingGates": [
+          "ciGreen"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-hermes-mismatch",
+      "title": "Hermes pinned inconsistently between the two files",
+      "why": "0.88 needed a Hermes pick mid-cycle, at rc.1, not at the branch cut. A mismatch means the branch consumes a different Hermes than it claims.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.2"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "hermesConsistent"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-open-pick",
+      "title": "An open pick request for the series",
+      "why": "An unactioned pick means the release ships without a change someone asked for or with an undecided one.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [
+          {
+            "number": 1410,
+            "title": "[0.88] Bump Metro minimum to 0.87.1"
+          }
+        ],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "noOpenPicks"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-prerelease-taking-latest",
+      "title": "A prerelease about to take the npm latest tag",
+      "why": "Would point every `npm install react-native` at an RC. The single most damaging mistake available in this flow.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": true,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "distTagCorrect"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-workflow-dryrun-default",
+      "title": "The publish workflow's dry-run input left at its default",
+      "why": "create-release defaults dry-run to true. Forgetting it produces a GREEN run that published nothing, indistinguishable from success.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "dryRunExplicit"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-tag-exists",
+      "title": "The tag for the next version already exists",
+      "why": "create-release guards on tag absence and SKIPS silently, producing a green run that did nothing.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": true,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "tagFree"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "promote-to-stable",
+      "title": "Promoting the final RC to stable",
+      "why": "The only flow where the npm latest tag legitimately moves and the only one with post-promotion follow-ups.",
+      "phase": "promote",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.2",
+        "proposedNext": "0.88.0",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": true,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": true,
+        "stepsInclude": [
+          "pre-flight",
+          "publish",
+          "support-table",
+          "blog",
+          "website-version"
+        ],
+        "mutatingCommands": [
+          "gh workflow run 'Create release' --repo react/react-native --ref 0.88-stable -f version=0.88.0 -f is-latest-on-npm=true -f dry-run=false"
+        ]
+      }
+    },
+    {
+      "id": "rc-blocked-hermes-behind",
+      "title": "The pinned Hermes tag is behind its branch",
+      "why": "A consistency check between the two pin files cannot see this. Two unreleased Hermes commits sat on the 0.88 branch unnoticed, one re-landing a change backed out for a SIGSEGV.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": [
+            {
+              "sha": "ace586d9008",
+              "subject": "Back out \"Back out D116775223 (VariableScope rescan)\"",
+              "reland": true
+            },
+            {
+              "sha": "e3371863eec",
+              "subject": "Easy: Update IEventLoopControl::scheduleTask doc comment",
+              "reland": false
+            }
+          ]
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "hermesCurrent"
+        ],
+        "failureMentions": "RE-LAND",
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "picks-blocked-breaking-candidate",
+      "title": "An open pick carries a [BREAKING] annotation",
+      "why": "noBreakingChanges only sees what is already on the branch, so alone it catches a breaking change after it has been picked and pushed. This stops it at the candidate stage.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [
+          {
+            "number": 1499,
+            "title": "[0.88] Change the ObjC TurboModule signature"
+          }
+        ],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [
+          {
+            "number": 1499,
+            "title": "[0.88] Change the ObjC TurboModule signature",
+            "resolved": [
+              {
+                "sha": "11f9a7f4491",
+                "message": "RCTArrayBuffer\n\n[IOS] [BREAKING] - Codegen emits RCTArrayBuffer"
+              }
+            ],
+            "prOnly": false
+          }
+        ],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "picks",
+        "failingGates": [
+          "picksNotBreaking"
+        ],
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "picks-blocked-unassessed",
+      "title": "An open pick cannot be resolved to a commit",
+      "why": "An unassessed candidate must block rather than pass. Absence of evidence is not evidence of safety.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [
+          {
+            "number": 1500,
+            "title": "[0.88] Something citing only a PR"
+          }
+        ],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [
+          {
+            "number": 1500,
+            "title": "[0.88] Something citing only a PR",
+            "resolved": [],
+            "prOnly": true
+          }
+        ],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "picks",
+        "failingGates": [
+          "picksNotBreaking"
+        ],
+        "failureMentions": "unassessed",
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "rc-blocked-offtip-red",
+      "title": "A path-filtered workflow is red on an earlier commit",
+      "why": "Filtering CI to the tip SHA hid a red \"Validate C++ API Snapshots\" on the very commit that shipped 0.88.0-rc.2, because a Podfile.lock-only tip did not re-trigger it.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": [
+          {
+            "workflow": "Validate C++ API Snapshots",
+            "sha": "215169c51bf",
+            "at": "2026-09-21T16:15:00Z"
+          }
+        ]
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "artifacts",
+        "failingGates": [
+          "ciGreen"
+        ],
+        "failureMentions": "not re-run",
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "picks-blocked-unannotated-breaking",
+      "title": "A pick candidate is breaking but carries no annotation",
+      "why": "#58063 had no [BREAKING] tag and broke C++ codegen consumers. Judging a candidate by its changelog line alone passes it, so the gate inspects what the change actually touches.",
+      "phase": "rc",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [
+          {
+            "number": 1501,
+            "title": "[0.88] Align EventEmitter payload types"
+          }
+        ],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [
+          {
+            "number": 1501,
+            "title": "[0.88] Align EventEmitter payload types",
+            "resolved": [
+              {
+                "sha": "ab2ea649e65",
+                "message": "Align payload types\n\n[General][Changed] - tighten the parser",
+                "files": [
+                  {
+                    "f": "packages/react-native-codegen/src/parsers/parsers-commons.js",
+                    "a": 8,
+                    "d": 0
+                  }
+                ]
+              }
+            ],
+            "prOnly": false
+          }
+        ],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "picks",
+        "failingGates": [
+          "picksNotBreaking"
+        ],
+        "failureMentions": "codegen-contract",
+        "neverReaches": "publish"
+      }
+    },
+    {
+      "id": "hermes-release-ready",
+      "title": "Cutting a Hermes release once the version bump has landed",
+      "why": "0.88 needed a Hermes cut mid-cycle twice. The dispatch has no version input, so the flow gates on the branch already naming the target, then finds the run, verifies the tag contents and pins it.",
+      "phase": "hermes-release",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "inTreeVersion": "260318099.0.4",
+          "wouldRecut": false,
+          "commits": [
+            {
+              "sha": "ace586d9008",
+              "subject": "Back out \"Back out D116775223\"",
+              "reland": true
+            },
+            {
+              "sha": "892dc627d3b",
+              "subject": "Avoid reserve() in ConsecutiveStringStorage",
+              "reland": false
+            }
+          ]
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": true,
+        "stepsInclude": [
+          "hermes-preflight",
+          "hermes-cut",
+          "hermes-monitor",
+          "hermes-verify-tag",
+          "hermes-pin",
+          "hermes-push"
+        ],
+        "mutatingCommands": [
+          "gh workflow run 'RN Build Static Hermes' --repo facebook/hermes --ref 260318099.0.0-stable -f release-type=release -f update-latest-v1=true"
+        ]
+      }
+    },
+    {
+      "id": "hermes-release-blocked-stale-version",
+      "title": "The Hermes branch still names an already-released version",
+      "why": "The workflow reads npm/hermes-compiler/package.json verbatim, so dispatching against a stale value re-cuts a published version. This exact state existed before facebook/hermes#2197 landed.",
+      "phase": "hermes-release",
+      "state": {
+        "series": "0.88",
+        "branch": "0.88-stable",
+        "branchTip": "070af03ab3b",
+        "current": "0.88.0-rc.1",
+        "proposedNext": "0.88.0-rc.2",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.87.1",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "260318099.0.3",
+          "compiler": "260318099.0.3"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.88",
+            "type": "non-breaking"
+          },
+          "isNonBreaking": true,
+          "manualTestingRcs": [
+            0,
+            1
+          ]
+        },
+        "hermesUnreleased": {
+          "branch": "260318099.0.0-stable",
+          "tag": "hermes-v260318099.0.3",
+          "resolved": true,
+          "inTreeVersion": "260318099.0.3",
+          "wouldRecut": true,
+          "commits": [
+            {
+              "sha": "ace586d9008",
+              "subject": "Back out \"Back out D116775223\"",
+              "reland": true
+            },
+            {
+              "sha": "892dc627d3b",
+              "subject": "Avoid reserve() in ConsecutiveStringStorage",
+              "reland": false
+            }
+          ]
+        },
+        "pickCandidates": [],
+        "staleRed": []
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": false,
+        "stopsAt": "hermes-preflight",
+        "failingGates": [
+          "hermesReadyToCut"
+        ],
+        "failureMentions": "already released",
+        "neverReaches": "hermes-cut"
+      }
+    }
+  ]
+}

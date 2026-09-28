@@ -1,0 +1,312 @@
+{
+  "0.88": {
+    "project": {
+      "number": 35,
+      "title": "React Native 0.88 Releases"
+    },
+    "items": [
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/commit/31d33ce91b127b434228c8d912810563afdede54 and https://github.com/react/react-native/commit/8480b86820b4535c9bec2967a0f16afed5292a0e\n\n### Description\n\nRequest to pick the commit to ship the refactor for the event dispatching pipeline in 0.88, which should be a purely backwards-compatible change.\n\nAlso the commit to promote the imperative API that this unblocks to the canary channel, as discussed in the last staging review for the feature.",
+          "number": 1409,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] EventTarget-based event dispatching refactor & new APIs in Canary",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1409"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg6gtX8",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] EventTarget-based event dispatching refactor & new APIs in Canary"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/pull/58504\n\n### Description\n\nBumps the minimum Metro version to 0.87.1, within the existing `^0.87.0` range, so that upgraders get the same Metro as fresh projects. Main equivalent: https://github.com/react/react-native/pull/58506\n\nMetro 0.87.1 is mostly fixes, including `Platform` inlining corrections, and replaces the `image-size` dependency to clear CVE alerts. Release notes: https://github.com/react/metro/releases/tag/v0.87.1\n",
+          "number": 1410,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Bump Metro minimum to 0.87.1",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1410"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg62BM8",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.2",
+        "title": "[0.88] Bump Metro minimum to 0.87.1"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\n- https://github.com/react/react-native/pull/58398\n- https://github.com/react/react-native/pull/58446\n\n### Description\n\nRequesting the React 19.3.0 sync for the 0.88 release. Please pick the commits in this order:\n\n1. `73a76ddced2088d925809432fd6b0503f239dbfe` (#58398)\n2. `b0b71421c1964e046ba2ad156669c7d32e4c538f` (#58446)\n\n#58398 is a required runtime prerequisite that is not present on `0.88-stable`. The React 19.3 Fabric renderer imports `react-native/react-private-interface` and dereferences `fabricUIManager` during module initialization. Without #58398, that property is undefined and renderer initialization fails. The prerequisite exposes the existing Fabric UIManager proxy through the private interface.\n\nI reviewed the contiguous commits after the sync on `main`. None is a corrective fix required by the React 19.3 update:\n\n- #58447 only enables previously guarded Fantom tests.\n- #58450 separately enables EventTarget-based event dispatch by default; the synced renderer retains the legacy path, so this behavior rollout is not required for correctness.\n- #58399, #58452, #58454, and #58455 remove bindings, forwarding modules, globals, and getters that the new renderer no longer consumes.\n\nI also reviewed #58443, which landed before the sync. It aligns the FabricUIManager Flow interface and cached-property list with the native binding, but it is not a runtime prerequisite: the existing proxy explicitly falls back to the original native object for uncached properties, and the 0.88 native binding already provides the methods used by the new renderer.\n\nA three-way application check against current `origin/0.88-stable` shows #58398 applying cleanly. The sync has expected content conflicts only in `packages/rn-tester/package.json` and `private/helloworld/package.json`, where the release branch contains `0.88.0-rc.0` version stamps and `main` contains development versions. The React 19.3 dependency updates should be applied while retaining the 0.88 release version stamps.",
+          "number": 1408,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Sync React 19.3.0 and required Fabric UIManager export",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1408"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg63QJ0",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] Sync React 19.3.0 and required Fabric UIManager export"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/pull/58518\n\n### Description\n\n`findFilesWithExtension` walks a library's directory looking for `.mm` files that declare a Fabric component. The walk descends into every subdirectory, `node_modules` included, resolves symlinks through `statSync`, and keeps no visited set.\n\nThis got broken after https://github.com/react/react-native/pull/57790 because `parseiOSAnnotations` now enters every library that declares a `codegenConfig` without an `ios` key into its map with an empty `components` object, so nothing removes it from `librariesToCrawl`. Previously such libraries were filtered before crawling. \n\nAn app that declares `codegenConfig` with `\"type\": \"all\"` and no `ios` key now gets treated as a component library, so the walk covers the entire project. ",
+          "number": 1411,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] skip node_modules and symlinks when crawling for codegen components",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1411"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg634sE",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] skip node_modules and symlinks when crawling for codegen components"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\n- https://github.com/react-native-community/template/pull/249 (commit `aad5b40ded3933a66166c11fe05835467bba48a3`)\n\n### Description\n\nNote this is a pick in `react-native-community/template`, not in `react/react-native`. Opening it here for bookkeeping so the 0.88 pick list is complete.\n\nThe React 19.3.0 sync (#1408, https://github.com/react/react-native/pull/58446) has been picked into `0.88-stable`. That commit bumps the `react-native` package's peer dependency:\n\n```\n\"peerDependencies\": {\n-   \"react\": \"^19.2.3\"\n+   \"react\": \"^19.3.0\"\n}\n```\n\nThe `0.88-stable` branch of `react-native-community/template` still pins `react: 19.2.3`, so the generated app and the picked `react-native` no longer agree. `test_e2e_ios_templateapp` and `test_e2e_android_templateapp` now fail in all four configurations (Debug and Release on both platforms) while installing the scaffolded project:\n\n```\nnpm error code ERESOLVE\nnpm error While resolving: RNTestProject@0.0.1\nnpm error Found: react@19.2.3\nnpm error   react@\"19.2.3\" from the root project\nnpm error Could not resolve dependency:\nnpm error peer react@\"^19.3.0\" from react-native@0.88.0-rc.0\n```\n\nFailing run: https://github.com/react/react-native/actions/runs/34846501953\n\n`scripts/e2e/init-project-e2e.js` clones the template repo, checks out the branch matching the current release branch, then rewrites only the `@react-native/*` scoped dependencies and `react-native` itself. It never rewrites `react`, so the pin has to be correct on the template's release branch.\n\nBoth halves of this change already landed on `main` on the same day:\n\n| Repo | Change | Date |\n| --- | --- | --- |\n| `react/react-native` | #58446 React 19.3.0 sync | 2026-09-10 |\n| `react-native-community/template` | #249 Update react and react-test-renderer to 19.3.0 | 2026-09-10 |\n\nThe template's `0.88-stable` branch was cut on 2026-09-08, two days before #249, and has not been updated since, so it missed the bump. Only the `react/react-native` half was picked into 0.88.\n\nThe pick is two lines in `template/package.json`:\n\n```diff\n-    \"react\": \"19.2.3\",\n+    \"react\": \"19.3.0\",\n...\n-    \"react-test-renderer\": \"19.2.3\",\n+    \"react-test-renderer\": \"19.3.0\",\n```\n\nNote that `react-native` on the template's `main` is pinned to `nightly` while the release branch pins the release version, so only the two `react` lines should be taken.\n\nThis is a required follow-up to the React 19.3.0 sync rather than an independent change. Without it the template e2e jobs cannot pass on `0.88-stable`, and anyone scaffolding a new app from the 0.88 template hits the same peer dependency conflict.\n",
+          "number": 1412,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Bump template react to 19.3.0 to match the React 19.3.0 sync",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1412"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg66hPk",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] Bump template react to 19.3.0 to match the React 19.3.0 sync"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\n- https://github.com/facebook/hermes/pull/1988 (the source backport, 10 of its commits)\n\n### Description\n\nBookkeeping record. **All 10 commits have already landed on `260318099.0.0-stable`, so there is nothing to action here.** Filing it so the 0.88 pick list reflects the work, and so the remaining release-side blocker is written down somewhere.\n\n#### The gap\n\nRN 0.88 moved to Hermes `260318099`, whose stable branch was cut from `static_h` around 2026-03-18. https://github.com/facebook/hermes/pull/1988 (\"Backport new JSI improvements\", 21 commits from `static_h`) landed on the `250829098` branch (used by RN 0.87) on 2026-04-15, after that cut.\n\nThe `260318099` branch received only half of it. The **JSI declarations** (\"Add `X` API\") crossed over, the **Hermes implementations** (\"Implement `X`\") and their SynthTrace support did not. The JSI surface in `API/jsi/jsi/jsi.h` was byte-identical between the two branches, so nothing failed to compile and nothing raised an error. Every affected API silently fell through to the `jsi` base implementation.\n\nThis was found through `tryGetMutableBuffer`, where `expo-modules-core`'s Android instrumentation tests caught the zero-copy regression on 0.88.0-rc.0 (https://github.com/expo/expo/pull/49910). The other five APIs had the same defect and were latent.\n\n#### Where each commit landed\n\n| # | Source (`250829098.0.0-stable`) | API | Landed on `260318099.0.0-stable` |\n| --- | --- | --- | --- |\n| 1 | `d44b213d74f` | `Array.push` impl | `9841318e1` |\n| 2 | `f5ce8f0e586` | `Array.push` SynthTrace | `2daaa8aa8` |\n| 3 | `9a50bd0f364` | `tryGetMutableBuffer` impl | `ccb4fb5bd` (via facebook/hermes#2179) |\n| 4 | `5d5c9334bec` | `getMutableBuffer` SynthTrace | `41ed32d43` |\n| 5 | `93eee4c7e4c` | `ArrayBuffer.detached` impl | `fd3724fb1` |\n| 6 | `1aea879f113` | `createUInt8Array` impl | `7b15bccd7` |\n| 7 | `9d28826712c` | `createUInt8Array`, `TypedArray::buffer` SynthTrace | `c926dd7a1` |\n| 8 | `5b31237bf83` | Error creation impl | `5d1e7237d` |\n| 9 | `e6268f9dee7` | Error creation SynthTrace | `1b374ae69` |\n| 10 | `5a7f83aa3a1` | `String::length` impl | `7e5dfcd59` |\n\nNine landed as `Graft \"[SH] ...\" to shermes/stable`. Number 3 landed through facebook/hermes#2179.\n\nVerified by content rather than by commit subject. Every `HermesRuntimeImpl` method (`push`, `tryGetMutableBuffer`, `detached`, `createUint8Array`, `isTypedArray`, `createError`, `createRangeError`, `createSyntaxError`, `length`) is now present in `API/hermes/hermes.cpp` on the 0.88 branch, and `API/hermes/TracingRuntime.cpp` matches the 0.87 branch exactly (4 / 1 / 2 occurrences of `createUint8Array` / `tryGetMutableBuffer` / `createError`, against 0 / 0 / 0 before).\n\n#### Still outstanding, and this is the part that affects the release\n\n**There is no `260318099.0.3` tag.** Tags stop at `hermes-v260318099.0.2`, and RN `0.88-stable` pins `260318099.0.2` in `packages/react-native/sdks/hermes-engine/version.properties` and `packages/react-native/package.json`. None of the work above reaches the release until a new tag is cut and RN is bumped to it.\n\nThree separate things are waiting on that tag:\n\n1. This batch of 10 commits.\n2. The back-out of the VariableScope rescan pick (facebook/hermes#2149). `hermes-v260318099.0.2` was tagged at 2026-09-08 03:05 PDT and the back-out landed at 11:18 PDT the same day, so `.0.2` still carries the change that was reverted for causing SIGSEGV crashes in Messenger Android (D118959426).\n3. `xplat/static_h` still carries that same change (`maybeDeadVariableScopes_` is still present in `lib/IR/IR.cpp` on `static_h`). The back-out called this out as a follow-up that was not included, since `static_h` is the source the next `stable` sync pulls from.\n\nClosing as landed.\n",
+          "number": 1413,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Hermes: JSI implementation batch backported to 260318099.0.0-stable (landed)",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1413"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg6_2BQ",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] Hermes: JSI implementation batch backported to 260318099.0.0-stable (landed)"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nPick in this order (oldest first):\n\n1. https://github.com/react/react-native/pull/58290 — `1cfc5f29a00` — Derive an SPM library's Swift name from its podspec\n2. https://github.com/react/react-native/pull/58362 — `25f48bd72fd` — Run SPM-generated shell scripts under bash, not `/bin/sh`\n3. https://github.com/react/react-native/pull/58379 — `92564f33fda` — Derive the generated manifests' iOS platform floor from the app (D119653699)\n\n### Description\n\nThe change we actually want is #58379. The other two are prerequisites, so the request covers all three.\n\n#### Why #58379 is needed\n\nThe SwiftPM manifests React Native generates (the `Autolinked` aggregate, the per-dependency synth packages and the scaffolded community packages) hardcode `platforms: [.iOS(.v15)]`. SwiftPM refuses to link a product whose minimum platform is above the depending target's, so any self-managed package with a higher floor cannot be autolinked.\n\nEvery Expo package declares iOS 16.4, so a stock Expo app fails at build time:\n\n```\nerror: The package product 'Expo' requires minimum platform version 16.4 for the iOS platform,\n       but this target supports 15.0 (in target 'AutolinkedAggregate' from project 'Autolinked')\n```\n\nThe app itself is correct (`IPHONEOS_DEPLOYMENT_TARGET = 16.4`). Only the generated manifests disagree. The fix derives the floor from the app's own deployment target, clamped to React Native's minimum (15.1).\n\n#### Why the prerequisites\n\n**#58290 is a hard dependency.** #58379 imports `findPodspecs` and `readPodspecCached` from `scripts/spm/read-podspec.js`. On `0.88-stable` that module exports only `readPodspec`, so the pick does not build without #58290 first. Cherry-picking #58379 alone conflicts in `generate-spm-autolinking.js` and `scaffold-package-swift.js`.\n\n**#58362 is taken to avoid a conflict.** It and #58379 both modify `scripts/spm/generate-spm-xcodeproj.js`. Not a functional dependency, but skipping it makes #58379 conflict there.\n\n**#58425 is deliberately not taken.** It is chronologically between #58362 and #58379 and touches `scripts/spm/`, but shares no file with #58379 (it changes `download-spm-artifacts.js`, the CocoaPods ruby helpers and the Gradle Kotlin plugin). It is a separate concern and is not required here.\n\n#### Risk\n\nThe chain is larger than a typical post-RC1 pick, so worth being explicit about the blast radius.\n\nAll of the code these commits change lives under `packages/react-native/scripts/spm/` plus `scripts/setup-apple-spm.js`. That tree is required only by `setup-apple-spm.js`, which is a manual entry point (`node node_modules/react-native/scripts/setup-apple-spm.js [action]`). It is not wired into `pod install` or any build phase. The only SPM code that runs unconditionally is the CocoaPods hook `SPM.apply_on_post_install`, which iterates a dependency map that stays empty unless a podspec declares an SPM dependency, and none of these commits touch it.\n\nSo an app that does not opt into SwiftPM cannot execute a line any of these change.\n\nThe remaining files in #58290 are `packages/rn-tester/` and `packages/react-native-test-library/`, which are React Native's own fixtures and are not shipped.\n\nOn size: #58290 reads as +3386/-912 across 26 files, but roughly 2264 of those additions are test files and ~143 are docs. The production delta is around +900/-325.\n\nTwo behaviour changes that do land, both only for SwiftPM users:\n\n- SwiftPM name collisions become a hard error naming `swiftpmConfig.name` as the fix, where previously colliding names were auto-corrected. The old behaviour invented a module name no `#import` could predict, so the error is the better outcome, but it is new.\n- `SCAFFOLDER_VERSION` bumps to 20, so existing scaffolds regenerate with the new floor on the next `spm add` / `spm update`.\n\n#### Prerequisite audit\n\nChecked against a full (unshallowed) `main` history: every SPM commit preceding #58290 is already on `0.88-stable` (#58292, #58060, #58044, #58033, #58087, #58059, #58034, #58035). The chain starts cleanly at #58290 and is exactly these three.\n",
+          "number": 1414,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] [iOS][SPM] Derive the generated manifests' iOS platform floor from the app (+2 prerequisites)",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1414"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg7EXmc",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] [iOS][SPM] Derive the generated manifests' iOS platform floor from the app (+2 prerequisites)"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\n- https://github.com/react/react-native/pull/57513 (the change being corrected)\n- Fix applied directly to `0.88-stable` as `579212e15c9`\n\n### Description\n\nBookkeeping record. **This is a `0.88-stable`-only fix with no corresponding commit on `main`,** so there is nothing to pick. Filing it so the 0.88 list is complete and so the deliberate divergence from `main` is written down.\n\n#### The regression\n\n#57513 relocated the hand-written `.d.ts` declarations under `types_DEPRECATED/` and updated the `exports` map. It describes itself as \"a pure relocation with no change to the public type surface\".\n\nFor `./Libraries/*`, the `react-native-legacy-deep-imports` condition changed:\n\n| | resolves to |\n| --- | --- |\n| 0.87 | `./Libraries/*.d.ts` |\n| 0.88 | `./types_DEPRECATED/Libraries/*.d.ts` |\n\nOn 0.87 that target sat beside the real `.js`, so TypeScript's extension substitution still found modules that have no hand-written declaration. `types_DEPRECATED/` contains no `.js` files at all, so on 0.88 those specifiers stop resolving. `types_DEPRECATED/Libraries/` has 83 declarations; `Libraries/` has 619 `.js` modules.\n\nReported by @gabrieldonadel against 0.88.0-rc.0. Reproduced against the published packages with a tsconfig setting `customConditions` to `[\"react-native\", \"react-native-legacy-deep-imports\"]` and importing `react-native/Libraries/Core/InitializeCore`:\n\n```\nreact-native@0.87.1       tsc exit 0\nreact-native@0.88.0-rc.1  tsc exit 2\n  TS2882: Cannot find module or type declarations for side-effect import\n```\n\nThis is not framework-only. The condition is the documented escape hatch: `@react-native/typescript-config`'s README instructs consumers to set it, and `packages/virtualized-lists` uses it.\n\n#### The fix\n\n```diff\n \"./Libraries/*\": {\n-  \"react-native-legacy-deep-imports\": \"./types_DEPRECATED/Libraries/*.d.ts\",\n+  \"react-native-legacy-deep-imports\": [\n+    \"./types_DEPRECATED/Libraries/*.d.ts\",\n+    \"./Libraries/*.d.ts\"\n+  ],\n   \"types\": null,\n   \"default\": \"./Libraries/*.js\"\n },\n```\n\nVerified:\n\n- The failing import resolves again.\n- Modules that do have a declaration are unaffected, since that entry is still first. `registerCallableModule` keeps its real declaration and a deliberately invalid call still errors rather than passing as `any`.\n- A value import from an untyped module (`Libraries/Utilities/logError`) produces the identical `TS7016` implicit-any diagnostic as 0.87.1, so this restores parity rather than adding new `any` leakage.\n- Passes with `moduleResolution` set to `bundler`, `node16` and `nodenext`.\n- Runtime resolution is unchanged. Without the custom condition, Node still resolves via `default` to the real `.js`.\n- `yarn test-typescript-legacy` passes.\n\nNot fixed, and not a regression: `react-native/Libraries/Core/InitializeCore.js` with an explicit `.js` suffix also fails on 0.87.1. The `./Libraries/*.js` subpath carries no legacy condition on either branch.\n\n#### Why this is not on `main`\n\nDeliberate. 0.88 is a non-breaking release, so the regression must not ship in it. `main` keeps the current behaviour for now because retiring deep imports is the direction of [RFC0894](https://github.com/react-native-community/discussions-and-proposals/pull/894) and 0.89 is a breaking release, which is the right window for it.\n\nWorth flagging for whoever picks this up: `main` is currently in a half-broken state rather than a cleanly retired one. The escape hatch resolves for the 83 modules with a declaration and fails with a bare `TS2882` for the rest, with no deprecation warning, changelog entry or migration guidance. If deep imports are to be retired in 0.89, removing the condition outright with a changelog entry would give consumers a clearer signal than leaving resolution to fail arbitrarily.\n\nA diff applying the same fix to `main` exists but is intentionally not landed, pending that decision.\n",
+          "number": 1415,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Restore .js fallback for legacy deep imports of untyped modules (regression from #57513)",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1415"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg7O1KE",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.2",
+        "title": "[0.88] Restore .js fallback for legacy deep imports of untyped modules (regression from #57513)"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\n- https://github.com/react/react-native/pull/58546 (`6e862f9a781` on `main`, D120209439)\n- Applied to `0.88-stable` as `ad7b17d8eef`\n\n### Description\n\nBookkeeping record. **Already applied to both `0.88-stable` and `main`,** so there is nothing to action. Filing it so the 0.88 list is complete.\n\n#### The problem\n\n`test_js` failed on every `0.88-stable` run, on both Node versions, on a single assertion in `packages/react-native-babel-preset/src/__tests__/cache-key-test.js`:\n\n```\nTest Suites: 1 failed, 229 passed, 230 total\nTests:       1 failed, 1 skipped, 6026 passed, 6028 total\n```\n\n`getCacheKey` short-circuits for published releases:\n\n```js\nif (!packageVersion.endsWith('-main')) {\n  // Assume the integrity of package contents for published npm releases.\n  cacheKey = packageVersion;\n  return cacheKey;\n}\n// only past here does it hash package contents\n```\n\nThe test called it twice with different package contents and asserted the keys differ. On a release branch the version is `0.88.0-rc.x`, which does not end in `-main`, so both calls return the same version string and `.not.toBe` cannot pass. The test's own name says it: *\"cache key includes package metadata **for main builds**\"*. It asserted main-only behaviour with no version guard.\n\n#### Why 0.88 and not earlier\n\nThe test was added by [#58251](https://github.com/react/react-native/pull/58251) (`9c6efa25c1b`) on 2026-09-02, five days before the 0.88 branch cut. It does not exist on `0.87-stable` or earlier, so 0.88 is the first release branch to inherit it. It has been red since 0.88.0-rc.0.\n\nThis is not \"how release branches are\". It is a test bug that would have hit 0.89 too, the moment its version stopped ending in `-main`.\n\n#### The fix\n\nAssert the property that actually holds for each case, rather than skipping:\n\n```js\nconst {version: packageVersion} = require('../../package.json');\n\nif (packageVersion.endsWith('-main')) {\n  test('cache key includes package metadata for main builds', () => { ... });\n} else {\n  test('cache key is the package version for published releases', () => {\n    expect(getCacheKey('{\"dependency\":\"1.0.0\"}')).toBe(packageVersion);\n    expect(getCacheKey('{\"dependency\":\"2.0.0\"}')).toBe(packageVersion);\n  });\n}\n```\n\nThis also adds coverage for the published-release path, which previously had none.\n\nBoth branches were verified, not just the one that runs on the release branch. On `0.88.0-rc.0` the release assertion passes; temporarily stamping the package version to `0.89.0-main` makes the original main-build assertion pass. So neither branch is vacuously green.\n\n#### Result\n\n`test_js` is green on `0.88-stable`. This was the last red job before rc1 was cut.\n\nUnusual ordering worth noting: this was applied to `0.88-stable` first to unblock rc1, then forward-ported to `main`, rather than landing on `main` and being picked. Both are now done, so `0.89` will inherit the fix at its branch cut.\n",
+          "number": 1416,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Fix cache-key test failing on release branches",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1416"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg7PXpc",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88] Fix cache-key test failing on release branches"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nReverts, both on `0.88-stable`:\n\n- https://github.com/react/react-native/pull/57879 (`11f9a7f4491`) — RCTArrayBuffer zero-copy class for ObjC TM\n- https://github.com/react/react-native/pull/57596 (`5e86c323cef`) — Use NSData for the JS->ObjC ArrayBuffer argument path\n\n### Description\n\n0.88 is a **non-breaking** release. #57879 is a confirmed breaking change to the ObjC TurboModule surface and must not ship in it.\n\n#### The breaking change\n\nCodegen emits a different ObjC type for TurboModule methods taking or returning an `ArrayBuffer`. Modules that adopted ObjC `ArrayBuffer` support in 0.87 stop compiling until they update. It is already documented in the 0.88.0-rc.0 changelog under `Breaking`.\n\n#### Why two reverts and not one\n\nThe type moved **twice inside 0.88**, so reverting #57879 alone does not restore 0.87:\n\n| Point | Argument type | Return type |\n| --- | --- | --- |\n| 0.87-stable | `NSMutableData *` | `NSMutableData *` |\n| after #57596 (0.88 only) | `NSMutableData *` | **`NSData *`** |\n| after #57879 (0.88 only) | `RCTArrayBuffer *` | `RCTArrayBuffer *` |\n\n`NSMutableData` is a subclass of `NSData`, so returning `NSData` where 0.87 returned `NSMutableData` still breaks any caller that mutates the result. Reverting only #57879 would leave a second, quieter breaking change in place.\n\n#### Scope, and how it was determined\n\nEnumerated every 0.88-only commit touching the ObjC TurboModule surface (codegen `GenerateModuleObjCpp`, `RCTArrayBuffer.*`, the iOS `ReactCommon` module dir, `iostests`, and the Apple cxx-api snapshots), then filtered to those whose added or removed lines mention `ArrayBuffer`, `NSData` or `NSMutableData`. Five matched:\n\n- `11f9a7f4491` #57879 — **revert**\n- `5e86c323cef` #57596 — **revert**\n- `d84c13d5111` #57982, `5bb96395949` #57897 — Java only, Android snapshots, zero ObjC codegen type changes\n- `5fb3ebce1ac` — Java ArrayBuffer support. Touches the ObjC codegen, but only to add the `throwIfUnsupportedPromiseArrayBuffer` validation guard. No type mapping, so out of scope.\n\nAll four `RCTArrayBuffer` entries in the public Apple API snapshot blame to `11f9a7f4491` alone.\n\n#### Kept, not reverted\n\n- https://github.com/react/react-native/pull/58264 (`253a84c8d1c`) — TurboModule identity on rethrown exceptions\n- https://github.com/react/react-native/pull/58190 (`ea291d7422e`) — top-level JS null to ObjC as `nil`\n\nBoth conflict with the revert, but each references `RCTArrayBuffer` **only in context lines**, never in an added or removed line. The conflicts are textual adjacency, not a dependency, so both were preserved through hand-resolution.\n\n- https://github.com/react/react-native/pull/57518 (`e7bb11ae162`) — also kept. It adds one `#import <react/bridging/ArrayBuffer.h>` line. After the reverts, `RCTTurboModuleArrayBufferTests.mm` is byte-identical to 0.87 apart from that import, and the header exists on 0.87.\n\n#### Verification\n\n- Resolved codegen `serializeMethod.js` ArrayBuffer lines are identical to 0.87-stable.\n- Regenerated `GenerateModuleHObjCpp` snapshot matches 0.87 except for `promiseArrayBuffer`, which the `throwIfUnsupportedPromiseArrayBuffer` guard now rejects. That guard is a separate 0.88 change, deliberately retained.\n- No `RCTArrayBuffer` or `mustCopyBytes` references remain anywhere under `ReactCommon/react/nativemodule/`.\n- `convertJSIValueToObjCObject` is back to its 4-parameter form with `BOOL useNSNull = NO` defaulted in the header, so the restored 3-argument call sites compile.\n- The three #58190 tests and the #58264 test are all still present.\n- `yarn jest packages/react-native-codegen` passes: 64 suites, 3129 tests, 1279 snapshots.\n\nNet: 16 files, 132 insertions, 607 deletions.\n\nThe iOS build and the ObjC unit tests are covered by branch CI rather than locally.\n",
+          "number": 1417,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Revert RCTArrayBuffer ObjC TurboModule type change (breaking in a non-breaking release)",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1417"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg7735Q",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.2",
+        "title": "[0.88] Revert RCTArrayBuffer ObjC TurboModule type change (breaking in a non-breaking release)"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nRevert of https://github.com/react/react-native/pull/58063 (`ab2ea649e65`) on `0.88-stable`.\n\n### Description\n\n0.88 is a **non-breaking** release. #58063 is a confirmed breaking change for C++ TurboModules and must not ship in it.\n\n#### What it does\n\nIt adds a codegen parse-time guard, `throwIfEventEmitterPayloadTypeIsUnsupported`, that rejects `ArrayBuffer` as a TurboModule `EventEmitter` payload on all platforms:\n\n```js\nexport interface Spec extends TurboModule {\n  +onBuffer: EventEmitter<ArrayBuffer>;\n}\n```\n\n#### Why this is breaking, demonstrated\n\nThe same spec was run through both branches' codegen. It worked on 0.87 and is rejected on 0.88:\n\n| | 0.87.1 | 0.88-stable |\n| --- | --- | --- |\n| Parse | accepted | **rejected** |\n| `GenerateModuleH` (`modulesCxx`) | **succeeded** | never runs |\n| `GenerateModuleObjCpp` | threw, \"Unsupported eventType\" | never runs |\n\nThe C++ output on 0.87 is functional, not placeholder:\n\n```cpp\neventEmitterMap_[\"onBuffer\"] = std::make_shared<AsyncEventEmitter<jsi::Value>>();\nstatic_assert(bridging::supportsFromJs<OnBufferType, jsi::ArrayBuffer>, ...);\nstatic_cast<AsyncEventEmitter<jsi::Value>&>(*eventEmitterMap_[\"onBuffer\"]).emit(...)\n```\n\nand the `static_assert` passes on 0.87, because `struct Bridging<jsi::ArrayBuffer>` with `fromJs` and `toJs` exists at `react/bridging/ArrayBuffer.h:46` and is exported through the `Bridging.h` umbrella. `modulesCxx` is a consumer-facing codegen target.\n\nSo a C++ TurboModule with an ArrayBuffer event payload parsed, generated, compiled and had working bridging on 0.87, and its build fails on 0.88 with no code change by the consumer.\n\nThe iOS path already rejected it on 0.87, which is why this needed checking per generator target rather than once.\n\n#### Scope\n\nSurface: the codegen parser and generator files that implement the guard (`error-utils.js`, `errors.js`, `parsers-commons.js`, `generators/modules/Utils.js`, `GenerateModuleH.js`, `GenerateModuleJavaSpec.js`, `GenerateModuleObjCpp/serializeEventEmitter.js`).\n\n0.88-only commits touching that surface, baseline `v0.87.1`:\n\n- `ab2ea649e65` #58063 — **revert**\n- `5bb96395949` #57897, `4bf55754905`, `5fb3ebce1ac` — all predate it and add **zero** EventEmitter payload validation\n\nNothing lands after `ab2ea649e65` on those files, so no later work conflicts. Both symbols it introduced (`throwIfEventEmitterPayloadTypeIsUnsupported`, `UnsupportedModuleEventEmitterPayloadTypeParserError`) are referenced only by files that commit itself created or modified, so the revert is self-contained.\n\nSingle commit. 23 files, all JavaScript under `react-native-codegen`, no native code.\n\n#### Not reverted\n\n`d84c13d5111` (#57982, Java ArrayBuffer borrow contract) is annotated `[Android][Breaking]` but is **not breaking for this release**. All three Java ArrayBuffer TurboModule commits are 0.88-only, and 0.87's Android API snapshot contains no Java-facing ArrayBuffer type, only the C++ `facebook::jsi::ArrayBuffer` and `facebook::react::AsyncArrayBuffer`. No 0.87 consumer could have adopted it, so constraining it in 0.88 breaks nobody. The label is correct against `main`'s history, not against the released line.\n\n#### Verification\n\n- Revert applies cleanly, no conflicts.\n- After reverting, the same spec behaves **identically to 0.87**: parse accepted, `GenerateModuleH` succeeds, `GenerateModuleObjCpp` throws \"Unsupported eventType\".\n- Both introduced symbols are gone from the tree.\n- `yarn jest packages/react-native-codegen` passes: 64 suites, 3122 tests, 1277 snapshots.\n",
+          "number": 1418,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Revert EventEmitter ArrayBuffer payload rejection (breaking for C++ TurboModules)",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1418"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg79YFA",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.2",
+        "title": "[0.88] Revert EventEmitter ArrayBuffer payload rejection (breaking for C++ TurboModules)"
+      },
+      {
+        "content": {
+          "body": "### Target Minor\n\n0.88\n\n### Under what system configuration was the test run?\n\n_Not captured at the time. This report is a retroactive record, see the note below._\n\n### Tested configurations\n\nRefer to this [spreadsheet](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) for test cases.\n\n- [x] RNTester + iOS + Hermes\n- [x] RNTester + Android + Hermes\n- [x] RNTestProject + iOS + Hermes\n- [x] RNTestProject + Android + Hermes\n\nClose this issue if there are no blocking issues.\n\n### Blocking Issues?\n\n- None. 0.88.0-rc.0 was published on 2026-09-08.\n\n---\n\n### Note: retroactive record\n\nThis report was **not filed at the time**. It is being backfilled so the 0.88 series has the test reports the process requires for RC0, RC1 and the golden RC. The four dimensions are recorded as covered per the release captain; the per-case notes and system configuration from the original session were not captured.\n\n### CI state on the release commit, for the record\n\n`Test All` was **red** on the `v0.88.0-rc.0` commit ([run 34759867001](https://github.com/react/react-native/actions/runs/34759867001)):\n\n| Job | |\n| --- | --- |\n| `test_js (22.13.0)` / `test_js (24)` | failure |\n| `test_android_helloworld (Debug)` / `(Release)` | failure |\n| `test_e2e_android_templateapp (debug)` / `(release)` | failure |\n\nThe two `test_js` failures were structural rather than a regression in the release: `cache-key-test.js` asserted behaviour that only holds when the package version ends in `-main`, so it could never pass on a release branch. It was introduced by #58251 five days before the 0.88 cut, making 0.88 the first branch to inherit it, and it was red from rc.0 onward. Fixed later in the cycle by `ad7b17d8eef` and forward-ported to `main` as #58546.\n\nThe Android `helloworld` and `templateapp` e2e failures on this commit have not been diagnosed retrospectively.\n",
+          "number": 1419,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88.0-rc.0] Test Report",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1419"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg7-E5Y",
+        "labels": [
+          "Type Release Crew"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.0",
+        "title": "[0.88.0-rc.0] Test Report"
+      },
+      {
+        "content": {
+          "body": "### Target Minor\n\n0.88\n\n### Under what system configuration was the test run?\n\n_Not captured at the time. This report is a retroactive record, see the note below._\n\n### Tested configurations\n\nRefer to this [spreadsheet](https://docs.google.com/spreadsheets/d/1p0Zs37ecau7Ty4L_4g1jf7PlivOmIEPjmDYq9Jp8qWI/edit?usp=sharing) for test cases.\n\n- [x] RNTester + iOS + Hermes\n- [x] RNTester + Android + Hermes\n- [x] RNTestProject + iOS + Hermes\n- [x] RNTestProject + Android + Hermes\n\nClose this issue if there are no blocking issues.\n\n### Blocking Issues?\n\n- None. 0.88.0-rc.1 was published on 2026-09-15.\n\n---\n\n### Note: retroactive record\n\nBackfilled alongside #1419 so the 0.88 series has the reports the process requires. Per [the testing guide](https://github.com/reactwg/react-native-releases/blob/main/docs/guide-release-testing.md), manual testing is required for **RC0, RC1, the golden RC and stable**, so rc.1 needs one as well as rc.0. The four dimensions are recorded as covered per the release captain; per-case notes and system configuration from the original session were not captured.\n\n### What shipped in rc.1\n\n12 commits between the two tags, notably the React 19.3.0 sync (#58446), the EventTarget dispatch work (#58450, #58479), the SPM chain (#58290, #58362, #58379), the codegen crawl fix (#58518) and the Hermes bump to `260318099.0.3`.\n\n### CI state on the release commit\n\n`Test All` was green on the `v0.88.0-rc.1` commit apart from the known `test_js` failure, which was the same structural `cache-key-test.js` problem described in #1419 and was fixed later that day in `ad7b17d8eef`.\n\nTwo template e2e issues were found and resolved during this RC rather than after it:\n\n- the template's `react` pin lagged the 19.3.0 sync, causing `ERESOLVE` across all four template e2e jobs. Fixed in `react-native-community/template` on its `0.88-stable` branch, which the e2e clones at run time, so a rerun picked it up with no RN commit needed.\n- `post_publish` failed on its 3-minute \"Verify Release is on NPM\" timeout. The publish itself succeeded; this is npm propagation lag, not a release failure.\n",
+          "number": 1420,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88.0-rc.1] Test Report",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1420"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg7-FIc",
+        "labels": [
+          "Type Release Crew"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Done / Picked",
+        "target Release": "0.88.0-rc.1",
+        "title": "[0.88.0-rc.1] Test Report"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/pull/58597\n\n### Description\n\nFixes an iOS SwiftPM autolinking bug where Xcode kept re-syncing and recreating library package roots, causing “Missing package product” build failures for apps using self-managed libraries with their own Package.swift files. It makes the generated library sync idempotent and ignores Xcode’s own .swiftpm metadata when deciding whether a sync is stale, so repeated builds no longer",
+          "number": 1421,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Stop re-creating library package roots on every sync",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1421"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg8KZBM",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Inbox",
+        "title": "[0.88] Stop re-creating library package roots on every sync"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/pull/57940\n\n### Description\n\nFixes a warning in Metro during bundling on every app that renders a virtualized list (`FlatList`, `SectionList`, etc.) - https://github.com/react/react-native/issues/57933:\n\n> Attempted to import the module \".../node_modules/react-native/src/private/featureflags/ReactNativeFeatureFlags\" which is not listed in the \"exports\" of \".../node_modules/react-native\" under the requested subpath \"./src/private/featureflags/ReactNativeFeatureFlags\". Falling back to file-based resolution.\n\nThis has appeared since https://github.com/react/react-native/pull/57484",
+          "number": 1422,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Fix `Attempted to import the module \"...ReactNativeFeatureFlags\"` in apps using virtualized-lists",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1422"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg8LHy0",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Inbox",
+        "title": "[0.88] Fix `Attempted to import the module \"...ReactNativeFeatureFlags\"` in apps using virtualized-lists"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/pull/58596\n\n### Description\n\nFor library developers - make sure to remove stale header directories during development",
+          "number": 1424,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Repair stale staged headers in the iOS prebuild",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1424"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg8WF6Y",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Inbox",
+        "title": "[0.88] Repair stale staged headers in the iOS prebuild"
+      },
+      {
+        "content": {
+          "body": "### Target Branch\n\n0.88\n\n### Link to commit or PR to be picked\n\nhttps://github.com/react/react-native/commit/d6a5f159c6ef81651d38af2a33338b921700e044\n\n### Description\n\nSince 0.87.0, `SurfaceMountingManager` keeps its view registry in a `MutableIntObjectMap` (#56646). `androidx.collection` 1.4.0 to 1.4.2 can corrupt `ScatterMap` and its primitive variants. Version 1.4.3 fixes this (https://issuetracker.google.com/issues/352560465). React Native pins 1.4.0, and a new app resolves 1.4.2 through `androidx.core` and `androidx.window`.\n\nWhen the map loses an entry, React Native logs `Unable to find viewState for tag N` and skips that mount instruction. The view does not get prop, layout or delete updates, and a stale view can stay on screen. Plain `View`s are enough to cause it. Libraries that remove many views at once, such as Reanimated layout animations, cause it sooner.\n\nAt the moment `0.88-stable` does not contain this fix yet. It still pins `androidx-collection = \"1.4.0\"`.\n\nThe fix from the linked commit (that's already on main) changes one line in `packages/react-native/gradle/libs.versions.toml` (1.4.0 → 1.4.4).\n\n- Issue: https://github.com/react/react-native/issues/58388\n- Reproducer: https://github.com/pawicao/rn-android-view-registry-corruption\n- Result with 1.4.2: 91 `Unable to find viewState` errors on 45 tags in two 40-round runs on a Pixel 9a, and a stale view on screen.\n- Result with 1.4.4: no errors in 120 rounds.",
+          "number": 1426,
+          "repository": "reactwg/react-native-releases",
+          "title": "[0.88] Bump androidx.collection to 1.4.4 to fix lost view registry entries on Android",
+          "type": "Issue",
+          "url": "https://github.com/reactwg/react-native-releases/issues/1426"
+        },
+        "id": "PVTI_lADOBQoUxc4BjKRnzg8gqpY",
+        "labels": [
+          "Type Pick Request"
+        ],
+        "repository": "https://github.com/reactwg/react-native-releases",
+        "status": "Inbox",
+        "title": "[0.88] Bump androidx.collection to 1.4.4 to fix lost view registry entries on Android"
+      }
+    ]
+  }
+}

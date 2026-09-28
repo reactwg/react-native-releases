@@ -1,0 +1,52 @@
+{
+  "0.88": [
+    {
+      "labels": [
+        {
+          "id": "LA_kwDOGN9KEs8AAAABi3S5_g",
+          "name": "Type Pick Request",
+          "description": "Pick requests to include commits inside a React Native release",
+          "color": "fbca04"
+        }
+      ],
+      "number": 1424,
+      "title": "[0.88] Repair stale staged headers in the iOS prebuild"
+    },
+    {
+      "labels": [
+        {
+          "id": "LA_kwDOGN9KEs8AAAABi3S5_g",
+          "name": "Type Pick Request",
+          "description": "Pick requests to include commits inside a React Native release",
+          "color": "fbca04"
+        }
+      ],
+      "number": 1421,
+      "title": "[0.88] Stop re-creating library package roots on every sync"
+    },
+    {
+      "labels": [
+        {
+          "id": "LA_kwDOGN9KEs8AAAABi3S5_g",
+          "name": "Type Pick Request",
+          "description": "Pick requests to include commits inside a React Native release",
+          "color": "fbca04"
+        }
+      ],
+      "number": 1422,
+      "title": "[0.88] Fix `Attempted to import the module \"...ReactNativeFeatureFlags\"` in apps using virtualized-lists"
+    },
+    {
+      "labels": [
+        {
+          "id": "LA_kwDOGN9KEs8AAAABi3S5_g",
+          "name": "Type Pick Request",
+          "description": "Pick requests to include commits inside a React Native release",
+          "color": "fbca04"
+        }
+      ],
+      "number": 1426,
+      "title": "[0.88] Bump androidx.collection to 1.4.4 to fix lost view registry entries on Android"
+    }
+  ]
+}
