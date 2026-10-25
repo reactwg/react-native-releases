@@ -1,0 +1,40 @@
+{
+  "_comment": "Who a changed file can reach, so a pick's reach is evidence rather than a guess. First match wins, so the no-reach surfaces come first. `marker` is re-read live from the release branch: a preview's own statement is what allows it to change in a patch, and if the statement is gone the surface is no longer treated as a preview. A file that matches nothing reaches the default build.",
+  "surfaces": [
+    {"id": "docs", "reach": "none", "label": "documentation only", "globs": ["**/*.md", "**/*.mdx", "**/__docs__/**"]},
+    {"id": "tests", "reach": "none", "label": "tests only", "globs": ["**/__tests__/**", "**/__snapshots__/**", "**/__fixtures__/**", "**/test/**", "**/tests/**", "**/androidTest/**"]},
+    {"id": "ci", "reach": "none", "label": "CI configuration", "globs": [".github/**"]},
+    {
+      "id": "swiftpm",
+      "reach": "opt-in-preview",
+      "label": "SwiftPM support",
+      "entry": "npx react-native spm",
+      "globs": [
+        "packages/react-native/scripts/spm/**",
+        "packages/react-native/scripts/setup-apple-spm.js",
+        "packages/community-cli-plugin/src/commands/spm.js"
+      ],
+      "marker": {"path": "packages/react-native/scripts/spm/__docs__/README.md", "pattern": "Preview\\."}
+    },
+    {
+      "id": "ios-build-config",
+      "reach": "build-config",
+      "label": "iOS build configuration",
+      "entry": "every iOS app that builds React Native, from source or the prebuilt frameworks",
+      "globs": ["**/*.podspec", "**/*.xcconfig", "packages/react-native/scripts/cocoapods/**", "packages/react-native/scripts/react_native_pods.rb", "packages/react-native/scripts/ios-prebuild/**"]
+    },
+    {
+      "id": "android-build-config",
+      "reach": "build-config",
+      "label": "Android build configuration",
+      "entry": "every Android app that builds React Native",
+      "globs": ["**/*.gradle", "**/*.gradle.kts", "packages/gradle-plugin/**", "**/CMakeLists.txt", "**/libs.versions.toml"]
+    },
+    {
+      "id": "rntester",
+      "reach": "none",
+      "label": "RNTester, not shipped",
+      "globs": ["packages/rn-tester/**", "packages/rn-tester-e2e/**"]
+    }
+  ]
+}

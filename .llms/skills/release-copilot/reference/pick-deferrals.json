@@ -1,0 +1,74 @@
+{
+  "_comment": "Pick requests the captain has triaged OUT of a specific release. An entry means a human looked at the request and decided it is not going into that version. Keyed by issue number and by the release it is deferred FROM, so a pick request opened after the decision still blocks noOpenPicks and gets its own triage. The board's Target Release is the preferred place to record this; use this file when the board cannot express the target yet.",
+  "deferrals": [
+    {
+      "series": "0.88",
+      "deferredFrom": "0.88.0-rc.5",
+      "deferredTo": "0.88.1",
+      "reason": "rc.5 is the golden RC, so the branch is held to validation-only changes. None of these is a reported 0.88 regression and all three carry cleanly to the first patch.",
+      "picks": [
+        {
+          "number": 1440,
+          "title": "SwiftPM: encode line breaks in scheme pre-action scriptText"
+        },
+        {
+          "number": 1441,
+          "title": "LogBox: iPhone Duo notification appearance and touch targets"
+        }
+      ],
+      "followUp": "The board's Target Release field has no 0.88.1 option yet. Add one and set it on these three, then this entry can go.",
+      "reviewedBy": "fabriziocucci",
+      "reviewedOn": "2026-10-12",
+      "_amended": "#1443 was un-deferred on 2026-10-13: its blocking PR #58964 landed, it was picked as 536c008de0f and it ships in 0.88.0-rc.6. #1440 and #1441 remain deferred to 0.88.1."
+    },
+    {
+      "series": "0.88",
+      "deferredFrom": "0.88.0-rc.6",
+      "deferredTo": "0.88.1",
+      "reason": "rc.6 is an exceptional RC cut for the AssetRegistry TypeScript fix (#1443) only, one cherry-pick. #1440, #1441 and #1446 all defer to 0.88.1. #1446 arrived after the rc.6 decision and is a real Android rendering bug in fontVariationSettings, assessed ACCEPT on its merits, so it should be first in line for the patch.",
+      "picks": [
+        {
+          "number": 1440,
+          "title": "SwiftPM: encode line breaks in scheme pre-action scriptText"
+        },
+        {
+          "number": 1441,
+          "title": "LogBox: iPhone Duo notification appearance and touch targets"
+        },
+        {
+          "number": 1446,
+          "title": "Fix Android text mis-measurement when re-applying fontVariationSettings"
+        }
+      ],
+      "followUp": "The board's Target Release field has no 0.88.1 option yet. Add one and set it on these three, then this entry can go.",
+      "reviewedBy": "fabriziocucci",
+      "reviewedOn": "2026-10-13"
+    },
+    {
+      "series": "0.88",
+      "deferredFrom": "0.88.0",
+      "deferredTo": "0.88.1",
+      "reason": "Nothing is picked after the golden RC. rc.4 was meant to be golden and rc.5 and rc.6 only happened for picks that had to go in, so 0.88.0 ships exactly what rc.6 shipped. All four carry to the first patch, #1446 first in line.",
+      "picks": [
+        {
+          "number": 1440,
+          "title": "SwiftPM: encode line breaks in scheme pre-action scriptText"
+        },
+        {
+          "number": 1441,
+          "title": "LogBox: iPhone Duo notification appearance and touch targets"
+        },
+        {
+          "number": 1446,
+          "title": "Fix Android text mis-measurement when re-applying fontVariationSettings"
+        },
+        {
+          "number": 1448,
+          "title": "Ignore stale image callbacks after an Image view is recycled on iOS"
+        }
+      ],
+      "reviewedBy": "fabriziocucci",
+      "reviewedOn": "2026-10-15"
+    }
+  ]
+}
