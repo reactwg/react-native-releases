@@ -108,9 +108,29 @@ export function describe(action) {
  */
 const ACK = 'Aye aye, Captain.';
 
+/**
+ * Members of the release crew who work at Meta. A captain need not be one, and
+ * a few steps (the `main` bump, the internal announcement) can only be done
+ * from inside Meta, so the copilot names who to hand them to.
+ */
+export const META_CREW = ['Nicola', 'Riccardo', 'Fabrizio'];
+
+/** What a Meta-only step tells whoever is running the copilot. */
+export function metaHandoff(atMeta) {
+  if (atMeta === true) {
+    return 'you are at Meta, so do this yourself. The copilot does not run it for you';
+  }
+  const who = `a Meta member of the release crew (${META_CREW.join(', ')})`;
+  return atMeta === false
+    ? `this needs a Meta employee. Ask ${who} to do it`
+    : `this needs a Meta employee. If you are not one, ask ${who} to do it`;
+}
+
 export class Runner {
-  constructor({mode, confirm, log, cwd} = {}) {
+  constructor({mode, confirm, log, cwd, atMeta = null} = {}) {
     this.mode = mode ?? MODES.DRY_RUN;
+    // Whether whoever runs this can do the Meta-only steps. null when unknown.
+    this.atMeta = atMeta;
     // Git actions act on the react-native checkout, not on wherever the CLI
     // was started. Without this, `git switch 0.88-stable` ran inside
     // react-native-releases and failed with "invalid reference".
@@ -143,7 +163,7 @@ export class Runner {
     if (action.metaOnly) {
       this.log(`  [meta-only] ${action.why}`);
       this.log(`              ${render(action)}`);
-      this.log(`              cannot run outside Meta, hand this to a Meta release crew member`);
+      this.log(`              cannot run outside Meta, so ${metaHandoff(this.atMeta)}`);
       return {skipped: 'meta-only'};
     }
 

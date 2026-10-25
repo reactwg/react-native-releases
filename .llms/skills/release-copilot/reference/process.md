@@ -46,7 +46,7 @@ So after one dispatch you curate outputs rather than creating them.
 > captain's own progress and gets edited in place as steps complete. The
 > announcement is a separate one-liner the community reads, posted once the
 > release is actually out, to `#releases-coordination` on Discord and React
-> Releases on GChat. The copilot prints both: the checklist at the publish step,
+> Releases on Slack. The copilot prints both: the checklist at the publish step,
 > the announcement at the announce step.
 3. Then the common publish path.
 
@@ -74,8 +74,9 @@ line does not.
 4. **Changelog.** Curate the generated PR. See `changelog.md`. It lands on `main`.
 5. **GitHub release.** Publish the draft. Pre-release for an RC, Latest for a
    stable on the newest line.
-6. **Announce.** `#releases-coordination` on Discord and React Releases on GChat (Meta
-   only).
+6. **Announce.** `#releases-coordination` on Discord, from anyone, and React Releases on
+   Slack, which is internal to Meta. A captain outside Meta asks a Meta member of the crew
+   to post the same text there.
 7. **Board.** Close actioned picks, which moves them to Done / Picked.
 
 ## Keeping the crew informed

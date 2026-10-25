@@ -10,7 +10,7 @@
  * can adapt to the derived state without any phase knowing how to execute.
  */
 
-import {declare} from './actions.mjs';
+import {declare, META_CREW} from './actions.mjs';
 import {nextHermesVersion} from './version.mjs';
 import {
   buildStatusMessage,
@@ -25,6 +25,21 @@ import {formatInvestigation} from './investigate-pick.mjs';
 import {hermesOverview, hermesChoice} from './release-state.mjs';
 
 const RN = 'react/react-native';
+
+/**
+ * Who posts the announcement where. Discord is open to any captain; the Slack
+ * room is internal to Meta, so a captain outside Meta asks a Meta crew member.
+ */
+export function announceWhere(atMeta) {
+  const [discord, slack] = ANNOUNCE_CHANNELS;
+  if (atMeta === true) {
+    return `Post this to ${discord} and ${slack}:`;
+  }
+  const ask = `ask a Meta member of the release crew (${META_CREW.join(', ')}) to post the same text there`;
+  return atMeta === false
+    ? `Post this to ${discord}. ${slack} is internal to Meta, so ${ask}:`
+    : `Post this to ${discord}, and to ${slack} if you work at Meta. If you do not, ${ask}:`;
+}
 const HERMES = 'facebook/hermes';
 
 const triggerCreateRelease = (state, ctx) =>
@@ -425,22 +440,22 @@ const commonPublishSteps = [
       declare({
         step: 'announce',
         metaOnly: true,
-        why: 'post the same announcement to React Releases on GChat',
+        why: 'post the same announcement to React Releases on Slack',
         cmd: 'echo',
-        args: ['post announcement to React Releases on GChat'],
+        args: ['post announcement to React Releases on Slack'],
       }),
     ],
-    note: `Post the announcement below to ${ANNOUNCE_CHANNELS.join(' and ')}.`,
+    note: `Post the announcement below to ${ANNOUNCE_CHANNELS.join(' and ')}. The Slack room is internal to Meta, so a captain outside Meta hands that post to a Meta member of the crew.`,
 
     /** The announcement text, with the changelog PR resolved live. */
-    async emit(state) {
+    async emit(state, ctx = {}) {
       const version = state.proposedNext;
       const artifacts = await liveSources()
         .releaseArtifacts(version, state.current ?? undefined)
         .catch(() => ({}));
       return [
         '-'.repeat(72),
-        `Post this to ${ANNOUNCE_CHANNELS.join(' and ')}:`,
+        announceWhere(ctx.atMeta),
         '',
         buildAnnouncement(version, {
           changelogPr: artifacts.changelogPr?.url,

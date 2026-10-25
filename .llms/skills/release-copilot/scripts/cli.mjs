@@ -18,7 +18,7 @@ import {
   upgradeHelperHint,
   leftoverDrafts,
 } from './release-message.mjs';
-import {runDoctor, formatDoctor, resolveCheckout, resolveHermesCheckout} from './doctor.mjs';
+import {runDoctor, formatDoctor, resolveCheckout, resolveHermesCheckout, atMeta} from './doctor.mjs';
 import {gatherPickEvidence, gatherHermesEvidence} from './evidence.mjs';
 import {Runner} from './actions.mjs';
 import {runPick, dropActions} from './pick-actions.mjs';
@@ -258,6 +258,7 @@ async function main() {
       mode: args['dry-run'] ? MODES.DRY_RUN : MODES.GUIDED,
       confirm,
       cwd: checkout,
+      atMeta: await atMeta().catch(() => null),
     });
     let result;
     if (cmd === 'pick') {
@@ -323,6 +324,8 @@ async function main() {
     const result = await runPhase(state, {
       mode,
       cwd: checkout,
+      // Decides what the Meta-only steps tell the captain: do it, or who to ask.
+      atMeta: args.fixture ? null : await atMeta().catch(() => null),
       shape: typeof args.shape === 'string' ? args.shape : undefined,
       ctx: {
         isLatest,
