@@ -124,7 +124,13 @@ node scripts/cli.mjs drop --series 0.88 --pick 1457 --to 0.89.0 --reason reason.
 `pick` cherry-picks the pick with `-x`, a stack from the bottom, checks the commits kept
 their original authors, pushes once the captain retypes the branch and closes each
 request with the SHA it landed as. It refuses a `[BREAKING]` pick in a non-breaking
-series and a stacked pick whose base is not a candidate.
+series and a stacked pick whose base is not a candidate. It also will not push commits
+whose committer is a placeholder, which `doctor` refuses before a run starts.
+
+**Never set a git identity yourself:** no `-c user.name`, no `-c user.email`, no
+`git config`, no `GIT_COMMITTER_*`. A pick records its committer on the release branch
+forever. Every 0.88.1 pick went out as `t <t@t>`. If git says the identity is unknown,
+stop and ask the captain to set theirs.
 
 `drop` posts the reason on the pick request, closing it for `--to never`. The comment
 ends with a marker naming the version it was not picked for and where it goes. That

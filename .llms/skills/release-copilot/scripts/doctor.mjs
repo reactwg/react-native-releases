@@ -157,6 +157,50 @@ export async function atMeta() {
 }
 
 /**
+ * The identity a cherry-pick will record as committer. Every 0.88.1 pick went
+ * onto the release branch as `t <t@t>`, permanently, because nothing looked.
+ * Git refuses to commit with no identity at all, so a placeholder like that is
+ * always something someone set to get past that refusal.
+ */
+const PLACEHOLDER_NAMES = new Set(['t', 'root', 'user', 'test', 'unknown', 'nobody', 'you', 'your name', 'name']);
+const PLACEHOLDER_DOMAINS = /(^|\.)(example\.(com|org|net)|localhost|local|invalid|test|t)$/i;
+
+export function validateIdentity({name, email} = {}) {
+  const problems = [];
+  const n = String(name ?? '').trim();
+  const e = String(email ?? '').trim();
+  if (n.length < 2 || PLACEHOLDER_NAMES.has(n.toLowerCase())) {
+    problems.push(`name "${n}" is not a real name`);
+  }
+  const m = /^[^@\s]+@([^@\s]+\.[a-z]{2,})$/i.exec(e);
+  if (!m || PLACEHOLDER_DOMAINS.test(m[1])) {
+    problems.push(`email "${e}" is not a real address`);
+  }
+  return problems;
+}
+
+export function parseIdent(ident) {
+  const m = /^(.*?)\s*<([^>]*)>/.exec(String(ident ?? ''));
+  return m ? {name: m[1], email: m[2]} : null;
+}
+
+async function checkGitIdentity(checkout) {
+  const r = await run('git', ['-C', checkout, 'var', 'GIT_COMMITTER_IDENT']);
+  const ident = r.ok ? parseIdent(r.out) : null;
+  const fix =
+    'Set your own identity, the one your GitHub account knows: git config --global user.name "Your Name" and ' +
+    'git config --global user.email you@example.org. Never pass -c user.name or user.email to get past this: a pick ' +
+    'records the committer on the release branch forever.';
+  if (!ident) {
+    return {status: FAIL, detail: 'git has no committer identity for this checkout', fix};
+  }
+  const problems = validateIdentity(ident);
+  return problems.length
+    ? {status: FAIL, detail: `picks would be committed as "${ident.name} <${ident.email}>": ${problems.join(', ')}`, fix}
+    : {status: OK, detail: `picks are committed as ${ident.name} <${ident.email}>`};
+}
+
+/**
  * The react-native checkout git actions run in.
  *
  * One resolver, because doctor and the runner disagreeing is worse than either
@@ -201,6 +245,11 @@ export async function runDoctor({checkout, hermesCheckout} = {}) {
     },
     {name: 'Meta-only tooling', ...(await checkMetaTooling())},
   ];
+
+  // The committer every pick records, which is permanent on the release branch.
+  if (existsSync(join(rnCheckout, '.git'))) {
+    checks.push({name: 'git committer identity', ...(await checkGitIdentity(rnCheckout))});
+  }
 
   const failed = checks.filter(c => c.status === FAIL);
   const warned = checks.filter(c => c.status === WARN);

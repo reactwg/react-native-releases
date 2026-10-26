@@ -15,6 +15,7 @@ import {hasBreakingTag} from './gates.mjs';
 import {notPickedMarker} from './release-state.mjs';
 import {parseVersion, seriesOf, compareVersions} from './version.mjs';
 import {ownCommits} from './evidence.mjs';
+import {validateIdentity, parseIdent} from './doctor.mjs';
 
 const RN = 'react/react-native';
 const RN_URL = `https://github.com/${RN}.git`;
@@ -189,9 +190,9 @@ export async function runPick(state, number, runner) {
     declare({
       step: 'pick',
       mutates: false,
-      why: 'check the picked commits kept their original authors',
+      why: 'check the picked commits kept their original authors and carry a real committer',
       cmd: 'git',
-      args: ['log', '--reverse', `-${shas.length}`, '--format=%an <%ae>%x09%h %s'],
+      args: ['log', '--reverse', `-${shas.length}`, '--format=%an <%ae>%x09%cn <%ce>%x09%h %s'],
     }),
   );
   if (!runner.isDryRun) {
@@ -202,6 +203,18 @@ export async function runPick(state, number, runner) {
         `authorship changed while picking: ${before.join(', ')} became ${after.join(', ')}. ` +
           `Fix it with git commit --amend --author before pushing; nothing was pushed.`,
       );
+    }
+    // The committer is permanent once pushed. 0.88.1 went out with every pick
+    // committed as `t <t@t>`.
+    const committers = [...new Set(String(landed?.stdout ?? '').split('\n').filter(Boolean).map(l => l.split('\t')[1]))];
+    for (const c of committers) {
+      const problems = validateIdentity(parseIdent(c) ?? {});
+      if (problems.length) {
+        throw new Error(
+          `the picks were committed as "${c}" (${problems.join(', ')}). Nothing was pushed. ` +
+            'Set your real git identity, then redo the pick: git reset --hard @{u} and run pick again.',
+        );
+      }
     }
   }
   const pushed = await runner.run(
@@ -227,7 +240,7 @@ export async function runPick(state, number, runner) {
   const landedShas = String(landed?.stdout ?? '')
     .split('\n')
     .filter(Boolean)
-    .map(l => l.split('\t')[1]?.split(' ')[0]);
+    .map(l => l.split('\t')[2]?.split(' ')[0]);
   let at = 0;
   for (const c of chain) {
     const n = ownCommits(c).length;

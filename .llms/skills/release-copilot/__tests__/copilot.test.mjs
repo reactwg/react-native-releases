@@ -2739,6 +2739,44 @@ const swiftpmPick = (over = {}, evOver = {}) => {
 const find = (r, id) => r.findings.filter(f => f.id === id);
 const st = over => baseState({proposedNext: '0.88.1', schedule: {series: {version: '0.88', type: 'non-breaking'}, isNonBreaking: true, today: '2026-10-25'}, ...over});
 
+test('doctor: a placeholder git identity is refused, a real one passes', async () => {
+  const {validateIdentity, parseIdent} = await import('../scripts/doctor.mjs');
+  assert.deepEqual(parseIdent('t <t@t> 1792948286 +0000'), {name: 't', email: 't@t'});
+  assert.ok(validateIdentity({name: 't', email: 't@t'}).length === 2, 'the identity 0.88.1 shipped with');
+  for (const bad of [
+    {name: 'Your Name', email: 'you@example.com'},
+    {name: 'root', email: 'root@localhost'},
+    {name: 'Fabrizio Cucci', email: 'fabrizio'},
+    {name: '', email: 'a@b.co'},
+  ]) {
+    assert.ok(validateIdentity(bad).length > 0, JSON.stringify(bad));
+  }
+  assert.deepEqual(validateIdentity({name: 'Fabrizio Cucci', email: 'fabriziocucci@meta.com'}), []);
+  assert.deepEqual(validateIdentity({name: 'nishan (o^▽^o)', email: '12345+nishanbende@users.noreply.github.com'}), []);
+});
+
+test('pick refuses to push commits recorded with a placeholder committer', async () => {
+  const {runPick} = await import('../scripts/pick-actions.mjs');
+  const sha = 'a'.repeat(40);
+  const cand = {number: 1468, title: 'p', landed: false, resolved: [{sha: sha.slice(0, 11), ownCommits: [sha], message: 'Fix x', files: []}]};
+  const ran = [];
+  const runner = {
+    isDryRun: false,
+    async run(a) {
+      ran.push(a);
+      if (a.args.includes('--no-walk=unsorted')) {
+        return {stdout: 'Jane Dev <jane@dev.io>\taaaaaaa Fix x\n'};
+      }
+      if (a.args[0] === 'log') {
+        return {stdout: 'Jane Dev <jane@dev.io>\tt <t@t>\tbbbbbbb Fix x\n'};
+      }
+      return {stdout: ''};
+    },
+  };
+  await assert.rejects(runPick(st({pickCandidates: [cand], openPicks: [cand]}), 1468, runner), /committed as "t <t@t>".*Nothing was pushed/);
+  assert.ok(!ran.some(a => a.args[0] === 'push'), 'never reaches the push');
+});
+
 test('surfaces: docs and tests win over the feature they document, unknown files reach everyone', async () => {
   const {surfaceOf} = await evid();
   assert.equal(surfaceOf('packages/react-native/scripts/spm/__docs__/README.md').id, 'docs');
