@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "additionalDirectories": ["~/git/react-native", "~/git/hermes"]
+  }
+}

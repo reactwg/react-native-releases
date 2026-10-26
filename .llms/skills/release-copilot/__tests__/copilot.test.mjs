@@ -2953,3 +2953,35 @@ test('a captain outside Meta is told which Meta crew member to hand a Meta-only 
   assert.match(announceWhere(false), /Post this to #releases-coordination on Discord\. React Releases on Slack is internal to Meta, so ask a Meta member/);
   assert.match(announceWhere(null), /if you work at Meta\. If you do not, ask/);
 });
+
+test('doctor: a checkout the sandbox will not let us write to fails with the setting that fixes it', async () => {
+  const {checkWritable} = await import('../scripts/doctor.mjs');
+  const {mkdtempSync, mkdirSync, chmodSync, rmSync} = await import('node:fs');
+  const {tmpdir} = await import('node:os');
+  const dir = mkdtempSync(join(tmpdir(), 'rc-writable-'));
+  mkdirSync(join(dir, '.git'));
+  try {
+    assert.equal(checkWritable(dir).status, 'ok');
+    chmodSync(join(dir, '.git'), 0o500);
+    const r = checkWritable(dir);
+    assert.equal(r.status, 'fail');
+    assert.match(r.detail, /EACCES|EPERM/);
+    assert.match(r.fix, /additionalDirectories/);
+    assert.ok(r.fix.includes(`"${dir}"`), 'names the real path to add');
+  } finally {
+    chmodSync(join(dir, '.git'), 0o700);
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
+test('the repo tells Claude Code it may write to the default checkouts', async () => {
+  const {readFileSync, realpathSync} = await import('node:fs');
+  const root = join(HERE, '..', '..', '..', '..');
+  const settings = JSON.parse(readFileSync(join(root, '.claude', 'settings.json'), 'utf8'));
+  assert.deepEqual(settings.permissions.additionalDirectories, ['~/git/react-native', '~/git/hermes']);
+  assert.equal(
+    realpathSync(join(root, '.claude', 'skills', 'release-copilot')),
+    realpathSync(join(HERE, '..')),
+    'stock Claude Code finds the skill through .claude/skills',
+  );
+});

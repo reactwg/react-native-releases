@@ -11,7 +11,7 @@
 
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {existsSync} from 'node:fs';
+import {existsSync, writeFileSync, unlinkSync} from 'node:fs';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
 
@@ -129,6 +129,56 @@ async function checkCheckout(path, {repo = 'react/react-native', env = 'RN_CHECK
   return {status: OK, detail: `full checkout, ${count.out || '?'} commits`};
 }
 
+/**
+ * Can the copilot write where git writes. A fetch, a cherry-pick and the trial
+ * worktree all write inside the checkout's .git. Claude Code at Meta only lets a
+ * session write inside the directory it was started in plus
+ * `permissions.additionalDirectories`. Without this check a sandboxed session
+ * found out halfway through a pick, from "cannot open '.git/FETCH_HEAD'".
+ */
+export function checkWritable(path) {
+  const probe = join(path, '.git', `release-copilot-probe-${process.pid}`);
+  try {
+    writeFileSync(probe, '');
+    unlinkSync(probe);
+    return {status: OK, detail: `can write to ${path}`};
+  } catch (err) {
+    const denied = err.code === 'EPERM' || err.code === 'EACCES';
+    return {
+      status: FAIL,
+      detail: denied ? `cannot write to ${path} (${err.code})` : `cannot write to ${path}: ${err.message}`,
+      fix: denied
+        ? `Claude Code only writes inside the directory it was started in and the ones listed in permissions.additionalDirectories. ` +
+          `This repo's .claude/settings.json lists ~/git/react-native and ~/git/hermes. For a checkout elsewhere add ` +
+          `{"permissions": {"additionalDirectories": ["${path}"]}} to .claude/settings.local.json, then restart Claude.`
+        : 'Check the checkout is a git repository you own.',
+    };
+  }
+}
+
+/** The hosts every run reads, fetched the way the copilot's scripts fetch them. */
+export const REACHABLE = [
+  {host: 'registry.npmjs.org', url: 'https://registry.npmjs.org/react-native/latest'},
+  {host: 'raw.githubusercontent.com', url: 'https://raw.githubusercontent.com/react/react-native/main/package.json'},
+];
+
+async function checkReachable() {
+  const failed = [];
+  for (const {host, url} of REACHABLE) {
+    const r = await run('curl', ['-s', '-o', '/dev/null', '-w', '%{http_code}', '--max-time', '20', url]);
+    if (!r.ok || r.out.trim() !== '200') {
+      failed.push(`${host} (${r.ok ? `HTTP ${r.out.trim() || '?'}` : 'no connection'})`);
+    }
+  }
+  return failed.length
+    ? {
+        status: FAIL,
+        detail: `cannot reach ${failed.join(', ')}`,
+        fix: 'The copilot reads npm and GitHub on every run. On a Meta devserver or OD route traffic through fwdproxy: `claude-templates setting fwdproxy install`. Elsewhere, check your network or proxy.',
+      }
+    : {status: OK, detail: REACHABLE.map(x => x.host).join(', ')};
+}
+
 /** Meta-only. A community captain can run a release without these. */
 async function checkMetaTooling() {
   const sl = await run('sl', ['--version']);
@@ -189,16 +239,18 @@ export async function runDoctor({checkout, hermesCheckout} = {}) {
   const rnCheckout = resolveCheckout(checkout);
   const hermes = resolveHermesCheckout(hermesCheckout);
 
+  const rnCheck = await checkCheckout(rnCheckout);
+  const hermesCheck = await checkCheckout(hermes, {repo: 'facebook/hermes', env: 'HERMES_CHECKOUT', flag: '--hermes-checkout'});
   const checks = [
     {name: 'node >= 22.11', ...(await checkNode())},
     {name: 'gh authenticated', ...(await checkGh())},
     {name: 'gh project scope', ...(await checkProjectScope())},
     ...(await checkRepoAccess()),
-    {name: `react-native checkout`, ...(await checkCheckout(rnCheckout))},
-    {
-      name: 'hermes checkout',
-      ...(await checkCheckout(hermes, {repo: 'facebook/hermes', env: 'HERMES_CHECKOUT', flag: '--hermes-checkout'})),
-    },
+    {name: 'npm and GitHub reachable', ...(await checkReachable())},
+    {name: `react-native checkout`, ...rnCheck},
+    ...(rnCheck.status === FAIL ? [] : [{name: 'react-native checkout writable', ...checkWritable(rnCheckout)}]),
+    {name: 'hermes checkout', ...hermesCheck},
+    ...(hermesCheck.status === FAIL ? [] : [{name: 'hermes checkout writable', ...checkWritable(hermes)}]),
     {name: 'Meta-only tooling', ...(await checkMetaTooling())},
   ];
 

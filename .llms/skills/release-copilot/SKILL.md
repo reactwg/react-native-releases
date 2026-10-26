@@ -10,6 +10,34 @@ actually is, refuses to proceed through a failed gate and walks the captain thro
 each step, describing what it is about to do before it does it. It carries the
 process itself: a step should never need a guide open next to it.
 
+## Launching
+
+Start Claude Code in this repo with Node 22 on the PATH. That is all a captain needs:
+
+```sh
+cd react-native-releases
+nvm use 22
+claude
+```
+
+The copilot reads npm and GitHub through its own scripts and writes only to the
+`react-native` and `hermes` checkouts. Claude Code at Meta runs in a sandbox that only
+writes inside the directory it was started in, so `.claude/settings.json` adds the default
+checkout paths (`~/git/react-native`, `~/git/hermes`) to `additionalDirectories`. For
+checkouts elsewhere `doctor` prints the `.claude/settings.local.json` lines to add. The
+first launch asks whether to trust the folder. Say yes, otherwise Claude Code ignores the
+project settings. Internet mode is not needed. It works too, but it loosens the sandbox for the whole
+session.
+
+**For the agent:**
+
+- Run `doctor` first. If it fails, give the captain its fix and stop. Do not look for a
+  way around a failing check.
+- Answer questions about versions, tags, branches and CI through the copilot
+  (`cli.mjs status`, `investigate-pick.mjs`) or with `npm view`, `gh` and `git ls-remote`.
+  Do not `curl` a public site yourself. Claude Code at Meta blocks that outside internet
+  mode and the copilot already reads what it needs.
+
 ## First, check your environment
 
 ```sh
@@ -17,12 +45,13 @@ node scripts/cli.mjs doctor
 ```
 
 Checks Node, `gh` auth, the `read:project,project` scope the board needs, push access
-to all four repos a release touches and that your `react-native` and `hermes` checkouts
-exist and are not shallow (`--checkout`, `--hermes-checkout`, or `RN_CHECKOUT` and
-`HERMES_CHECKOUT`). Every failing check says how to fix itself.
+to all four repos a release touches, that npm and GitHub are reachable and that your
+`react-native` and `hermes` checkouts exist, are not shallow and can be written to. Point
+at other checkouts with `--checkout` and `--hermes-checkout` or with `RN_CHECKOUT` and
+`HERMES_CHECKOUT`. Every failing check says how to fix itself.
 
-`run` and `plan` call it automatically and refuse to start on a broken environment.
-`--skip-doctor` overrides.
+`run`, `plan`, `pick` and `drop` call it automatically and refuse to start on a broken
+environment. `--skip-doctor` overrides.
 
 The shallow-clone check matters for the hand-run commands in `reference/`, several of
 which use `git merge-base --is-ancestor`. On a shallow clone that returns a wrong answer
