@@ -2777,6 +2777,81 @@ test('pick refuses to push commits recorded with a placeholder committer', async
   assert.ok(!ran.some(a => a.args[0] === 'push'), 'never reaches the push');
 });
 
+test('pick, for real: cherry-picks, keeps the author, pushes and closes, but never pushes as t <t@t>', async () => {
+  // Real git end to end. The release branch URL is redirected to a local bare
+  // repo and gh is swapped for a logger, so nothing leaves the machine.
+  const {runPick} = await import('../scripts/pick-actions.mjs');
+  const {Runner} = await import('../scripts/actions.mjs');
+  const {mkdtempSync, writeFileSync, readFileSync, chmodSync, mkdirSync, rmSync} = await import('node:fs');
+  const {execFileSync} = await import('node:child_process');
+  const {tmpdir} = await import('node:os');
+  const root = mkdtempSync(join(tmpdir(), 'rc-pick-e2e-'));
+  const sh = (cwd, ...args) => execFileSync('git', args, {cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
+  const id = ['-c', 'user.name=Setup', '-c', 'user.email=setup@reactnative.dev'];
+  const saved = {...process.env};
+  try {
+    const remote = join(root, 'remote.git');
+    const seed = join(root, 'seed');
+    const checkout = join(root, 'checkout');
+    sh(root, 'init', '-q', '--bare', remote);
+    sh(root, 'init', '-q', '-b', 'main', seed);
+    writeFileSync(join(seed, 'a.txt'), 'base\n');
+    sh(seed, ...id, 'add', '.');
+    sh(seed, ...id, 'commit', '-q', '-m', 'base');
+    sh(seed, 'branch', '0.88-stable');
+    writeFileSync(join(seed, 'b.txt'), 'the fix\n');
+    sh(seed, 'add', '.');
+    sh(seed, ...id, 'commit', '-q', '--author', 'Jane Dev <jane@dev.io>', '-m', 'Fix the thing (#100)');
+    const fix = sh(seed, 'rev-parse', 'HEAD');
+    sh(seed, 'push', '-q', remote, 'main', '0.88-stable');
+    sh(root, 'clone', '-q', remote, checkout);
+
+    const bin = join(root, 'bin');
+    mkdirSync(bin);
+    writeFileSync(join(bin, 'gh'), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${join(root, 'gh.log')}"\n`);
+    chmodSync(join(bin, 'gh'), 0o755);
+    Object.assign(process.env, {
+      PATH: `${bin}:${process.env.PATH}`,
+      GIT_CONFIG_COUNT: '1',
+      GIT_CONFIG_KEY_0: `url.${remote}.insteadOf`,
+      GIT_CONFIG_VALUE_0: 'https://github.com/react/react-native.git',
+      GIT_COMMITTER_NAME: 'Release Captain',
+      GIT_COMMITTER_EMAIL: 'captain@reactnative.dev',
+    });
+
+    const cand = {number: 1500, title: '[0.88] Fix the thing', landed: false,
+      resolved: [{sha: fix.slice(0, 11), ownCommits: [fix], message: 'Fix the thing (#100)', files: []}]};
+    const state = st({pickCandidates: [cand], openPicks: [cand]});
+    const runner = () => new Runner({mode: MODES.GUIDED, cwd: checkout, confirm: async () => true, log: () => {}});
+
+    // A placeholder committer: refused after the cherry-pick, before the push.
+    Object.assign(process.env, {GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t'});
+    await assert.rejects(runPick(state, 1500, runner()), /committed as "t <t@t>".*Nothing was pushed/);
+    assert.equal(sh(remote, 'log', '-1', '--format=%s', '0.88-stable'), 'base', 'nothing reached the remote');
+    sh(checkout, 'reset', '-q', '--hard', 'origin/0.88-stable');
+
+    // A real committer: picked, pushed and closed.
+    Object.assign(process.env, {GIT_COMMITTER_NAME: 'Release Captain', GIT_COMMITTER_EMAIL: 'captain@reactnative.dev'});
+    const res = await runPick(state, 1500, runner());
+    assert.equal(res.completed, true);
+    const [author, committer, body] = sh(remote, 'log', '-1', '--format=%an <%ae>%x09%cn <%ce>%x09%B', '0.88-stable').split('\t');
+    assert.equal(author, 'Jane Dev <jane@dev.io>', 'the original author is kept');
+    assert.equal(committer, 'Release Captain <captain@reactnative.dev>');
+    assert.match(body, new RegExp(`cherry picked from commit ${fix}`));
+    const landed = sh(remote, 'rev-parse', '--short', '0.88-stable');
+    const gh = readFileSync(join(root, 'gh.log'), 'utf8');
+    assert.match(gh, new RegExp(`issue close 1500 --repo reactwg/react-native-releases --comment Picked into \`0.88-stable\` for 0.88.1 as \`${landed}`));
+  } finally {
+    for (const k of Object.keys(process.env)) {
+      if (!(k in saved)) {
+        delete process.env[k];
+      }
+    }
+    Object.assign(process.env, saved);
+    rmSync(root, {recursive: true, force: true});
+  }
+});
+
 test('surfaces: docs and tests win over the feature they document, unknown files reach everyone', async () => {
   const {surfaceOf} = await evid();
   assert.equal(surfaceOf('packages/react-native/scripts/spm/__docs__/README.md').id, 'docs');
