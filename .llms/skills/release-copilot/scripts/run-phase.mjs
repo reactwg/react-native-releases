@@ -9,9 +9,10 @@ import {evaluate, formatGates} from './gates.mjs';
 import {phaseFor} from './phases.mjs';
 import {summarize} from './release-state.mjs';
 
-export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, log = console.log} = {}) {
+export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, atMeta = null, log = console.log} = {}) {
   const phase = phaseFor(shape ?? state.shape);
-  const runner = new Runner({mode, confirm, log, cwd});
+  const runner = new Runner({mode, confirm, log, cwd, atMeta});
+  ctx = {...ctx, atMeta};
 
   log('');
   log('='.repeat(72));

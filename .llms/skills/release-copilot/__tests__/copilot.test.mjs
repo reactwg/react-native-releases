@@ -1197,7 +1197,7 @@ test('the announce step emits the announcement rather than naming channels', asy
   // captain's progress, the other is what the community reads.
   assert.ok(!text.includes(':hourglass:'), 'no checklist ticks in an announcement');
   assert.ok(ANNOUNCE_CHANNELS.some(c => /Discord/.test(c)));
-  assert.ok(ANNOUNCE_CHANNELS.some(c => /GChat/.test(c)));
+  assert.ok(ANNOUNCE_CHANNELS.some(c => /Slack/.test(c)));
 });
 
 test('the announcement omits the changelog line when there is no PR', async () => {
@@ -1866,7 +1866,7 @@ test('golden plan: rc phase step order is stable', async () => {
       "gh workflow run 'Create release' --repo react/react-native --ref 0.88-stable -f version=0.88.0-rc.3 -f is-latest-on-npm=false -f dry-run=false",
       `node ${new URL('../scripts/generate-changelog.mjs', import.meta.url).pathname} 0.88.0-rc.3`,
       `node ${new URL('../scripts/fill-release-notes.mjs', import.meta.url).pathname} 0.88.0-rc.3`,
-      "echo 'post announcement to React Releases on GChat'",
+      "echo 'post announcement to React Releases on Slack'",
     ],
   );
 });
@@ -2934,4 +2934,22 @@ test('pick takes a stack from the bottom, checks authors, pushes on a retyped br
   const breaking = [mk(1500, 'c'.repeat(40))];
   breaking[0].resolved[0].message = '[GENERAL] [BREAKING] - Remove prop';
   await assert.rejects(runPick(st({pickCandidates: breaking, openPicks: breaking}), 1500, runner), /non-breaking/);
+});
+
+test('a captain outside Meta is told which Meta crew member to hand a Meta-only step to', async () => {
+  const {metaHandoff, META_CREW, Runner, declare} = await import('../scripts/actions.mjs');
+  const {announceWhere} = await import('../scripts/phases.mjs');
+  assert.match(metaHandoff(true), /do this yourself/);
+  for (const atMeta of [false, null]) {
+    assert.match(metaHandoff(atMeta), new RegExp(META_CREW.join(', ')));
+  }
+  const lines = [];
+  await new Runner({mode: MODES.DRY_RUN, atMeta: false, log: l => lines.push(l)}).run(
+    declare({step: 'announce', metaOnly: true, why: 'post it', cmd: 'echo', args: ['x']}),
+  );
+  assert.match(lines.join('\n'), /needs a Meta employee\. Ask a Meta member of the release crew \(Nicola, Riccardo, Fabrizio\)/);
+
+  assert.match(announceWhere(true), /^Post this to #releases-coordination on Discord and React Releases on Slack:$/);
+  assert.match(announceWhere(false), /Post this to #releases-coordination on Discord\. React Releases on Slack is internal to Meta, so ask a Meta member/);
+  assert.match(announceWhere(null), /if you work at Meta\. If you do not, ask/);
 });

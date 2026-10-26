@@ -223,5 +223,5 @@ export function buildAnnouncement(version, {changelogPr, releaseUrl} = {}) {
 /** Where the announcement goes. */
 export const ANNOUNCE_CHANNELS = [
   '#releases-coordination on Discord',
-  'React Releases on GChat',
+  'React Releases on Slack',
 ];

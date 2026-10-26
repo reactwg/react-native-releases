@@ -353,7 +353,11 @@ pick request with the scope analysis **before** pushing.
 ## Meta-only steps
 
 Two steps are marked `metaOnly`, printed and delegated rather than attempted:
-`bump-main` (`js1 publish` in fbsource) and `announce` (the GChat post). Curating the
+`bump-main` (`js1 publish` in fbsource) and `announce` (the Slack post). The captain need
+not work at Meta. The copilot checks for Meta tooling and tells the captain either to do
+the step themselves or which Meta member of the release crew to ask (`META_CREW` in
+`scripts/actions.mjs`). The announcement goes to Discord from anyone and to the internal
+Slack room from a Meta employee. Curating the
 changelog diff also needs Meta tooling, but that step runs no commands at all, so it
 is a note rather than a flag. See `reference/changelog.md`.
 
