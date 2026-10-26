@@ -174,7 +174,9 @@ async function checkReachable() {
     ? {
         status: FAIL,
         detail: `cannot reach ${failed.join(', ')}`,
-        fix: 'The copilot reads npm and GitHub on every run. On a Meta devserver or OD route traffic through fwdproxy: `claude-templates setting fwdproxy install`. Elsewhere, check your network or proxy.',
+        // A devserver has no direct internet and fwdproxy refuses github.com
+        // (CONNECT 403), so no proxy setting gets the copilot working there.
+        fix: 'The copilot reads npm and GitHub on every run, so run it on your own machine. A Meta devserver or OD cannot reach github.com, even through fwdproxy. Elsewhere, check your network or proxy.',
       }
     : {status: OK, detail: REACHABLE.map(x => x.host).join(', ')};
 }

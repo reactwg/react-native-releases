@@ -12,13 +12,16 @@ process itself: a step should never need a guide open next to it.
 
 ## Launching
 
-Start Claude Code in this repo with Node 22 on the PATH. That is all a captain needs:
+Start Claude Code in this repo on your own machine, with Node 22 on the PATH. That is
+all a captain needs:
 
 ```sh
 cd react-native-releases
 nvm use 22
 claude
 ```
+
+A Meta devserver or OD will not work. It cannot reach github.com, even through fwdproxy.
 
 The copilot reads npm and GitHub through its own scripts and writes only to the
 `react-native` and `hermes` checkouts. Claude Code at Meta runs in a sandbox that only
