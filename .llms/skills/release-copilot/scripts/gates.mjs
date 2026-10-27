@@ -291,8 +291,8 @@ export const gates = {
 
   /**
    * The summary said "REQUIRES manual release testing" and nothing checked it,
-   * so a run could publish a stable release nobody had tested. The captain
-   * vouches for the test pass with --manual-tested.
+   * so a run could publish a golden RC nobody had tested. The captain vouches
+   * for the test pass with --manual-tested.
    */
   manualTestingDone(state, {manualTested}) {
     const needs = state.schedule?.needsManualTesting;

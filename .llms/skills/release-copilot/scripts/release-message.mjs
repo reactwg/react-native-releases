@@ -12,7 +12,9 @@
  * tick something on the assumption it probably happened.
  */
 
-import {loadPickDeferrals} from './release-state.mjs';
+import {loadPickDeferrals, requiresManualTesting} from './release-state.mjs';
+
+export {requiresManualTesting};
 
 const DONE = ':white_check_mark:';
 const WIP = ':hourglass:';
@@ -23,38 +25,6 @@ function line(done, text) {
   return `${done ? DONE : WIP} ${text}`;
 }
 
-/**
- * RC0, RC1, the golden RC and any stable release get a manual test pass.
- *
- * For an in-flight series the golden RC is assumed to be `expectedGoldenRc`
- * (rc.4) unless the captain says otherwise. That is the captain's standing
- * instruction, so it is an answer rather than a refusal. It stays a stated
- * assumption in the output, because measured from tags the real golden landed
- * anywhere from rc.3 to rc.7 across 0.82 to 0.87.
- */
-export function requiresManualTesting(state, version) {
-  const m = /^\d+\.\d+\.\d+(?:-rc\.(\d+))?$/.exec(version ?? '');
-  if (!m) {
-    return true; // unknown shape, assume it needs testing rather than skipping it
-  }
-  const rc = m[1] == null ? null : Number(m[1]);
-  if (rc == null) {
-    return true; // stable
-  }
-  const listed = state.schedule?.manualTestingRcs ?? [0, 1];
-  if (listed.includes(rc)) {
-    return true;
-  }
-  const golden = state.schedule?.goldenRc;
-  if ((golden?.source === 'tags' || golden?.source === 'content') && golden.value != null) {
-    return rc === golden.value;
-  }
-  const expected = state.schedule?.expectedGoldenRc;
-  if (expected != null) {
-    return rc === expected;
-  }
-  return null; // no released tags and no standing default
-}
 
 /**
  * @param state      derived release state

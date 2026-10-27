@@ -52,5 +52,5 @@
   "lastUpdatedFor": "0.84 through 0.89 (2026 schedule), 0.88 release corrected 2026-10-13",
   "_goldenRcCaveat": "A PRIOR, not a rule. The golden RC is whichever RC turns out to be last and that is decided by content, not by a number: the last RC that carried a real change was the golden one. History shows no fixed value (0.82 rc.5, 0.83 rc.5, 0.84 rc.5, 0.85 rc.7, 0.86 rc.3, 0.87 rc.4), so 4 is only a planning default for projecting dates. The rcHasContent gate is what actually enforces this: an RC with nothing in it means the PREVIOUS one was golden and the next action is promote to stable. rc.4 is the usual golden. A series can set goldenByContent when its last RC by tag is not the golden one, as 0.88 does.",
   "expectedGoldenRc": 4,
-  "_manualTestingNote": "RC0 and RC1 always, plus the golden RC and any stable release. For a released series the golden RC is derived from tags. For one in flight it is expectedGoldenRc, treated as an assumption the captain can override."
+  "_manualTestingNote": "RC0 and RC1 always, plus the golden RC. Nothing else is manually tested. The stable .0 is promoted from the golden RC with nothing new in it, so it is covered. Patches are never manually tested. For a released series the golden RC is derived from tags. For one in flight it is expectedGoldenRc, treated as an assumption the captain can override."
 }
