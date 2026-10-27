@@ -3204,3 +3204,19 @@ test('verify-template: a Gradle failure shows "What went wrong", not the daemon 
   assert.doesNotMatch(d, /\[DEBUG\]|\* Try/);
   assert.equal(failureDetail('a\nb\nerror: something broke'), 'a\nb\nerror: something broke', 'no Gradle section, keep the tail');
 });
+
+test('hermes-verify-tag checks the iOS tarballs the prebuild downloads, and the pin names all three files', async () => {
+  const {phaseFor, hermesIosTarballUrls} = await import('../scripts/phases.mjs');
+  assert.deepEqual(hermesIosTarballUrls('260318099.0.5'), [
+    'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-debug.tar.gz',
+    'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-release.tar.gz',
+  ]);
+  const steps = phaseFor('hermes-release').steps;
+  const state = baseState({hermesUnreleased: {inTreeVersion: '260318099.0.5', commits: []}});
+  const verify = steps.find(s => s.id === 'hermes-verify-tag').actions(state);
+  for (const url of hermesIosTarballUrls('260318099.0.5')) {
+    assert.ok(verify.some(a => a.args.includes(url)), `verify-tag should check ${url}`);
+  }
+  const pin = steps.find(s => s.id === 'hermes-pin').actions(state)[0];
+  assert.match(pin.args[0], /\.hermesv1version to hermes-v260318099\.0\.5/);
+});

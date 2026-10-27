@@ -5,12 +5,23 @@ happen **before** the RN release that consumes it.
 
 ## Where the version lives
 
-Two files on the release branch and they must agree:
+Three files on the release branch and they must agree:
 
 ```
 packages/react-native/sdks/hermes-engine/version.properties   HERMES_VERSION_NAME=...
 packages/react-native/package.json                            dependencies["hermes-compiler"]
+packages/react-native/sdks/.hermesv1version                   hermes-v...  (no trailing newline)
 ```
+
+`.hermesv1version` is the tag a from-source Hermes build checks out (the CocoaPods
+build-from-tag path and the Android source build) and it ships in the npm package. 0.88's
+stayed on `hermes-v260318099.0.2` through the `.0.3` and `.0.4` bumps until 0.88.1 fixed
+it, so anyone building Hermes from source with 0.88.0 got `.0.2`.
+
+Pin only once the iOS tarballs download. The iOS prebuild fetches
+`hermes-ios-<version>-hermes-ios-{debug,release}.tar.gz` from `repo.reactnative.dev`,
+which lags Maven Central. The `260318099.0.5` pin landed about 30 minutes after the Maven
+publish and all six iOS prebuild slices failed with a 404. `hermes-verify-tag` checks both.
 
 On `main`, `hermes-compiler` is the `0.0.0` placeholder. On a release branch it is
 the real version. Do not copy a main-side bump onto a release branch.
@@ -18,7 +29,7 @@ the real version. Do not copy a main-side bump onto a release branch.
 `packages/rn-tester/Podfile.lock` also pins `hermes-engine` with a checksum, but
 the publish workflow regenerates it. See field-notes.
 
-Gate `hermesConsistent` checks the two files agree.
+Gate `hermesConsistent` checks the three files agree.
 
 ## Branch naming
 
