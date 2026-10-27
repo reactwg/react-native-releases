@@ -76,7 +76,13 @@ node scripts/verify-template.mjs 0.88.0-rc.3 --keep     # leave the app to poke 
 ```
 
 The `template-check` step runs this after `verify-publish`, since you cannot build
-against a version that is not published yet. It creates a throwaway app in a temp
+against a version that is not published yet.
+
+A sandboxed Claude Code session may not be able to run the Android half. On 0.88.1 the
+Gradle client could not reach its own daemon on `127.0.0.1` ("Could not connect to the
+Gradle daemon"), which is the session's restriction, not the release. Run
+`verify-template.mjs <version> --android-only` from your own terminal in that case. The
+iOS half and `init` work in the session. It creates a throwaway app in a temp
 directory, so it mutates nothing shared and it cleans up unless you pass `--keep`.
 
 What it checks beyond "the build is green":

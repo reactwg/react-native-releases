@@ -3177,3 +3177,30 @@ test('manual testing: only RC0, RC1 and the golden RC, never a .0 or a patch', a
   assert.equal(ev.passed, true);
   assert.match(ev.results[0].detail, /0\.88\.1 needs no manual testing/);
 });
+
+// ------------------------------------------------- template verification output
+
+test('verify-template: Node fetch is told to use the proxy, an explicit setting wins', async () => {
+  const {childEnv} = await import('../scripts/verify-template.mjs');
+  assert.equal(childEnv({HTTPS_PROXY: 'http://localhost:10054'}).NODE_USE_ENV_PROXY, '1');
+  assert.equal(childEnv({https_proxy: 'http://localhost:10054'}).NODE_USE_ENV_PROXY, '1');
+  assert.equal(childEnv({HTTPS_PROXY: 'http://x', NODE_USE_ENV_PROXY: '0'}).NODE_USE_ENV_PROXY, '0');
+  assert.equal(childEnv({PATH: '/usr/bin'}).NODE_USE_ENV_PROXY, undefined, 'no proxy, nothing to change');
+});
+
+test('verify-template: a Gradle failure shows "What went wrong", not the daemon log tail', async () => {
+  const {failureDetail} = await import('../scripts/verify-template.mjs');
+  const gradle = [
+    'FAILURE: Build failed with an exception.',
+    '* What went wrong:',
+    'Could not connect to the Gradle daemon.',
+    'Daemon uid: dff24c5f with diagnostics:',
+    '* Try:',
+    '> Run with --stacktrace option to get the stack trace.',
+    ...Array.from({length: 20}, (_, i) => `2026-10-27T16:50:56.88${i}+0000 [DEBUG] daemon is running. Sleeping until state changes.`),
+  ].join('\n');
+  const d = failureDetail(gradle);
+  assert.match(d, /Could not connect to the Gradle daemon/);
+  assert.doesNotMatch(d, /\[DEBUG\]|\* Try/);
+  assert.equal(failureDetail('a\nb\nerror: something broke'), 'a\nb\nerror: something broke', 'no Gradle section, keep the tail');
+});
