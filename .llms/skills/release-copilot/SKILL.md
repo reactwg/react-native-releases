@@ -261,9 +261,10 @@ shipped with nothing in it, then rc.6 carried a single pick. A released series r
 that as `goldenByContent` in `schedule.json`, so the history shows `0.88:rc.4 (last rc.6)`
 and does not read as a series that needed six RCs.
 
-Manual testing follows from it: RC0 and RC1 unconditionally, then the golden RC and the
-stable release. Tags win over the assumption, so a released series is always answered from
-what actually shipped.
+Manual testing follows from it: RC0 and RC1 unconditionally, then the golden RC. Nothing
+else is manually tested, neither the stable `.0` (promoted from the golden RC with nothing
+new in it) nor patches. Tags win over the assumption, so a released series is always
+answered from what actually shipped.
 
 ## Modes
 

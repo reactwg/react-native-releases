@@ -1261,7 +1261,8 @@ test('status message: testing requirement, golden known vs unknown', async () =>
   assert.equal(requiresManualTesting(done, '0.87.0-rc.1'), true);
   assert.equal(requiresManualTesting(done, '0.87.0-rc.3'), false);
   assert.equal(requiresManualTesting(done, '0.87.0-rc.4'), true, 'golden RC needs testing');
-  assert.equal(requiresManualTesting(done, '0.87.0'), true, 'stable always needs testing');
+  assert.equal(requiresManualTesting(done, '0.87.0'), false, 'the .0 is covered by the golden RC');
+  assert.equal(requiresManualTesting(done, '0.87.3'), false, 'patches are not manually tested');
 
   // In flight: any RC past rc.1 MAY be golden, so refuse to decide.
   const live = baseState({
@@ -1290,7 +1291,7 @@ test('golden RC: rc.5 is the standing assumption for an in-flight series', async
   assert.equal(requiresManualTesting(live, '0.88.0-rc.1'), true, 'rc.1 unconditional');
   assert.equal(requiresManualTesting(live, '0.88.0-rc.3'), false, 'not the assumed golden');
   assert.equal(requiresManualTesting(live, '0.88.0-rc.5'), true, 'the assumed golden');
-  assert.equal(requiresManualTesting(live, '0.88.0'), true, 'stable always');
+  assert.equal(requiresManualTesting(live, '0.88.0'), false, 'the .0 is covered by the golden RC');
 });
 
 test('golden RC: a released series still derives from tags, overriding the default', async () => {
@@ -2507,7 +2508,7 @@ test('a patch has no weekly due date and no golden RC lines', async () => {
   assert.ok(!/OVERDUE|due in/.test(out), out);
   assert.ok(!/Golden RC|Projected|Targets/.test(out), out);
   assert.match(out, /patches are unscheduled/);
-  assert.match(out, /Testing       0\.88\.1 REQUIRES manual release testing/);
+  assert.match(out, /Testing       0\.88\.1 needs no manual testing/);
 });
 
 // The real 0.88.1 branch, abbreviated.
@@ -3097,4 +3098,29 @@ test('the repo tells Claude Code it may write to the default checkouts', async (
     realpathSync(join(HERE, '..')),
     'stock Claude Code finds the skill through .claude/skills',
   );
+});
+
+test('manual testing: only RC0, RC1 and the golden RC, never a .0 or a patch', async () => {
+  // Derived end to end, the way plan and the crew status message see it.
+  const at = async (versions, next, shape, tags = []) =>
+    (await deriveState({
+      ...patchSrc(),
+      npmVersions: async () => versions,
+      npmDistTags: async () => ({latest: versions.find(v => !v.includes('-')) ?? '0.87.1', next: versions.at(-1)}),
+      gitTags: async () => tags,
+    }, {series: '0.88', today: '2026-10-25', shape})).schedule.needsManualTesting;
+  const rcs = n => [...Array(n)].map((_, i) => `0.88.0-rc.${i}`);
+  assert.equal(await at(['0.87.1'], '0.88.0-rc.0', 'branch-cut'), true, 'RC0');
+  assert.equal(await at(['0.87.1', ...rcs(1)], '0.88.0-rc.1', 'rc'), true, 'RC1');
+  assert.equal(await at(['0.87.1', ...rcs(2)], '0.88.0-rc.2', 'rc'), false, 'RC2');
+  assert.equal(await at(['0.87.1', ...rcs(4)], '0.88.0-rc.4', 'rc'), true, 'the assumed golden rc.4');
+  assert.equal(await at(['0.87.1', ...rcs(5)], '0.88.0', 'promote'), false, 'the .0');
+  assert.equal(await at(['0.87.1', ...rcs(5), '0.88.0'], '0.88.1', 'patch'), false, 'a patch');
+  assert.equal(await at(['0.87.1', ...rcs(5), '0.88.0', '0.88.1'], '0.88.2', 'patch'), false, 'a later patch');
+
+  // The pre-flight gate follows: no --manual-tested needed for a patch.
+  const patch = await deriveState(patchSrc(), {series: '0.88', today: '2026-10-25'});
+  const ev = await evaluate(['manualTestingDone'], patch, {});
+  assert.equal(ev.passed, true);
+  assert.match(ev.results[0].detail, /0\.88\.1 needs no manual testing/);
 });

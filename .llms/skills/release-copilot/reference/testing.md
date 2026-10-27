@@ -7,9 +7,10 @@ Only these:
 - **RC0**
 - **RC1**
 - **the golden RC**, meaning the last one before `.0`
-- **stable** `.0` and patches on the latest line
 
-Everything else needs no manual pass. One release crew member is enough.
+Everything else needs no manual pass, including the stable `.0` and every patch. The `.0`
+is promoted from the golden RC with nothing new in it, so the golden RC's pass covers it.
+One release crew member is enough.
 
 The golden RC number is **not derivable in advance**. Measured from tags it landed at
 rc.5, rc.5, rc.5, rc.7, rc.3 then rc.4 across 0.82 to 0.87. For a released series

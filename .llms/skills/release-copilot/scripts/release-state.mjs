@@ -243,6 +243,41 @@ export function hermesChoice(overview, {proposedNext, pinned} = {}) {
   );
 }
 
+/**
+ * Only RC0, RC1 and the golden RC get a manual test pass, per the release
+ * process guide. A stable `.0` is promoted from the golden RC with nothing new
+ * in it, so that RC's pass covers it. Patches are not manually tested.
+ *
+ * For an in-flight series the golden RC is assumed to be `expectedGoldenRc`
+ * (rc.4) unless the captain says otherwise. That is the captain's standing
+ * instruction, so it is an answer rather than a refusal. It stays a stated
+ * assumption in the output, because measured from tags the real golden landed
+ * anywhere from rc.3 to rc.7 across 0.82 to 0.87.
+ */
+export function requiresManualTesting(state, version) {
+  const m = /^\d+\.\d+\.\d+(?:-rc\.(\d+))?$/.exec(version ?? '');
+  if (!m) {
+    return true; // unknown shape, assume it needs testing rather than skipping it
+  }
+  const rc = m[1] == null ? null : Number(m[1]);
+  if (rc == null) {
+    return false; // a stable .0 or a patch
+  }
+  const listed = state.schedule?.manualTestingRcs ?? [0, 1];
+  if (listed.includes(rc)) {
+    return true;
+  }
+  const golden = state.schedule?.goldenRc;
+  if ((golden?.source === 'tags' || golden?.source === 'content') && golden.value != null) {
+    return rc === golden.value;
+  }
+  const expected = state.schedule?.expectedGoldenRc;
+  if (expected != null) {
+    return rc === expected;
+  }
+  return null; // no released tags and no standing default
+}
+
 const HERMES_VERSION_FILE = 'packages/react-native/sdks/hermes-engine/version.properties';
 const RN_PACKAGE_JSON = 'packages/react-native/package.json';
 
@@ -695,19 +730,15 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
     shape === 'promote' ||
     (nextParsed?.rc != null && assumedGolden != null && nextParsed.rc >= assumedGolden);
 
-  // RC0 and RC1 always. Golden too, but if we cannot know whether this is the
-  // golden RC, report null so the caller asks instead of silently deciding.
-  const listed = nextParsed?.rc != null && schedule.manualTestingRcs.includes(nextParsed.rc);
+  // The same rule the crew status message uses, so the gate and the message
+  // cannot disagree. Null when it cannot be known, so the caller asks.
   const needsManualTesting =
     nextParsed == null
       ? null
-      : nextParsed.rc == null
-        ? true
-        : listed
-          ? true
-          : assumedGolden == null
-            ? null
-            : isGoldenNext;
+      : requiresManualTesting(
+          {schedule: {manualTestingRcs: schedule.manualTestingRcs, goldenRc, expectedGoldenRc: schedule.expectedGoldenRc}},
+          proposedNext,
+        );
 
   const todayStr = today ?? new Date().toISOString().slice(0, 10);
   const lastPublishedAt = current ? publishTimes[formatVersion(current)] ?? null : null;

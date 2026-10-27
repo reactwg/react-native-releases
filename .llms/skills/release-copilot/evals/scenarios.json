@@ -764,7 +764,7 @@
             0,
             1
           ],
-          "needsManualTesting": true
+          "needsManualTesting": false
         },
         "hermesUnreleased": {
           "branch": "260318099.0.0-stable",
@@ -783,8 +783,7 @@
       "ctx": {
         "isLatest": true,
         "workflowDryRun": false,
-        "isBreaking": false,
-        "manualTested": true
+        "isBreaking": false
       },
       "expect": {
         "completes": true,
@@ -1392,7 +1391,7 @@
             0,
             1
           ],
-          "needsManualTesting": true
+          "needsManualTesting": false
         },
         "hermesUnreleased": {
           "branch": "260318099.0.0-stable",
@@ -1413,7 +1412,6 @@
       },
       "ctx": {
         "isLatest": true,
-        "manualTested": true,
         "workflowDryRun": false
       },
       "expect": {
