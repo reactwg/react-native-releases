@@ -2964,6 +2964,21 @@ test('a port that differs from main must say so', async () => {
   assert.match(find(r, 'fidelity')[0].text, /not a plain cherry-pick/);
 });
 
+test('a port that explains its conflict says why it differs (#1462)', async () => {
+  const {checkPick, CONFIRMED} = await inv();
+  const diverged = {fidelity: [{own: 'abe1c5f0411', main: '4bba13d4197', same: false, onlyOwn: [], onlyMain: [], differing: [{f: 'generate-spm-autolinking.js', own: '+16/-90', main: '+16/-93'}]}]};
+  const told = swiftpmPick({description: 'This is a port PR against `0.88-stable` of #59365, which already landed in main. A plain cherry-pick conflicts in `generate-spm-autolinking.js`, because main uses a helper from a later PR that is not on 0.88-stable. The port PR resolves that conflict.'}, diverged);
+  assert.equal(find(checkPick(told.c, told.ev, st(), {today: '2026-10-26'}), 'fidelity')[0].status, CONFIRMED);
+});
+
+test('"regression tests" is not a regression claim (#1461), a regression still is', async () => {
+  const {claimedKind} = await inv();
+  assert.notEqual(claimedKind('[0.88] Add regression tests for the iOS SwiftPM tooling'), 'regression');
+  assert.notEqual(claimedKind('[0.88] Add a regression test'), 'regression');
+  assert.equal(claimedKind('[0.88] Fix a regression in Text measurement since 0.87'), 'regression');
+  assert.equal(claimedKind('Text regressed in 0.88'), 'regression');
+});
+
 test('reverted on main, too fresh, or followed up: each is said, not hidden', async () => {
   const {checkPick, CONTRADICTED, FLAG} = await inv();
   const {c, ev} = swiftpmPick({}, {mainCommits: [mainCommit({
