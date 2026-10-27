@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
-import {fixtureSources} from '../scripts/sources.mjs';
+import {fixtureSources, npmVersionStatus, parseNpmDocument} from '../scripts/sources.mjs';
 import {deriveState} from '../scripts/release-state.mjs';
 import {evaluate, classifyFailure, hasBreakingTag} from '../scripts/gates.mjs';
 import {declare, render, Runner, MODES} from '../scripts/actions.mjs';
@@ -99,6 +99,41 @@ test('gate: mismatched Hermes pins block', async () => {
     {},
   );
   assert.equal(ev.passed, false);
+});
+
+test('gate: a stale sdks/.hermesv1version blocks, its absence does not', async () => {
+  const pins = {pinned: '260318099.0.4', compiler: '260318099.0.4'};
+  const stale = await evaluate(['hermesConsistent'], baseState({hermes: {...pins, v1Tag: 'hermes-v260318099.0.2'}}), {});
+  assert.equal(stale.passed, false);
+  assert.match(stale.results[0].detail, /\.hermesv1version=hermes-v260318099\.0\.2/);
+  const current = await evaluate(['hermesConsistent'], baseState({hermes: {...pins, v1Tag: 'hermes-v260318099.0.4'}}), {});
+  assert.equal(current.passed, true);
+  const absent = await evaluate(['hermesConsistent'], baseState({hermes: {...pins, v1Tag: null}}), {});
+  assert.equal(absent.passed, true, 'a branch without the file predates it');
+});
+
+test('fixture: the .hermesv1version drift already present at rc.2 is caught', async () => {
+  const state = await deriveState(fixtureSources(FIXTURE), {series: '0.88', today: '2026-09-22'});
+  assert.equal(state.hermes.v1Tag, 'hermes-v260318099.0.2');
+  const ev = await evaluate(['hermesConsistent'], state, {});
+  assert.equal(ev.passed, false, 'rc.2 pinned .0.3 while from-source builds checked out .0.2');
+});
+
+// ------------------------------------------------- npm reads fail loudly
+
+test('npm: only a 404 means unpublished, an unreachable registry throws', () => {
+  assert.equal(npmVersionStatus('200', 'react-native@0.88.1'), true);
+  assert.equal(npmVersionStatus('404\n', 'react-native@0.88.1'), false);
+  assert.throws(() => npmVersionStatus('000', 'react-native@0.88.1'), /npm answered 000/);
+  assert.throws(() => npmVersionStatus('503', 'react-native@0.88.1'), /npm answered 503/);
+  assert.throws(() => npmVersionStatus('', 'react-native@0.88.1'), /npm answered nothing/);
+});
+
+test('npm: an empty or broken package document throws instead of reading as no versions', () => {
+  assert.deepEqual(Object.keys(parseNpmDocument('{"versions":{"0.88.0":{}},"dist-tags":{"latest":"0.88.0"}}', 'react-native').versions), ['0.88.0']);
+  assert.throws(() => parseNpmDocument('', 'react-native'), /could not read react-native/);
+  assert.throws(() => parseNpmDocument('<html>503</html>', 'react-native'), /could not read react-native/);
+  assert.throws(() => parseNpmDocument('{"error":"Not found"}', 'react-native'), /could not read react-native/);
 });
 
 // ------------------------------------------------- failure classification
@@ -1824,6 +1859,8 @@ test('fixture: rc dry-run reaches publish once gates are clear, executing nothin
     openPicks: [],
     pickCandidates: [],
     hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
+    // The recorded branch had a stale .hermesv1version; that is asserted on its own.
+    hermes: {...derived.hermes, v1Tag: `hermes-v${derived.hermes.pinned}`},
     // Same reason as the CI normalisation above: this asserts the plan shape,
     // not whether the recorded branch happened to have picks on it.
     schedule: {...derived.schedule, sinceLastRc: {count: 2, from: '0.88.0-rc.0'}},
@@ -1851,6 +1888,7 @@ test('golden plan: rc phase step order is stable', async () => {
     breakingCommits: [],
     staleRed: [],
     hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
+    hermes: {...state.hermes, v1Tag: `hermes-v${state.hermes.pinned}`},
     ci: [{workflow: 'Test All', conclusion: 'success', status: 'completed', failedJobs: []}],
     schedule: {...state.schedule, sinceLastRc: {count: 2, from: '0.88.0-rc.0'}},
   };
@@ -2566,7 +2604,13 @@ test('a recorded Hermes decision does not carry into the next release', async ()
   const {loadHermesException} = await import('../scripts/release-state.mjs');
   const acked = ['a2200396a42', 'c2834a81138'];
   assert.ok(loadHermesException('0.88', acked, '0.88.0'), 'applies to the release it was taken for');
-  assert.equal(loadHermesException('0.88', acked, '0.88.1'), null, 'a patch re-asks');
+  // The patch may carry its own entry (0.88.1 does, for a different commit), but
+  // none of the 0.88.0 decision's commits are acknowledged by it.
+  const next = loadHermesException('0.88', acked, '0.88.1');
+  assert.ok(
+    next === null || acked.every(sha => next.unacknowledged.includes(sha)),
+    'a patch re-asks: the 0.88.0 decision covers none of its commits',
+  );
 });
 
 test('a backport PR against the release branch is assessed, not blocked', async () => {

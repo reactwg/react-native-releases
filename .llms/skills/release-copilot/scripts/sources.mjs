@@ -64,7 +64,48 @@ async function npmVersionExists(pkg, version) {
     ['-s', '-o', '/dev/null', '-w', '%{http_code}', `https://registry.npmjs.org/${pkg}/${version}?t=${Date.now()}`],
     {allowFail: true},
   );
-  return out.trim() === '200';
+  return npmVersionStatus(out, `${pkg}@${version}`);
+}
+
+/**
+ * Only a 404 means "not published". Anything else that is not a 200, including
+ * curl's `000` when the registry cannot be reached at all, is an unknown and
+ * throws. On 0.88.1 an unreachable registry read as "nothing published", so the
+ * copilot proposed a branch cut for 0.88.0-rc.0 on a series that had shipped.
+ */
+export function npmVersionStatus(httpCode, what) {
+  const code = String(httpCode ?? '').trim();
+  if (code === '200') {
+    return true;
+  }
+  if (code === '404') {
+    return false;
+  }
+  throw new Error(
+    `npm answered ${code || 'nothing'} for ${what}, so whether it is published is unknown. ` +
+      'Check that registry.npmjs.org is reachable (doctor checks it) and re-run.',
+  );
+}
+
+/**
+ * The full package document, or a throw. An empty or unparseable answer used to
+ * become `{}`, which every caller read as a package with no versions and no
+ * dist-tags.
+ */
+export function parseNpmDocument(raw, pkg) {
+  const doc = parseJSON(raw, null);
+  if (!doc || typeof doc !== 'object' || typeof doc.versions !== 'object' || doc.versions === null) {
+    throw new Error(
+      `could not read ${pkg} from the npm registry. Every version would look unpublished, so stopping. ` +
+        'Check that registry.npmjs.org is reachable (doctor checks it) and re-run.',
+    );
+  }
+  return doc;
+}
+
+async function npmDocument(pkg) {
+  const raw = await sh('curl', ['-s', '-f', `https://registry.npmjs.org/${pkg}?t=${Date.now()}`], {allowFail: true});
+  return parseNpmDocument(raw, pkg);
 }
 
 /**
@@ -83,29 +124,23 @@ export function liveSources() {
     kind: 'live',
 
     async npmDistTags(pkg) {
-      const raw = await sh('curl', ['-s', `https://registry.npmjs.org/${pkg}?t=${Date.now()}`], {allowFail: true});
-      const doc = parseJSON(raw, {});
-      return doc['dist-tags'] ?? {};
+      return (await npmDocument(pkg))['dist-tags'] ?? {};
     },
 
     async npmVersions(pkg) {
-      const raw = await sh('curl', ['-s', `https://registry.npmjs.org/${pkg}?t=${Date.now()}`], {allowFail: true});
-      const doc = parseJSON(raw, {});
-      return Object.keys(doc.versions ?? {});
+      return Object.keys((await npmDocument(pkg)).versions);
     },
 
     npmVersionExists,
 
     async npmPublishTimes(pkg) {
-      const raw = await sh('curl', ['-s', `https://registry.npmjs.org/${pkg}?t=${Date.now()}`], {allowFail: true});
-      const doc = parseJSON(raw, {});
-      return doc.time ?? {};
+      return (await npmDocument(pkg)).time ?? {};
     },
 
+    // No allowFail on the two git reads: a failed ls-remote returned no tags and
+    // no branch, which reads as a series that was never released.
     async gitTags() {
-      const raw = await sh('git', ['ls-remote', '--tags', `https://github.com/${RN_REPO}.git`], {
-        allowFail: true,
-      });
+      const raw = await sh('git', ['ls-remote', '--tags', `https://github.com/${RN_REPO}.git`]);
       return raw
         .split('\n')
         .map(l => l.split('refs/tags/')[1])
@@ -114,11 +149,7 @@ export function liveSources() {
     },
 
     async branchTip(branch) {
-      const raw = await sh(
-        'git',
-        ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branch}`],
-        {allowFail: true},
-      );
+      const raw = await sh('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branch}`]);
       const sha = raw.split(/\s+/)[0];
       return sha || null;
     },

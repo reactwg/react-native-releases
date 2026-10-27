@@ -480,13 +480,22 @@ export const gates = {
   },
 
   hermesConsistent(state) {
-    const {pinned, compiler} = state.hermes;
+    const {pinned, compiler, v1Tag} = state.hermes;
     if (!pinned || !compiler) {
       return FAIL(`could not read Hermes pins (version.properties=${pinned}, package.json=${compiler})`);
     }
-    return pinned === compiler
-      ? PASS(`Hermes pinned consistently at ${pinned}`)
-      : FAIL(`Hermes mismatch: version.properties=${pinned} but package.json=${compiler}`);
+    if (pinned !== compiler) {
+      return FAIL(`Hermes mismatch: version.properties=${pinned} but package.json=${compiler}`);
+    }
+    // sdks/.hermesv1version is the tag from-source builds check out. A branch
+    // without the file predates it, so its absence is not a mismatch.
+    if (v1Tag != null && v1Tag !== `hermes-v${pinned}`) {
+      return FAIL(
+        `Hermes mismatch: sdks/.hermesv1version=${v1Tag} but the pin is ${pinned}. ` +
+          `Builds of Hermes from source would check out ${v1Tag}. Set it to hermes-v${pinned} in the pin commit.`,
+      );
+    }
+    return PASS(`Hermes pinned consistently at ${pinned}`);
   },
 
   /**
