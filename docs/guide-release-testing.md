@@ -13,7 +13,7 @@
 > npx rn-release-automator@latest test-release --version 0.85.0-rc.0
 > ```
 >
-> It only requires manual testing for RC0, RC1, RC4, and stable (and will tell you when testing is optional). Use the sections below (**What to test?** / **How to test?**) for what to exercise. The manual setup steps are collapsed just below.
+> Only RC0, RC1 and the golden RC (usually RC4) are manually tested, as the [release process](./guide-release-process.md) says. Stable releases and patches are not. The CLI (0.1.7) still says stable releases require testing, so skip it there. Use the sections below (**What to test?** / **How to test?**) for what to exercise. The manual setup steps are collapsed just below.
 
 <details>
   <summary><b>Manual steps</b> — set up and run the test matrix by hand</summary>
