@@ -58,6 +58,24 @@
       "reviewedBy": "fabriziocucci",
       "reviewedOn": "2026-10-15",
       "shipOn": "0.88.0 on 260318099.0.4"
+    },
+    {
+      "series": "0.88",
+      "version": "0.88.1",
+      "pinned": "hermes-v260318099.0.5",
+      "branch": "260318099.0.0-stable",
+      "decision": "ship 0.88.1 on 260318099.0.5, do not cut 260318099.0.6",
+      "reason": "59b3d7fd4be landed after 260318099.0.5 was cut. It is a build-configuration change, not a fix: it turns HERMES_IS_MOBILE_BUILD on for iOS and tvOS Apple builds, which today build with it off because build-apple-framework.sh only passes HERMES_APPLE_TARGET_PLATFORM. On iOS that changes Hermes fatal errors from SIGABRT to SIGSEGV (the deliberate null write before abort, which changes how crash reporters group them), compiles out the JSX, Flow and TypeScript runtime parser and drops the runtime CLI flags and JIT logging. No 0.88 issue needs it, and it would change every iOS app's Hermes in a patch release.",
+      "acknowledged": [
+        {
+          "sha": "59b3d7fd4be",
+          "subject": "Graft \"[SH] Default HERMES_IS_MOBILE_BUILD to ON for iOS/tvOS Apple builds\" to shermes/stable"
+        }
+      ],
+      "carryTo": "the next 260318099 release. The version bump to 260318099.0.6 already landed (#2273), so hermesReadyToCut is satisfied whenever the next cut is wanted.",
+      "reviewedBy": "cipolleschi",
+      "reviewedOn": "2026-10-27",
+      "shipOn": "0.88.1 on 260318099.0.5"
     }
   ]
 }
