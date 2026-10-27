@@ -1214,6 +1214,15 @@ test('the rc phase verifies a fresh app builds on the published version', async 
   assert.match(a.args[0], /verify-template\.mjs$/);
 });
 
+test('status message: a run link before the tag means the release being cut, not the last one', async () => {
+  const {messageVersion} = await import('../scripts/release-message.mjs');
+  const inFlight = {current: '0.88.0', proposedNext: '0.88.1', tagExistsForNext: false};
+  assert.equal(messageVersion(inFlight), '0.88.0', 'refreshing with no signal describes what is published');
+  assert.equal(messageVersion(inFlight, {run: 'https://github.com/react/react-native/actions/runs/1'}), '0.88.1');
+  assert.equal(messageVersion({...inFlight, tagExistsForNext: true}), '0.88.1', 'the tag wins over a lagging npm');
+  assert.equal(messageVersion(inFlight, {version: '0.88.0', run: 'x'}), '0.88.0', '--version always wins');
+});
+
 test('the announce step emits the announcement rather than naming channels', async () => {
   const {phaseFor} = await import('../scripts/phases.mjs');
   const {buildAnnouncement, ANNOUNCE_CHANNELS} = await import('../scripts/release-message.mjs');

@@ -13,6 +13,7 @@ import {deriveState, summarize} from './release-state.mjs';
 import {runPhase, MODES} from './run-phase.mjs';
 import {
   buildStatusMessage,
+  messageVersion,
   unverifiable,
   publishCaveat,
   upgradeHelperHint,
@@ -103,7 +104,8 @@ async function main() {
   record  --series <x.y> --out <dir>   snapshot live state into a fixture
 
   message --series <x.y>               release-crew Discord status message, ticks derived live
-  message --series <x.y> --run <url>   include the publish run link
+  message --series <x.y> --run <url>   include the publish run link (implies the release being cut)
+  message --series <x.y> --version <v> the message for an explicit version
 
   plan    --series <x.y>               dry run: print every command, execute none
   run     --series <x.y>               guided: describe and confirm every mutating step
@@ -171,19 +173,10 @@ async function main() {
       shape: typeof args.shape === 'string' ? args.shape : undefined,
     });
 
-    // Default to the version already published, since the message is usually
-    // regenerated while that release is in flight rather than before it.
-    //
-    // `current` comes from npm, which lags the publish by minutes. In that
-    // window a tag exists for a version npm has not served yet and defaulting
-    // to `current` produced a message titled for the PREVIOUS release carrying
-    // THIS release's run link. The tag is the earlier and more reliable signal,
-    // so prefer the just-tagged version while npm catches up.
-    const justTagged = state.tagExistsForNext ? state.proposedNext : null;
-    const version =
-      typeof args.version === 'string'
-        ? args.version
-        : (justTagged ?? state.current ?? state.proposedNext);
+    const version = messageVersion(state, {
+      version: typeof args.version === 'string' ? args.version : undefined,
+      run: typeof args.run === 'string' ? args.run : undefined,
+    });
     const versions = await sources.npmVersions('react-native');
     const parsed = parseVersion(version);
     const earlier = versions

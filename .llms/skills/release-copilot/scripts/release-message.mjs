@@ -113,6 +113,32 @@ export function buildStatusMessage(state, {version, artifacts, publishRunUrl}) {
 const isDotZero = v => /^\d+\.\d+\.0$/.test(v ?? '');
 
 /**
+ * Which release the status message describes.
+ *
+ * Default to the version already published, since the message is usually
+ * regenerated while that release is in flight rather than before it.
+ *
+ * `current` comes from npm, which lags the publish by minutes. In that window a
+ * tag exists for a version npm has not served yet and defaulting to `current`
+ * produced a message titled for the PREVIOUS release carrying THIS release's
+ * run link. The tag is the earlier and more reliable signal, so prefer the
+ * just-tagged version while npm catches up.
+ *
+ * Before the tag exists there is no signal at all, and on 0.88.1 the message
+ * came out titled 0.88.0 with 0.88.0's ticks while 0.88.1 was being cut. A run
+ * link only exists for the release being cut, so passing one implies it.
+ */
+export function messageVersion(state, {version, run} = {}) {
+  if (version) {
+    return version;
+  }
+  if (state.tagExistsForNext || run) {
+    return state.proposedNext;
+  }
+  return state.current ?? state.proposedNext;
+}
+
+/**
  * Nothing outstanding for THIS version. A pick aimed elsewhere is a decision,
  * not an open item: 0.88.0 shipped with four picks deferred to 0.88.1 and the
  * tick stayed pending because it only counted open issues.
