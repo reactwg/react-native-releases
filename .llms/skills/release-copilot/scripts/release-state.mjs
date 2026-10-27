@@ -280,6 +280,11 @@ export function requiresManualTesting(state, version) {
 
 const HERMES_VERSION_FILE = 'packages/react-native/sdks/hermes-engine/version.properties';
 const RN_PACKAGE_JSON = 'packages/react-native/package.json';
+// The tag a from-source Hermes build checks out (CocoaPods build-from-tag and
+// the Android source build). It ships in the npm package, so a stale value
+// builds old Hermes for anyone compiling it: 0.88's stayed on .0.2 while the
+// other two pins moved to .0.3 and .0.4.
+const HERMES_V1_TAG_FILE = 'packages/react-native/sdks/.hermesv1version';
 
 export function loadSchedule() {
   return JSON.parse(readFileSync(SCHEDULE_PATH, 'utf8'));
@@ -552,6 +557,8 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
       /* leave null, the gate will flag it */
     }
   }
+  const hermesV1Raw = await sources.fileAt(branch, HERMES_V1_TAG_FILE);
+  const hermesV1Tag = hermesV1Raw ? hermesV1Raw.trim() || null : null;
 
   // Baseline for "is this breaking change NEW in this series".
   //
@@ -803,7 +810,7 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
       });
     })(),
     board,
-    hermes: {pinned: hermesPinned, compiler: hermesCompiler},
+    hermes: {pinned: hermesPinned, compiler: hermesCompiler, v1Tag: hermesV1Tag},
     hermesUnreleased,
     // A recorded decision not to cut Hermes for this series. Null when there
     // is none, which is the normal case.

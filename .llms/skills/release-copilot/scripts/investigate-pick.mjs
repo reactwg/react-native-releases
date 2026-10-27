@@ -46,7 +46,8 @@ const quote = (text, re) => {
 
 /** What the request says the change is. Regression first: it is the strongest claim. */
 export function claimedKind(text) {
-  if (/\bregress(ion|ed)?\b/i.test(text)) {
+  // "Add regression tests" is not a claim that something regressed (#1461).
+  if (/\bregress(ion|ed)?\b(?!\s+tests?\b)/i.test(text)) {
     return 'regression';
   }
   if (/^\W*\[[\d.]+\]\s*docs?\b|\bdocs?(\(|:)|\bdocumentation\b/i.test(text)) {
@@ -96,8 +97,12 @@ const CONTRADICTS = {
   feature: [],
 };
 
+// How a port says it is not the commit on main. The last three cover requests
+// that explain the conflict instead (#1462: "A plain cherry-pick conflicts in
+// generate-spm-autolinking.js, because main uses a helper from a later PR that
+// is not on 0.88-stable. The port PR resolves that conflict.").
 const ADMITS_DIVERGENCE =
-  /not a plain cherry-pick|differs? from (the commit on )?main|adapted (for|to)|reviewed version of|instead of the commit on main|without .{0,40} from main/i;
+  /not a plain cherry-pick|differs? from (the commit on )?main|adapted (for|to)|reviewed version of|instead of the commit on main|without .{0,40} from main|(plain|straight|clean) cherry-pick (conflicts|does not apply)|resolves? (that|the|this) conflict|\bnot on `?\d+\.\d+-stable\b/i;
 const CLAIMS_LANDED = /\b(landed|merged)\b[^.\n]{0,40}\b(in|into|to|on)\s+`?main\b|already landed|merged to `?main/i;
 const CLAIMS_TEST = /\b(adds?|added|with|includes?)\s+(a\s+|new\s+)*(regression\s+|unit\s+)?tests?\b/i;
 const ASKS_CONSUMERS =

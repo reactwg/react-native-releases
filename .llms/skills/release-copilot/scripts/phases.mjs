@@ -42,6 +42,17 @@ export function announceWhere(atMeta) {
 }
 const HERMES = 'facebook/hermes';
 
+/**
+ * The tarballs the iOS prebuild (prebuild_react_native_core) downloads for a
+ * Hermes version. They come from repo.reactnative.dev, not Maven Central, and
+ * appear there later, so a pin pushed as soon as Maven has the artifact fails
+ * every iOS slice with a 404.
+ */
+export function hermesIosTarballUrls(version) {
+  const base = `https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/${version}`;
+  return ['debug', 'release'].map(b => `${base}/hermes-ios-${version}-hermes-ios-${b}.tar.gz`);
+}
+
 const triggerCreateRelease = (state, ctx) =>
   declare({
     step: 'publish',
@@ -708,10 +719,19 @@ export const PHASES = {
               cmd: 'curl',
               args: ['-s', `https://registry.npmjs.org/hermes-compiler?t=${Date.now()}`],
             }),
+            ...hermesIosTarballUrls(v).map(url =>
+              declare({
+                step: 'hermes-verify-tag',
+                mutates: false,
+                why: `confirm the iOS prebuild can download ${url.split('/').pop()}`,
+                cmd: 'curl',
+                args: ['-s', '-I', '-L', '-o', '/dev/null', '-w', '%{http_code}\\n', url],
+              }),
+            ),
           ];
         },
         note:
-          'Check the tag CONTAINS the commits you expect, not just that it exists. hermes-v260318099.0.2 was tagged eight hours before a crash fix was backed out and shipped the bad version anyway. Use `git merge-base --is-ancestor <sha> hermes-v<version>`.',
+          'Check the tag CONTAINS the commits you expect, not just that it exists. hermes-v260318099.0.2 was tagged eight hours before a crash fix was backed out and shipped the bad version anyway. Use `git merge-base --is-ancestor <sha> hermes-v<version>`. Do not pin until both iOS tarballs answer 200: the iOS prebuild downloads them from repo.reactnative.dev, which lags Maven Central. The 260318099.0.5 pin landed about 30 minutes after the Maven publish and all six iOS prebuild slices failed with 404.',
       },
       {
         id: 'hermes-pin',
@@ -723,14 +743,15 @@ export const PHASES = {
           return [
             declare({
               step: 'hermes-pin',
-              why: `bump the two Hermes pins on ${state.branch} to ${v}`,
+              why: `bump the three Hermes pins on ${state.branch} to ${v}`,
               cmd: 'echo',
               args: [
-                `edit packages/react-native/sdks/hermes-engine/version.properties and packages/react-native/package.json to ${v}, then commit`,
+                `edit packages/react-native/sdks/hermes-engine/version.properties and packages/react-native/package.json to ${v}, and packages/react-native/sdks/.hermesv1version to hermes-v${v} (no trailing newline), then commit`,
               ],
               impact: [
                 `changes which Hermes ${state.branch} consumes, from ${state.hermes?.pinned ?? '?'} to ${v}`,
-                'both files must agree or the hermesConsistent gate fails',
+                '.hermesv1version is the tag from-source builds check out; the .0.3 and .0.4 bumps missed it',
+                'all three must agree or the hermesConsistent gate fails',
               ],
               reversible: 'yes before pushing',
             }),

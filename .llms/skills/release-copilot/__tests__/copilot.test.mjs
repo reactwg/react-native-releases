@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
-import {fixtureSources} from '../scripts/sources.mjs';
+import {fixtureSources, npmVersionStatus, parseNpmDocument} from '../scripts/sources.mjs';
 import {deriveState} from '../scripts/release-state.mjs';
 import {evaluate, classifyFailure, hasBreakingTag} from '../scripts/gates.mjs';
 import {declare, render, Runner, MODES} from '../scripts/actions.mjs';
@@ -99,6 +99,41 @@ test('gate: mismatched Hermes pins block', async () => {
     {},
   );
   assert.equal(ev.passed, false);
+});
+
+test('gate: a stale sdks/.hermesv1version blocks, its absence does not', async () => {
+  const pins = {pinned: '260318099.0.4', compiler: '260318099.0.4'};
+  const stale = await evaluate(['hermesConsistent'], baseState({hermes: {...pins, v1Tag: 'hermes-v260318099.0.2'}}), {});
+  assert.equal(stale.passed, false);
+  assert.match(stale.results[0].detail, /\.hermesv1version=hermes-v260318099\.0\.2/);
+  const current = await evaluate(['hermesConsistent'], baseState({hermes: {...pins, v1Tag: 'hermes-v260318099.0.4'}}), {});
+  assert.equal(current.passed, true);
+  const absent = await evaluate(['hermesConsistent'], baseState({hermes: {...pins, v1Tag: null}}), {});
+  assert.equal(absent.passed, true, 'a branch without the file predates it');
+});
+
+test('fixture: the .hermesv1version drift already present at rc.2 is caught', async () => {
+  const state = await deriveState(fixtureSources(FIXTURE), {series: '0.88', today: '2026-09-22'});
+  assert.equal(state.hermes.v1Tag, 'hermes-v260318099.0.2');
+  const ev = await evaluate(['hermesConsistent'], state, {});
+  assert.equal(ev.passed, false, 'rc.2 pinned .0.3 while from-source builds checked out .0.2');
+});
+
+// ------------------------------------------------- npm reads fail loudly
+
+test('npm: only a 404 means unpublished, an unreachable registry throws', () => {
+  assert.equal(npmVersionStatus('200', 'react-native@0.88.1'), true);
+  assert.equal(npmVersionStatus('404\n', 'react-native@0.88.1'), false);
+  assert.throws(() => npmVersionStatus('000', 'react-native@0.88.1'), /npm answered 000/);
+  assert.throws(() => npmVersionStatus('503', 'react-native@0.88.1'), /npm answered 503/);
+  assert.throws(() => npmVersionStatus('', 'react-native@0.88.1'), /npm answered nothing/);
+});
+
+test('npm: an empty or broken package document throws instead of reading as no versions', () => {
+  assert.deepEqual(Object.keys(parseNpmDocument('{"versions":{"0.88.0":{}},"dist-tags":{"latest":"0.88.0"}}', 'react-native').versions), ['0.88.0']);
+  assert.throws(() => parseNpmDocument('', 'react-native'), /could not read react-native/);
+  assert.throws(() => parseNpmDocument('<html>503</html>', 'react-native'), /could not read react-native/);
+  assert.throws(() => parseNpmDocument('{"error":"Not found"}', 'react-native'), /could not read react-native/);
 });
 
 // ------------------------------------------------- failure classification
@@ -1179,6 +1214,15 @@ test('the rc phase verifies a fresh app builds on the published version', async 
   assert.match(a.args[0], /verify-template\.mjs$/);
 });
 
+test('status message: a run link before the tag means the release being cut, not the last one', async () => {
+  const {messageVersion} = await import('../scripts/release-message.mjs');
+  const inFlight = {current: '0.88.0', proposedNext: '0.88.1', tagExistsForNext: false};
+  assert.equal(messageVersion(inFlight), '0.88.0', 'refreshing with no signal describes what is published');
+  assert.equal(messageVersion(inFlight, {run: 'https://github.com/react/react-native/actions/runs/1'}), '0.88.1');
+  assert.equal(messageVersion({...inFlight, tagExistsForNext: true}), '0.88.1', 'the tag wins over a lagging npm');
+  assert.equal(messageVersion(inFlight, {version: '0.88.0', run: 'x'}), '0.88.0', '--version always wins');
+});
+
 test('the announce step emits the announcement rather than naming channels', async () => {
   const {phaseFor} = await import('../scripts/phases.mjs');
   const {buildAnnouncement, ANNOUNCE_CHANNELS} = await import('../scripts/release-message.mjs');
@@ -1824,6 +1868,8 @@ test('fixture: rc dry-run reaches publish once gates are clear, executing nothin
     openPicks: [],
     pickCandidates: [],
     hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
+    // The recorded branch had a stale .hermesv1version; that is asserted on its own.
+    hermes: {...derived.hermes, v1Tag: `hermes-v${derived.hermes.pinned}`},
     // Same reason as the CI normalisation above: this asserts the plan shape,
     // not whether the recorded branch happened to have picks on it.
     schedule: {...derived.schedule, sinceLastRc: {count: 2, from: '0.88.0-rc.0'}},
@@ -1851,6 +1897,7 @@ test('golden plan: rc phase step order is stable', async () => {
     breakingCommits: [],
     staleRed: [],
     hermesUnreleased: {branch: 'x-stable', tag: 'hermes-vx', resolved: true, commits: []},
+    hermes: {...state.hermes, v1Tag: `hermes-v${state.hermes.pinned}`},
     ci: [{workflow: 'Test All', conclusion: 'success', status: 'completed', failedJobs: []}],
     schedule: {...state.schedule, sinceLastRc: {count: 2, from: '0.88.0-rc.0'}},
   };
@@ -2566,7 +2613,13 @@ test('a recorded Hermes decision does not carry into the next release', async ()
   const {loadHermesException} = await import('../scripts/release-state.mjs');
   const acked = ['a2200396a42', 'c2834a81138'];
   assert.ok(loadHermesException('0.88', acked, '0.88.0'), 'applies to the release it was taken for');
-  assert.equal(loadHermesException('0.88', acked, '0.88.1'), null, 'a patch re-asks');
+  // The patch may carry its own entry (0.88.1 does, for a different commit), but
+  // none of the 0.88.0 decision's commits are acknowledged by it.
+  const next = loadHermesException('0.88', acked, '0.88.1');
+  assert.ok(
+    next === null || acked.every(sha => next.unacknowledged.includes(sha)),
+    'a patch re-asks: the 0.88.0 decision covers none of its commits',
+  );
 });
 
 test('a backport PR against the release branch is assessed, not blocked', async () => {
@@ -2911,6 +2964,21 @@ test('a port that differs from main must say so', async () => {
   assert.match(find(r, 'fidelity')[0].text, /not a plain cherry-pick/);
 });
 
+test('a port that explains its conflict says why it differs (#1462)', async () => {
+  const {checkPick, CONFIRMED} = await inv();
+  const diverged = {fidelity: [{own: 'abe1c5f0411', main: '4bba13d4197', same: false, onlyOwn: [], onlyMain: [], differing: [{f: 'generate-spm-autolinking.js', own: '+16/-90', main: '+16/-93'}]}]};
+  const told = swiftpmPick({description: 'This is a port PR against `0.88-stable` of #59365, which already landed in main. A plain cherry-pick conflicts in `generate-spm-autolinking.js`, because main uses a helper from a later PR that is not on 0.88-stable. The port PR resolves that conflict.'}, diverged);
+  assert.equal(find(checkPick(told.c, told.ev, st(), {today: '2026-10-26'}), 'fidelity')[0].status, CONFIRMED);
+});
+
+test('"regression tests" is not a regression claim (#1461), a regression still is', async () => {
+  const {claimedKind} = await inv();
+  assert.notEqual(claimedKind('[0.88] Add regression tests for the iOS SwiftPM tooling'), 'regression');
+  assert.notEqual(claimedKind('[0.88] Add a regression test'), 'regression');
+  assert.equal(claimedKind('[0.88] Fix a regression in Text measurement since 0.87'), 'regression');
+  assert.equal(claimedKind('Text regressed in 0.88'), 'regression');
+});
+
 test('reverted on main, too fresh, or followed up: each is said, not hidden', async () => {
   const {checkPick, CONTRADICTED, FLAG} = await inv();
   const {c, ev} = swiftpmPick({}, {mainCommits: [mainCommit({
@@ -3123,4 +3191,47 @@ test('manual testing: only RC0, RC1 and the golden RC, never a .0 or a patch', a
   const ev = await evaluate(['manualTestingDone'], patch, {});
   assert.equal(ev.passed, true);
   assert.match(ev.results[0].detail, /0\.88\.1 needs no manual testing/);
+});
+
+// ------------------------------------------------- template verification output
+
+test('verify-template: Node fetch is told to use the proxy, an explicit setting wins', async () => {
+  const {childEnv} = await import('../scripts/verify-template.mjs');
+  assert.equal(childEnv({HTTPS_PROXY: 'http://localhost:10054'}).NODE_USE_ENV_PROXY, '1');
+  assert.equal(childEnv({https_proxy: 'http://localhost:10054'}).NODE_USE_ENV_PROXY, '1');
+  assert.equal(childEnv({HTTPS_PROXY: 'http://x', NODE_USE_ENV_PROXY: '0'}).NODE_USE_ENV_PROXY, '0');
+  assert.equal(childEnv({PATH: '/usr/bin'}).NODE_USE_ENV_PROXY, undefined, 'no proxy, nothing to change');
+});
+
+test('verify-template: a Gradle failure shows "What went wrong", not the daemon log tail', async () => {
+  const {failureDetail} = await import('../scripts/verify-template.mjs');
+  const gradle = [
+    'FAILURE: Build failed with an exception.',
+    '* What went wrong:',
+    'Could not connect to the Gradle daemon.',
+    'Daemon uid: dff24c5f with diagnostics:',
+    '* Try:',
+    '> Run with --stacktrace option to get the stack trace.',
+    ...Array.from({length: 20}, (_, i) => `2026-10-27T16:50:56.88${i}+0000 [DEBUG] daemon is running. Sleeping until state changes.`),
+  ].join('\n');
+  const d = failureDetail(gradle);
+  assert.match(d, /Could not connect to the Gradle daemon/);
+  assert.doesNotMatch(d, /\[DEBUG\]|\* Try/);
+  assert.equal(failureDetail('a\nb\nerror: something broke'), 'a\nb\nerror: something broke', 'no Gradle section, keep the tail');
+});
+
+test('hermes-verify-tag checks the iOS tarballs the prebuild downloads, and the pin names all three files', async () => {
+  const {phaseFor, hermesIosTarballUrls} = await import('../scripts/phases.mjs');
+  assert.deepEqual(hermesIosTarballUrls('260318099.0.5'), [
+    'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-debug.tar.gz',
+    'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-release.tar.gz',
+  ]);
+  const steps = phaseFor('hermes-release').steps;
+  const state = baseState({hermesUnreleased: {inTreeVersion: '260318099.0.5', commits: []}});
+  const verify = steps.find(s => s.id === 'hermes-verify-tag').actions(state);
+  for (const url of hermesIosTarballUrls('260318099.0.5')) {
+    assert.ok(verify.some(a => a.args.includes(url)), `verify-tag should check ${url}`);
+  }
+  const pin = steps.find(s => s.id === 'hermes-pin').actions(state)[0];
+  assert.match(pin.args[0], /\.hermesv1version to hermes-v260318099\.0\.5/);
 });

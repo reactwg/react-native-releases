@@ -25,12 +25,23 @@ import {tmpdir} from 'node:os';
 
 const exec = promisify(execFile);
 
+/**
+ * Node's built-in fetch ignores HTTPS_PROXY unless NODE_USE_ENV_PROXY is set.
+ * Behind a proxy that made `init` fail in seconds with "fetch failed" on 0.88.1
+ * while npm and curl, which honour the proxy, worked. An explicit value wins.
+ */
+export function childEnv(env = process.env) {
+  const proxied = env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
+  return proxied && env.NODE_USE_ENV_PROXY === undefined ? {...env, NODE_USE_ENV_PROXY: '1'} : env;
+}
+
 async function run(cmd, args, opts = {}) {
   const started = Date.now();
   try {
     const {stdout, stderr} = await exec(cmd, args, {
       maxBuffer: 64 * 1024 * 1024,
       ...opts,
+      env: childEnv(opts.env ?? process.env),
     });
     return {ok: true, out: stdout + stderr, secs: Math.round((Date.now() - started) / 1000)};
   } catch (err) {
@@ -114,7 +125,7 @@ export async function verifyTemplate(version, {iosOnly = false, androidOnly = fa
   const app = join(root, 'TemplateCheck');
   const results = [];
   const note = (step, r, extra = '') =>
-    results.push({step, ok: r.ok, secs: r.secs, detail: extra || (r.ok ? '' : lastLines(r.out))});
+    results.push({step, ok: r.ok, secs: r.secs, detail: extra || (r.ok ? '' : failureDetail(r.out))});
 
   log(`Verifying the ${version} template in ${root}`);
   log('');
@@ -262,6 +273,25 @@ export async function verifyTemplate(version, {iosOnly = false, androidOnly = fa
 
 function lastLines(s, n = 12) {
   return String(s).trim().split('\n').slice(-n).join('\n');
+}
+
+/**
+ * What to show for a failed step. Gradle ends every failure with daemon log
+ * lines and a "* Try:" footer, so the last lines alone showed nothing on
+ * 0.88.1. Its "What went wrong" section is the error, so prefer that.
+ */
+export function failureDetail(out) {
+  const lines = String(out ?? '').split('\n');
+  const start = lines.findIndex(l => /^\* What went wrong:/.test(l.trim()));
+  if (start === -1) {
+    return lastLines(out);
+  }
+  const rest = lines.slice(start);
+  const end = rest.findIndex((l, i) => i > 0 && /^\* (Try|Exception is|Get more help):?/.test(l.trim()));
+  return rest
+    .slice(0, end === -1 ? 25 : Math.min(end, 25))
+    .join('\n')
+    .trim();
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

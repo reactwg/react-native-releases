@@ -320,7 +320,7 @@ is in `scripts/gates.mjs` and `reference/field-notes.md` rather than repeated he
 | `rcHasContent` | an RC with nothing in it: the previous RC was golden, promote instead |
 | `noBreakingChanges` | new `[BREAKING]` commits in a non-breaking series or a truncated scan |
 | `picksNotBreaking` | an open pick is annotated breaking or touches a watched surface |
-| `hermesConsistent` | the two Hermes pin files disagree |
+| `hermesConsistent` | the three Hermes pin files disagree |
 | `hermesCurrent` | the pinned Hermes tag is behind its branch |
 | `hermesReadyToCut` | the Hermes branch still names a published version, which would re-cut it |
 | `mainResolved` | a branch cut has no resolved SHA for main |
