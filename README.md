@@ -15,13 +15,17 @@ Please refer to the official [Support Policy](https://github.com/reactwg/react-n
 ## Running a React Native Release
 
 > [!TIP]
-> The recommended way to run a release is the **[`rn-release-automator` CLI](./docs/guide-release-cli.md)**. It walks you through every phase with interactive prompts and pre-flight checks:
+> The recommended way to run a release is the **release copilot**, a Claude Code skill in this repo. It works out where the release stands, stops at anything that isn't ready and asks you to confirm every step that publishes or pushes. Start Claude Code in this repo on your own machine, with Node 22:
 >
 > ```sh
-> npx rn-release-automator@latest
+> cd react-native-releases
+> nvm use 22
+> claude
 > ```
 >
-> Every guide below leads with the relevant CLI command and keeps the manual steps in collapsible sections. Always run mutating commands with `--dry-run` first — see the [Release CLI guide](./docs/guide-release-cli.md) to get started.
+> Then ask it, for example, "check my environment" or "plan the next 0.89 release". The first launch asks whether to trust the folder. Say yes, otherwise Claude Code ignores the project settings. See the [copilot's SKILL.md](./.llms/skills/release-copilot/SKILL.md) for what it does.
+>
+> To run a release without an agent, use the [`rn-release-automator` CLI](./docs/guide-release-cli.md) and the guides below. Every guide leads with the relevant CLI command and keeps the manual steps in collapsible sections. Always run mutating commands with `--dry-run` first.
 
 React Native releases are run by a group of volunteers called the **Release Crew**.
 In those docs you can find clarification about the roles of the various members of the Release Crew:
@@ -33,7 +37,7 @@ In those docs you can find clarification about the roles of the various members 
 
 In those docs instead you can find step-by-step guides on how to run a React Native release
 
-- [Guide: Release CLI (`rn-release-automator`)](./docs/guide-release-cli.md) — **start here**
+- [Guide: Release CLI (`rn-release-automator`)](./docs/guide-release-cli.md)
 - [Guide: Running a Release](./docs/guide-release-process.md)
 - [Guide: Release Candidates](./docs/guide-release-candidate.md)
   - [How to setup a new release project](./docs/guide-release-project-setup.md)
