@@ -29,6 +29,7 @@ export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, atMe
   log('');
 
   const stopped = [];
+  const skipped = [];
 
   for (const [i, step] of phase.steps.entries()) {
     log('-'.repeat(72));
@@ -55,7 +56,8 @@ export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, atMe
         log('');
         log(`STOP: gate failure in "${step.title}". Not proceeding.`);
         stopped.push({step: step.id, failures: ev.results.filter(r => !r.ok)});
-        return {phase: phase.id, plan: runner.plan(), stopped, completed: false};
+        logSkipped(skipped, log);
+        return {phase: phase.id, plan: runner.plan(), stopped, skipped, completed: false};
       }
     }
 
@@ -80,6 +82,11 @@ export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, atMe
     for (const action of step.actions(state, ctx)) {
       const res = await runner.run(action);
 
+      if (res?.skipped === 'declined' && action.skippable) {
+        skipped.push({step: step.id, why: action.why, command: action});
+        break;
+      }
+
       // Declining is a decision not to do the release, not a decision to skip
       // one command. Later steps assume the earlier ones happened: after
       // declining a Hermes cut, the run offered to pin the release branch to a
@@ -92,7 +99,8 @@ export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, atMe
           declined: true,
           failures: [{gate: 'declined', detail: action.why}],
         });
-        return {phase: phase.id, plan: runner.plan(), stopped, completed: false};
+        logSkipped(skipped, log);
+        return {phase: phase.id, plan: runner.plan(), stopped, skipped, completed: false};
       }
     }
 
@@ -101,7 +109,19 @@ export async function runPhase(state, {mode, shape, ctx = {}, confirm, cwd, atMe
 
   log('-'.repeat(72));
   log(runner.isDryRun ? 'Dry run complete. Nothing was executed.' : 'Phase complete.');
-  return {phase: phase.id, plan: runner.plan(), stopped, completed: true};
+  logSkipped(skipped, log);
+  return {phase: phase.id, plan: runner.plan(), stopped, skipped, completed: true};
+}
+
+function logSkipped(skipped, log) {
+  if (!skipped.length) {
+    return;
+  }
+  log('');
+  log('Skipped, still to do:');
+  for (const s of skipped) {
+    log(`  - ${s.step}: ${s.why}`);
+  }
 }
 
 export {MODES};

@@ -60,6 +60,10 @@ export function declare(spec) {
     reversible: spec.reversible ?? null,
     confirmToken: spec.confirmToken ?? null,
     metaOnly: spec.metaOnly === true,
+    // Nothing later depends on it, so declining skips it rather than ending
+    // the run. The cut's nightly was broken and declining it stopped the run
+    // before the publish.
+    skippable: spec.skippable === true,
     verify: spec.verify ?? null,
   };
 }
@@ -90,6 +94,9 @@ export function describe(action) {
   }
   if (action.reversible) {
     L.push(`    undo:     ${action.reversible}`);
+  }
+  if (action.skippable) {
+    L.push('    skip:     declining skips only this. The run carries on and lists it at the end as still to do');
   }
   return L.join('\n');
 }
@@ -177,7 +184,7 @@ export class Runner {
       this.log(describe(action));
       const ok = await this.confirm(action);
       if (!ok) {
-        this.log(`  declined, stopping this step.`);
+        this.log(action.skippable ? '  declined, skipping it.' : '  declined, stopping this step.');
         this.declined.push(action);
         return {skipped: 'declined'};
       }
@@ -223,6 +230,7 @@ export class Runner {
       metaOnly: a.metaOnly,
       impact: a.impact,
       confirmToken: a.confirmToken,
+      skippable: a.skippable,
     }));
   }
 }

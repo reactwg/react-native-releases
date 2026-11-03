@@ -6,7 +6,8 @@
  * release. The cost is a handful of API calls at startup.
  */
 
-import {readFileSync} from 'node:fs';
+import {readFileSync, writeFileSync, mkdirSync} from 'node:fs';
+import {homedir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {
@@ -28,6 +29,79 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const SCHEDULE_PATH = join(HERE, '..', 'reference', 'schedule.json');
 const EXCEPTIONS_PATH = join(HERE, '..', 'reference', 'breaking-exceptions.json');
 const HERMES_EXCEPTIONS_PATH = join(HERE, '..', 'reference', 'hermes-exceptions.json');
+
+/**
+ * Where the copilot keeps decisions the captain takes during a release. A
+ * "ship this RC on the current Hermes" call is the captain's for that run, so
+ * it is local state, not a PR to the repo. The repo file keeps the history.
+ */
+export function copilotStateDir() {
+  if (process.env.RELEASE_COPILOT_STATE_DIR) {
+    return process.env.RELEASE_COPILOT_STATE_DIR;
+  }
+  return process.platform === 'darwin'
+    ? join(homedir(), 'Library', 'Application Support', 'release-copilot')
+    : join(homedir(), '.local', 'state', 'release-copilot');
+}
+
+export const localHermesDecisionsPath = () => join(copilotStateDir(), 'hermes-decisions.json');
+
+function readExceptions(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8')).exceptions ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** The repo's history plus the captain's local decisions. Local wins for the same release. */
+export function hermesExceptions() {
+  const local = readExceptions(localHermesDecisionsPath());
+  const key = e => `${e.series}@${e.version}`;
+  const overridden = new Set(local.map(key));
+  return [...readExceptions(HERMES_EXCEPTIONS_PATH).filter(e => !overridden.has(key(e))), ...local];
+}
+
+/**
+ * The decision to ship a release on the Hermes it already pins. It acknowledges
+ * exactly the commits that are unreleased right now, so a commit landing later
+ * is not covered and the gate asks again.
+ */
+export function hermesSkipEntry(state, {reason, reviewedBy, today}) {
+  const h = state.hermesUnreleased;
+  if (!h?.resolved) {
+    throw new Error('the Hermes branch could not be compared, so there is nothing to acknowledge');
+  }
+  const payload = (h.commits ?? []).filter(c => !c.versionBump);
+  if (!payload.length) {
+    throw new Error(`nothing on ${h.branch} is ahead of ${h.tag}, so no decision is needed`);
+  }
+  if (!reason || !String(reason).trim()) {
+    throw new Error('say why this release ships without those commits');
+  }
+  const pinned = state.hermes?.pinned;
+  return {
+    series: state.series,
+    version: state.proposedNext,
+    pinned: h.tag,
+    branch: h.branch,
+    decision: `ship ${state.proposedNext} on ${pinned}, do not cut ${h.inTreeVersion ?? 'Hermes'}`,
+    shipOn: `${state.proposedNext} on ${pinned}`,
+    reviewedBy,
+    reviewedOn: today,
+    reason: String(reason).trim(),
+    acknowledged: payload.map(c => ({sha: c.sha, subject: c.subject})),
+  };
+}
+
+/** Records (or replaces) the local decision for one release. */
+export function recordHermesDecision(entry) {
+  const path = localHermesDecisionsPath();
+  const rest = readExceptions(path).filter(e => !(e.series === entry.series && e.version === entry.version));
+  mkdirSync(dirname(path), {recursive: true});
+  writeFileSync(path, JSON.stringify({exceptions: [...rest, entry]}, null, 2) + '\n');
+  return path;
+}
 const PICK_DEFERRALS_PATH = join(HERE, '..', 'reference', 'pick-deferrals.json');
 
 export function loadBreakingExceptions(series) {
@@ -103,8 +177,7 @@ export function notPickedFor(issue, version) {
 /** Decisions taken for other releases of the series, shown as context only. */
 export function hermesPriorDecisions(series, payloadShas, version) {
   try {
-    const d = JSON.parse(readFileSync(HERMES_EXCEPTIONS_PATH, 'utf8'));
-    return (d.exceptions ?? [])
+    return hermesExceptions()
       .filter(e => e.series === series && e.version !== version)
       .map(e => {
         const ack = (e.acknowledged ?? []).map(a => a.sha);
@@ -128,13 +201,7 @@ export function hermesPriorDecisions(series, payloadShas, version) {
  * whether the next patch should ship the same fixes.
  */
 export function loadHermesException(series, payloadShas, version) {
-  let entry;
-  try {
-    const d = JSON.parse(readFileSync(HERMES_EXCEPTIONS_PATH, 'utf8'));
-    entry = (d.exceptions ?? []).find(e => e.series === series && e.version === version);
-  } catch {
-    return null;
-  }
+  const entry = hermesExceptions().find(e => e.series === series && e.version === version);
   if (!entry) {
     return null;
   }

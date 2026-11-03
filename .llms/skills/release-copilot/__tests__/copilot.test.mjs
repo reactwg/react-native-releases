@@ -7,15 +7,18 @@
  */
 
 import {test} from 'node:test';
+import {mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
 import {fixtureSources, npmVersionStatus, parseNpmDocument} from '../scripts/sources.mjs';
-import {deriveState} from '../scripts/release-state.mjs';
+import {deriveState, hermesSkipEntry, recordHermesDecision, loadHermesException, hermesExceptions} from '../scripts/release-state.mjs';
 import {evaluate, classifyFailure, hasBreakingTag} from '../scripts/gates.mjs';
 import {declare, render, Runner, MODES} from '../scripts/actions.mjs';
 import {runPhase} from '../scripts/run-phase.mjs';
+import {PHASES} from '../scripts/phases.mjs';
 import {parseVersion, nextRC, promoteToStable, releaseShape, formatVersion} from '../scripts/version.mjs';
 import {
   loadSpec as loadReleaseSpec,
@@ -28,6 +31,9 @@ import {
   RUN_ROOT as RELEASE_TEST_ROOT,
 } from '../scripts/release-test.mjs';
 import {existsSync as existsSyncNode} from 'node:fs';
+
+// The copilot's local decisions are the captain's, not test input.
+process.env.RELEASE_COPILOT_STATE_DIR = mkdtempSync(join(tmpdir(), 'release-copilot-state-'));
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, '..', 'fixtures', '0.88-rc2-published');
@@ -3418,4 +3424,88 @@ test('state: the test report is looked up only for a version that needs testing'
   void testReport;
   const s = await deriveState(noReport, {series: '0.88', today: '2026-10-25'});
   assert.equal(s.testReport, null, 'a source without testReport reads as no report');
+});
+
+// ---------------------------------------------------------- local Hermes decisions
+
+const hermesState = over =>
+  baseState({
+    series: '0.89',
+    branch: '0.89-stable',
+    proposedNext: '0.89.0-rc.0',
+    hermes: {pinned: '260318099.0.6', compiler: '260318099.0.6'},
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.6',
+      resolved: true,
+      inTreeVersion: '260318099.0.7',
+      commits: [
+        {sha: 'f289631444e', subject: 'shermes stable + staging intl-java-impl: strict (2 targets)'},
+        {sha: 'aaaaaaaaaaa', subject: 'Bump hermes-compiler version to 260318099.0.7', versionBump: true},
+      ],
+    },
+    ...over,
+  });
+
+test('hermes-skip: acknowledges exactly the unreleased payload, not the version bump', () => {
+  const e = hermesSkipEntry(hermesState(), {reason: 'Java warnings cleanup only', reviewedBy: 'fabriziocucci', today: '2026-11-03'});
+  assert.equal(e.version, '0.89.0-rc.0');
+  assert.equal(e.decision, 'ship 0.89.0-rc.0 on 260318099.0.6, do not cut 260318099.0.7');
+  assert.deepEqual(e.acknowledged.map(a => a.sha), ['f289631444e']);
+  assert.equal(e.reviewedBy, 'fabriziocucci');
+  assert.throws(() => hermesSkipEntry(hermesState(), {reason: ' '}), /say why/);
+  const nothing = hermesState({hermesUnreleased: {...hermesState().hermesUnreleased, commits: [hermesState().hermesUnreleased.commits[1]]}});
+  assert.throws(() => hermesSkipEntry(nothing, {reason: 'x'}), /no decision is needed/);
+});
+
+test('hermes-skip: the decision is local state, read back by the gate, and replaced not duplicated', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rc-state-'));
+  const prev = process.env.RELEASE_COPILOT_STATE_DIR;
+  process.env.RELEASE_COPILOT_STATE_DIR = dir;
+  try {
+    assert.equal(loadHermesException('0.89', ['f289631444e'], '0.89.0-rc.0'), null);
+    const first = hermesSkipEntry(hermesState(), {reason: 'first', reviewedBy: 'a', today: '2026-11-03'});
+    const path = recordHermesDecision(first);
+    assert.ok(path.startsWith(dir), 'written under the state dir, not the repo');
+    recordHermesDecision({...first, reason: 'second'});
+    const ex = loadHermesException('0.89', ['f289631444e'], '0.89.0-rc.0');
+    assert.equal(ex.reason, 'second');
+    assert.deepEqual(ex.unacknowledged, []);
+    assert.equal(hermesExceptions().filter(e => e.version === '0.89.0-rc.0').length, 1);
+    assert.deepEqual(loadHermesException('0.89', ['f289631444e', 'bbbbbbbbbbb'], '0.89.0-rc.0').unacknowledged, ['bbbbbbbbbbb'], 'a later commit is not covered');
+    assert.ok(hermesExceptions().some(e => e.version === '0.88.0'), 'the repo history is still read');
+  } finally {
+    process.env.RELEASE_COPILOT_STATE_DIR = prev;
+  }
+});
+
+// ---------------------------------------------------------- skippable actions
+
+const skipPhaseState = () => baseState({});
+
+test('runner: declining a skippable action carries on and lists it, a normal one still stops', async () => {
+  const phase = {
+    id: 'x',
+    title: 'x',
+    steps: [
+      {id: 'side', title: 'side', gates: [], actions: () => [declare({step: 'side', why: 'side job', cmd: 'true', args: [], impact: ['x'], skippable: true}), declare({step: 'side', why: 'side follow-up', cmd: 'true', args: [], impact: ['x']})]},
+      {id: 'main', title: 'main', gates: [], actions: () => [declare({step: 'main', why: 'main job', cmd: 'true', args: [], impact: ['x']})]},
+    ],
+  };
+  PHASES.__skiptest = phase;
+  try {
+    const seen = [];
+    const logs = [];
+    const r = await runPhase(skipPhaseState(), {mode: MODES.GUIDED, shape: '__skiptest', confirm: async a => (seen.push(a.why), a.why === 'main job'), log: l => logs.push(l)});
+    assert.equal(r.completed, true);
+    assert.deepEqual(seen, ['side job', 'main job'], 'the rest of the skipped step is skipped too, the next step runs');
+    assert.deepEqual(r.skipped.map(s => s.step), ['side']);
+    assert.ok(logs.some(l => /Skipped, still to do/.test(l)));
+
+    const stop = await runPhase(skipPhaseState(), {mode: MODES.GUIDED, shape: '__skiptest', confirm: async a => a.why === 'side job', log: () => {}});
+    assert.equal(stop.completed, false, 'declining a non-skippable action still stops the run');
+    assert.equal(stop.stopped[0].step, 'side');
+  } finally {
+    delete PHASES.__skiptest;
+  }
 });

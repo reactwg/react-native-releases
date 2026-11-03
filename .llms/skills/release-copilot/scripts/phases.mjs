@@ -146,7 +146,7 @@ const hermesDecisionStep = {
       `  To cut: run \`plan --shape hermes-release\`. It cuts ${h.inTreeVersion ?? 'the next version'}, verifies the tag and pins it on ${state.branch}. Re-run this plan once the pin is on the branch.`,
     );
     L.push(
-      `  Not to cut: add an entry for version ${state.proposedNext} to reference/hermes-exceptions.json with the reason and the commits it acknowledges.`,
+      `  Not to cut: node scripts/cli.mjs hermes-skip --series ${state.series} --reason "<why>". It records the decision in the copilot's local state and acknowledges exactly these commits.`,
     );
     L.push('  Settle it before the artifacts build: a pin bump after the test pass means testing again.');
     return L.join('\n');
