@@ -76,6 +76,24 @@
       "reviewedBy": "cipolleschi",
       "reviewedOn": "2026-10-27",
       "shipOn": "0.88.1 on 260318099.0.5"
+    },
+    {
+      "series": "0.89",
+      "version": "0.89.0-rc.0",
+      "pinned": "hermes-v260318099.0.6",
+      "branch": "260318099.0.0-stable",
+      "decision": "ship 0.89.0-rc.0 on 260318099.0.6, cut 260318099.0.7 for rc.1",
+      "shipOn": "0.89.0-rc.0 on 260318099.0.6",
+      "carryTo": "260318099.0.7, cut for 0.89.0-rc.1. The bump to 260318099.0.7 is open as meta/hermes#2282, and hermesReadyToCut needs it merged first.",
+      "reviewedBy": "fabriziocucci",
+      "reviewedOn": "2026-11-03",
+      "reason": "f289631444e landed on 2026-11-02 after 260318099.0.6 was tagged. It only cleans up Java warnings for Meta's internal warnings-as-errors build (serialVersionUID fields, ILocaleObject<?>, a redundant cast, two methods made final) and changes nothing at runtime. RC0 was tested on 260318099.0.6 (#1498), so re-cutting Hermes now would mean new artifacts and a new test pass for no behaviour change. It goes out with 260318099.0.7 in rc.1.",
+      "acknowledged": [
+        {
+          "sha": "f289631444e",
+          "subject": "shermes stable + staging intl-java-impl: strict (2 targets)"
+        }
+      ]
     }
   ]
 }
