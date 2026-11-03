@@ -21,7 +21,7 @@ const SURFACES_PATH = join(HERE, '..', 'reference', 'surfaces.json');
 
 const RN_REPO = 'react/react-native';
 const RN_URL = `https://github.com/${RN_REPO}.git`;
-const HERMES_URL = 'https://github.com/facebook/hermes.git';
+const HERMES_URL = 'https://github.com/meta/hermes.git';
 const RELEASES_REPO = 'reactwg/react-native-releases';
 
 function git(cwd, args, {input} = {}) {

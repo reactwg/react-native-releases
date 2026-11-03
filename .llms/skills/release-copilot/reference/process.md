@@ -88,5 +88,5 @@ place as steps land. The publish step prints it for you.
 ## Prerequisites
 
 Write access to `react/react-native`, `react-native-community/template`,
-`facebook/hermes` and `reactwg/react-native-releases`. Plus `gh auth login`, and
+`meta/hermes` and `reactwg/react-native-releases`. Plus `gh auth login`, and
 `gh auth refresh -s read:project,project` for the board.

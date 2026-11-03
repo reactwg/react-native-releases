@@ -60,7 +60,7 @@ So the file must already name the version you want before you dispatch. Dispatch
 while it still names the released version re-cuts that version. Check it first:
 
 ```sh
-curl -s https://raw.githubusercontent.com/facebook/hermes/<branch>/npm/hermes-compiler/package.json \
+curl -s https://raw.githubusercontent.com/meta/hermes/<branch>/npm/hermes-compiler/package.json \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"
 ```
 
@@ -77,14 +77,14 @@ feature branch pushes fine; only the stable ref is protected.
 
 ### The PR has to be imported before anyone can stamp it
 
-Opening the PR is not enough. A `facebook/hermes` PR is reviewed as a Phabricator
+Opening the PR is not enough. A `meta/hermes` PR is reviewed as a Phabricator
 diff and the import is what puts **rn-oss** and **Hermes** on it as reviewers. Until
 that happens there is nobody who can accept it, so it just sits.
 
 Check the `Import Status` row on the PR:
 
 ```sh
-gh pr view <n> --repo facebook/hermes --json statusCheckRollup \
+gh pr view <n> --repo meta/hermes --json statusCheckRollup \
   --jq '.statusCheckRollup[] | select(.name|test("Import";"i")) | "\(.name): \(.state // .conclusion)  \(.detailsUrl // .targetUrl)"'
 ```
 
@@ -126,7 +126,7 @@ Workflow: **RN Build Static Hermes** (`rn-build-hermes.yml`), dispatched on the
 Hermes stable branch.
 
 ```sh
-gh workflow run "RN Build Static Hermes" --repo facebook/hermes \
+gh workflow run "RN Build Static Hermes" --repo meta/hermes \
   --ref 260318099.0.0-stable \
   -f release-type=release \
   -f update-latest-v1=true

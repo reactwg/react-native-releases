@@ -36,7 +36,7 @@ async function run(cmd, args) {
 export const REPOS = [
   {slug: 'react/react-native', why: 'the release branch and tags'},
   {slug: 'react-native-community/template', why: 'the matching template branch (branch cut)'},
-  {slug: 'facebook/hermes', why: 'Hermes release branches and tags'},
+  {slug: 'meta/hermes', why: 'Hermes release branches and tags'},
   {slug: 'reactwg/react-native-releases', why: 'pick requests, test reports, the project board'},
 ];
 
@@ -337,7 +337,7 @@ export async function runDoctor({checkout, hermesCheckout} = {}) {
   const hermes = resolveHermesCheckout(hermesCheckout);
 
   const rnCheck = await checkCheckout(rnCheckout);
-  const hermesCheck = await checkCheckout(hermes, {repo: 'facebook/hermes', env: 'HERMES_CHECKOUT', flag: '--hermes-checkout'});
+  const hermesCheck = await checkCheckout(hermes, {repo: 'meta/hermes', env: 'HERMES_CHECKOUT', flag: '--hermes-checkout'});
   const checks = [
     {name: 'node >= 22.11', ...(await checkNode())},
     {name: 'gh authenticated', ...(await checkGh())},

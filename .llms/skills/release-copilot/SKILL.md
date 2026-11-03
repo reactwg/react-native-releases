@@ -433,7 +433,7 @@ changelog diff also needs Meta tooling, but that step runs no commands at all, s
 is a note rather than a flag. See `reference/changelog.md`.
 
 The **Hermes cut is not in that list**. It is `gh workflow run` against
-`facebook/hermes`, so it needs dispatch access to that repo rather than a Meta
+`meta/hermes`, so it needs dispatch access to that repo rather than a Meta
 machine and `doctor` checks exactly that. Run it through `plan --shape hermes-release`.
 
 ## Status

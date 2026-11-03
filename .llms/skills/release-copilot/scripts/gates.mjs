@@ -351,10 +351,18 @@ export const gates = {
       return FAIL('could not determine whether the pinned Hermes tag is current');
     }
     if (!h.resolved) {
-      return FAIL(`could not compare ${h.tag} against ${h.branch} on facebook/hermes`);
+      return FAIL(`could not compare ${h.tag} against ${h.branch} on meta/hermes`);
     }
     // Version bumps are plumbing for the next cut, not work awaiting release.
     const payload = h.commits.filter(c => !c.versionBump);
+    // A newer Hermes is already released and the branch does not pin it. That
+    // needs a pin bump whatever the branch carries beyond it.
+    if (h.pinBehind) {
+      return FAIL(
+        `${state.branch} pins ${h.pinned} but ${h.latestReleased} is already released. Pin ${h.latestReleased}, or cut a new release if the ` +
+          `${payload.length} commit(s) beyond it are needed.`,
+      );
+    }
     if (payload.length === 0) {
       const bumps = h.commits.length - payload.length;
       return PASS(
@@ -371,7 +379,7 @@ export const gates = {
     if (ex && ex.unacknowledged.length === 0) {
       return PASS(
         `${payload.length} commit(s) ahead of ${h.tag}, deliberately: ${ex.decision}. ` +
-          `Reviewed by ${ex.reviewedBy} on ${ex.reviewedOn}. See reference/hermes-exceptions.json`,
+          `Reviewed by ${ex.reviewedBy} on ${ex.reviewedOn}.`,
       );
     }
     // A partial exception is not an exception. New work landed after the
@@ -387,7 +395,7 @@ export const gates = {
         : '';
     const ho = hermesOverview(h, state.hermesEvidence);
     return FAIL(
-      `${payload.length} commit(s) on ${h.branch} are not in the pinned ${h.tag} (${ho.tally}): ` +
+      `${payload.length} commit(s) on ${h.branch} are not in the latest release ${h.tag} (${ho.tally}): ` +
         ho.commits.map(c => `[${c.kind}${c.fromBody ? ', from its description' : ''}] ${c.sha} ${c.subject}${c.note ? ` (${c.note})` : ''}`).join('; ') +
         (relands.length
           ? `. ${relands.length} of these RE-LAND a previously backed-out change, which needs a human decision before pinning.`
@@ -505,6 +513,40 @@ export const gates = {
           ? `, ${relands.length} of which RE-LAND a previously backed-out change and need a decision`
           : ''),
     );
+  },
+
+  /**
+   * Whether a dispatch would publish at all. A guard naming the old repo gives
+   * a green run that tagged and published nothing, and a repository.url that
+   * names another repo fails npm's provenance check at the very end.
+   */
+  hermesPublishable(state) {
+    const h = state.hermesUnreleased;
+    if (!h?.resolved) {
+      return FAIL('could not read the Hermes branch, so whether a dispatch would publish is unknown');
+    }
+    if (h.hostRepo == null || h.workflowGuards == null) {
+      return PASS('repo checks not available from this source');
+    }
+    const problems = [];
+    const wrong = [...new Set(h.workflowGuards.filter(r => r !== h.hostRepo))];
+    if (!h.workflowGuards.length) {
+      problems.push(`rn-build-hermes.yml on ${h.branch} has no repository guard to check, read it before dispatching`);
+    }
+    if (wrong.length) {
+      problems.push(
+        `rn-build-hermes.yml on ${h.branch} only publishes when github.repository == '${wrong.join("' or '")}', but the workflow runs in ${h.hostRepo}. ` +
+          'The run would go green and skip set_release_type, create-tag, build_android and publish. Land a fix on the branch first',
+      );
+    }
+    if (!h.repositoryUrl || !h.repositoryUrl.toLowerCase().includes(`github.com/${h.hostRepo.toLowerCase()}`)) {
+      problems.push(
+        `npm/hermes-compiler/package.json repository.url is ${h.repositoryUrl ?? 'missing'}, not ${h.hostRepo}. npm rejects a provenance publish whose repository does not match`,
+      );
+    }
+    return problems.length
+      ? FAIL(problems.join('. ') + '. npm\'s trusted publisher must also name this repo, which cannot be read from here: check it on npmjs.com.')
+      : PASS(`${h.branch} publishes from ${h.hostRepo}: the workflow guard and repository.url both name it`);
   },
 
   hermesConsistent(state) {

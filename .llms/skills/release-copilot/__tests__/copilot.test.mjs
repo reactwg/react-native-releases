@@ -31,6 +31,7 @@ import {
   RUN_ROOT as RELEASE_TEST_ROOT,
 } from '../scripts/release-test.mjs';
 import {existsSync as existsSyncNode} from 'node:fs';
+import {judgeRun, pinContents, judgePin, PIN_FILES, iosTarballUrls as hermesIosTarballUrls} from '../scripts/hermes-release.mjs';
 
 // The copilot's local decisions are the captain's, not test input.
 process.env.RELEASE_COPILOT_STATE_DIR = mkdtempSync(join(tmpdir(), 'release-copilot-state-'));
@@ -3237,20 +3238,62 @@ test('verify-template: a Gradle failure shows "What went wrong", not the daemon 
   assert.equal(failureDetail('a\nb\nerror: something broke'), 'a\nb\nerror: something broke', 'no Gradle section, keep the tail');
 });
 
-test('hermes-verify-tag checks the iOS tarballs the prebuild downloads, and the pin names all three files', async () => {
-  const {phaseFor, hermesIosTarballUrls} = await import('../scripts/phases.mjs');
+test('hermes phase: wait, verify, pin, push and next bump all go through hermes-release.mjs', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
   assert.deepEqual(hermesIosTarballUrls('260318099.0.5'), [
     'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-debug.tar.gz',
     'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-release.tar.gz',
   ]);
   const steps = phaseFor('hermes-release').steps;
-  const state = baseState({hermesUnreleased: {inTreeVersion: '260318099.0.5', commits: []}});
-  const verify = steps.find(s => s.id === 'hermes-verify-tag').actions(state);
-  for (const url of hermesIosTarballUrls('260318099.0.5')) {
-    assert.ok(verify.some(a => a.args.includes(url)), `verify-tag should check ${url}`);
+  assert.deepEqual(steps.map(s => s.id), ['hermes-preflight', 'hermes-cut', 'hermes-monitor', 'hermes-verify-tag', 'hermes-pin', 'hermes-push', 'hermes-next-bump'], 'pin and push before the optional next bump');
+  assert.ok(steps[0].gates.includes('hermesPublishable'));
+  const state = baseState({branch: '0.89-stable', hermesUnreleased: {branch: '260318099.0.0-stable', inTreeVersion: '260318099.0.5', commits: []}});
+  const one = (id, ctx = {}) => steps.find(s => s.id === id).actions(state, ctx)[0];
+  const tail = a => a.args.slice(1).join(' ');
+  assert.equal(one('hermes-cut').args[4], 'meta/hermes');
+  assert.equal(tail(one('hermes-monitor')), 'wait 260318099.0.5 --branch 260318099.0.0-stable');
+  assert.equal(one('hermes-monitor').mutates, false);
+  assert.equal(tail(one('hermes-verify-tag')), 'verify 260318099.0.5 --branch 260318099.0.0-stable --wait 120');
+  assert.match(tail(one('hermes-verify-tag', {hermesLatestV1: false})), /--no-latest-v1$/);
+  assert.equal(tail(one('hermes-pin')), 'pin 0.89-stable 260318099.0.5');
+  const push = one('hermes-push');
+  assert.equal(tail(push), 'push 0.89-stable 260318099.0.5');
+  assert.equal(push.confirmToken, '0.89-stable');
+  const bump = one('hermes-next-bump');
+  assert.equal(tail(bump), 'next-bump 260318099.0.0-stable 260318099.0.5 260318099.0.6');
+  assert.equal(bump.skippable, true, 'the next bump does not block the pin');
+  for (const a of [one('hermes-monitor'), one('hermes-verify-tag'), one('hermes-pin'), push, bump]) {
+    assert.match(a.args[0], /hermes-release\.mjs$/);
   }
-  const pin = steps.find(s => s.id === 'hermes-pin').actions(state)[0];
-  assert.match(pin.args[0], /\.hermesv1version to hermes-v260318099\.0\.5/);
+});
+
+test('hermes: a green run whose publishing jobs were skipped is not a release', () => {
+  const job = (name, conclusion = 'success') => ({name, conclusion});
+  const base = {databaseId: 1, status: 'completed', conclusion: 'success', url: 'u'};
+  // The first 260318099.0.6 dispatch (41490254955), after the repo moved to meta/hermes.
+  const dry = judgeRun({...base, jobs: [job('build_hermesc_linux / build-hermesc-linux'), job('set_release_type', 'skipped'), job('create-tag', 'skipped'), job('build_android', 'skipped'), job('publish', 'skipped')]});
+  assert.equal(dry.ok, false);
+  assert.match(dry.detail, /green but published nothing: set_release_type=skipped, create-tag=skipped, build_android=skipped, publish=skipped/);
+  // The real one (41524889130): reusable-workflow jobs are named "<id> / <inner>".
+  const real = judgeRun({...base, jobs: [job('set_release_type'), job('build_android / build-android'), job('create-tag / publish'), job('publish')]});
+  assert.equal(real.ok, true);
+  assert.equal(judgeRun({...base, status: 'in_progress'}).done, false);
+  assert.equal(judgeRun({...base, conclusion: 'failure'}).ok, false);
+});
+
+test('hermes: the pin reproduces the 260318099.0.6 commit and the push refuses anything else', () => {
+  const before = {properties: 'HERMES_VERSION_NAME=260318099.0.2\nHERMES_V1_VERSION_NAME=x\n', packageJson: '{\n  "dependencies": {\n    "hermes-compiler": "0.0.0",\n    "x": "1"\n  }\n}\n'};
+  const c = pinContents(before, '260318099.0.6');
+  assert.equal(c.properties, 'HERMES_VERSION_NAME=260318099.0.6\nHERMES_V1_VERSION_NAME=x\n');
+  assert.match(c.packageJson, /"hermes-compiler": "260318099\.0\.6"/);
+  assert.match(c.packageJson, /"x": "1"/);
+  assert.equal(c.tag, 'hermes-v260318099.0.6', 'no trailing newline');
+  const ok = {parent: 'a'.repeat(40), remoteTip: 'a'.repeat(40), changed: Object.values(PIN_FILES), contents: c, version: '260318099.0.6'};
+  assert.deepEqual(judgePin(ok), []);
+  assert.match(judgePin({...ok, remoteTip: 'b'.repeat(40)}).join(), /branch is now at bbbbbbbbbbb/);
+  assert.match(judgePin({...ok, changed: [...ok.changed, 'packages/rn-tester/Podfile.lock']}).join(), /not exactly the three pin files/);
+  assert.match(judgePin({...ok, contents: {...c, tag: 'hermes-v260318099.0.6\n'}}).join(), /without a newline/);
+  assert.match(judgePin({...ok, version: '260318099.0.7'}).join(), /does not name 260318099\.0\.7/);
 });
 
 // ---------------------------------------------------------- release test pass
@@ -3512,4 +3555,30 @@ test('runner: declining a skippable action carries on and lists it, a normal one
   } finally {
     delete PHASES.__skiptest;
   }
+});
+
+test('gate: hermesPublishable catches a workflow guard or repository.url naming the old repo', async () => {
+  const h = over => baseState({hermesUnreleased: {branch: '260318099.0.0-stable', tag: 't', resolved: true, commits: [], hostRepo: 'meta/hermes', workflowGuards: ['meta/hermes'], repositoryUrl: 'git+ssh://git@github.com/meta/hermes.git', ...over}});
+  const ok = await evaluate(['hermesPublishable'], h({}), {});
+  assert.equal(ok.passed, true, ok.results[0].detail);
+  const guard = await evaluate(['hermesPublishable'], h({workflowGuards: ['facebook/hermes']}), {});
+  assert.equal(guard.passed, false);
+  assert.match(guard.results[0].detail, /github\.repository == 'facebook\/hermes', but the workflow runs in meta\/hermes/);
+  const url = await evaluate(['hermesPublishable'], h({repositoryUrl: 'git+ssh://git@github.com/facebook/hermes.git'}), {});
+  assert.equal(url.passed, false);
+  assert.match(url.results[0].detail, /repository\.url is git\+ssh:\/\/git@github\.com\/facebook\/hermes\.git, not meta\/hermes/);
+  assert.match(url.results[0].detail, /trusted publisher/);
+});
+
+test('gate: hermesCurrent fails when a newer Hermes is released but not pinned, counting from that release', async () => {
+  const st = baseState({
+    branch: '0.89-stable',
+    hermesUnreleased: {branch: '260318099.0.0-stable', tag: 'hermes-v260318099.0.5', resolved: true, pinned: '260318099.0.2', latestReleased: '260318099.0.5', pinBehind: true, commits: [{sha: 'aaa', subject: 'x'}]},
+  });
+  const ev = await evaluate(['hermesCurrent'], st, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /0\.89-stable pins 260318099\.0\.2 but 260318099\.0\.5 is already released/);
+  assert.match(ev.results[0].detail, /the 1 commit\(s\) beyond it/);
+  const current = await evaluate(['hermesCurrent'], baseState({hermesUnreleased: {branch: 'b', tag: 'hermes-v260318099.0.5', resolved: true, pinned: '260318099.0.5', latestReleased: '260318099.0.5', pinBehind: false, commits: [{sha: 'aaa', subject: 'x'}]}}), {});
+  assert.match(current.results[0].detail, /not in the latest release hermes-v260318099\.0\.5/);
 });

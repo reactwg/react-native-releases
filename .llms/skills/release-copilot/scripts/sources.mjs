@@ -18,7 +18,7 @@ const exec = promisify(execFile);
 
 const RN_REPO = 'react/react-native';
 const RELEASES_REPO = 'reactwg/react-native-releases';
-const HERMES_REPO = 'facebook/hermes';
+const HERMES_REPO = 'meta/hermes';
 const PROJECT_OWNER = 'reactwg';
 
 async function sh(cmd, args, {allowFail = false} = {}) {
@@ -282,9 +282,18 @@ export function liveSources() {
       if (!m) {
         return null;
       }
-      const [, line, minor] = m;
+      const [, line, minor, pinPatch] = m;
       const branch = `${line}.${minor}.0-stable`;
-      const tag = `hermes-v${pinnedVersion}`;
+      // Unreleased means not in the LATEST release on this line, not "not in
+      // the pin". At the 0.89 cut the branch pinned .0.2 while .0.5 had shipped,
+      // so comparing from the pin listed 34 commits where 4 were new.
+      const released = Object.keys((await npmDocument('hermes-compiler').catch(() => ({versions: {}}))).versions ?? {})
+        .map(v => new RegExp(`^${line}\\.${minor}\\.(\\d+)$`).exec(v))
+        .filter(Boolean)
+        .map(x => Number(x[1]));
+      const latestPatch = released.length ? Math.max(...released) : Number(pinPatch);
+      const latestReleased = `${line}.${minor}.${Math.max(latestPatch, Number(pinPatch))}`;
+      const tag = `hermes-v${latestReleased}`;
       const raw = await gh([
         'api',
         `repos/${HERMES_REPO}/compare/${tag}...${branch}?per_page=100`,
@@ -303,6 +312,20 @@ export function liveSources() {
       );
       const inTreeVersion = parseJSON(pkgRaw, {}).version ?? null;
 
+      // What decides whether a dispatch publishes anything. After the repo
+      // moved to meta/hermes, the workflow's `github.repository ==
+      // 'facebook/hermes'` guard skipped every publishing job of a green run,
+      // and npm's provenance check needs repository.url to name the repo the
+      // workflow runs in.
+      const hostRepo = (await gh(['api', `repos/${HERMES_REPO}`, '--jq', '.full_name']).catch(() => '')).trim() || null;
+      const workflowRaw = await sh(
+        'curl',
+        ['-s', '-f', `https://raw.githubusercontent.com/${HERMES_REPO}/${branch}/.github/workflows/rn-build-hermes.yml`],
+        {allowFail: true},
+      );
+      const workflowGuards = [...String(workflowRaw ?? '').matchAll(/github\.repository\s*==\s*'([^']+)'/g)].map(x => x[1]);
+      const repositoryUrl = parseJSON(pkgRaw, {}).repository?.url ?? null;
+
       // Can we cut? The question is whether the in-tree version is ALREADY
       // PUBLISHED, not whether it matches what RN pins. Comparing against the
       // RN pin only looked right by coincidence: after cutting .0.4 the branch
@@ -316,6 +339,12 @@ export function liveSources() {
         branch,
         tag,
         resolved: true,
+        pinned: pinnedVersion,
+        latestReleased,
+        pinBehind: latestReleased !== pinnedVersion,
+        hostRepo,
+        workflowGuards,
+        repositoryUrl,
         inTreeVersion,
         inTreePublished,
         wouldRecut: inTreePublished,

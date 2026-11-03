@@ -44,18 +44,8 @@ export function announceWhere(atMeta) {
     ? `Post this to ${discord}. ${slack} is internal to Meta, so ${ask}:`
     : `Post this to ${discord}, and to ${slack} if you work at Meta. If you do not, ${ask}:`;
 }
-const HERMES = 'facebook/hermes';
-
-/**
- * The tarballs the iOS prebuild (prebuild_react_native_core) downloads for a
- * Hermes version. They come from repo.reactnative.dev, not Maven Central, and
- * appear there later, so a pin pushed as soon as Maven has the artifact fails
- * every iOS slice with a 404.
- */
-export function hermesIosTarballUrls(version) {
-  const base = `https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/${version}`;
-  return ['debug', 'release'].map(b => `${base}/hermes-ios-${version}-hermes-ios-${b}.tar.gz`);
-}
+const HERMES = 'meta/hermes';
+const HERMES_RELEASE = join(dirname(fileURLToPath(import.meta.url)), 'hermes-release.mjs');
 
 const triggerCreateRelease = (state, ctx) =>
   declare({
@@ -651,7 +641,7 @@ export const PHASES = {
       {
         id: 'hermes-preflight',
         title: 'Pre-flight the Hermes cut',
-        gates: ['hermesReadyToCut'],
+        gates: ['hermesReadyToCut', 'hermesPublishable'],
         actions: () => [],
         note:
           'RN Build Static Hermes has no version input: it reads npm/hermes-compiler/package.json verbatim. A stale value re-cuts a published version. If a bump PR is needed, remember to import it so rn-oss and Hermes can stamp it. See reference/hermes.md.',
@@ -704,84 +694,47 @@ export const PHASES = {
       },
       {
         id: 'hermes-monitor',
-        title: 'Find the run and watch it',
-        gates: [],
-        actions: () => [
-          declare({
-            step: 'hermes-monitor',
-            mutates: false,
-            why: 'get the dispatched run so you have a link to watch',
-            cmd: 'gh',
-            args: [
-              'run',
-              'list',
-              '--repo',
-              HERMES,
-              '--workflow',
-              'RN Build Static Hermes',
-              '--limit',
-              '1',
-              '--json',
-              'databaseId,status,conclusion,url',
-            ],
-          }),
-        ],
-        note:
-          'The dispatch returns nothing, so the run has to be looked up. It takes a while: the Apple slices and the Android build dominate. Watch with `gh run watch <id> --repo facebook/hermes`.',
-      },
-      {
-        id: 'hermes-verify-tag',
-        title: 'Verify the tag before pinning',
+        title: 'Wait for the run to publish',
         gates: [],
         actions: state => {
           const h = state.hermesUnreleased ?? {};
           const v = h.inTreeVersion ?? 'UNKNOWN';
           return [
             declare({
-              step: 'hermes-verify-tag',
+              step: 'hermes-monitor',
               mutates: false,
-              why: `confirm hermes-v${v} exists on the remote`,
-              cmd: 'git',
-              args: ['ls-remote', '--tags', `https://github.com/${HERMES}.git`, `refs/tags/hermes-v${v}`],
+              why: `wait for the ${v} run to finish and check it really tagged and published`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'wait', v, '--branch', h.branch ?? ''],
             }),
-            declare({
-              step: 'hermes-verify-tag',
-              mutates: false,
-              why: 'confirm the version resolves on npm',
-              cmd: 'curl',
-              args: [
-                '-s',
-                '-o',
-                '/dev/null',
-                '-w',
-                '%{http_code}\\n',
-                `https://registry.npmjs.org/hermes-compiler/${v}?t=${Date.now()}`,
-              ],
-            }),
-            declare({
-              step: 'hermes-verify-tag',
-              mutates: false,
-              why: 'confirm the dist-tags moved as intended',
-              cmd: 'curl',
-              args: ['-s', `https://registry.npmjs.org/hermes-compiler?t=${Date.now()}`],
-            }),
-            ...hermesIosTarballUrls(v).map(url =>
-              declare({
-                step: 'hermes-verify-tag',
-                mutates: false,
-                why: `confirm the iOS prebuild can download ${url.split('/').pop()}`,
-                cmd: 'curl',
-                args: ['-s', '-I', '-L', '-o', '/dev/null', '-w', '%{http_code}\\n', url],
-              }),
-            ),
           ];
         },
         note:
-          'Check the tag CONTAINS the commits you expect, not just that it exists. hermes-v260318099.0.2 was tagged eight hours before a crash fix was backed out and shipped the bad version anyway. Use `git merge-base --is-ancestor <sha> hermes-v<version>`. Do not pin until both iOS tarballs answer 200: the iOS prebuild downloads them from repo.reactnative.dev, which lags Maven Central. The 260318099.0.5 pin landed about 30 minutes after the Maven publish and all six iOS prebuild slices failed with 404.',
+          'This waits for the whole run, about an hour, and prints when it finishes. A green run is not enough: the first 260318099.0.6 dispatch went green with set_release_type, create-tag, build_android and publish all skipped, because the workflow still checked for facebook/hermes. It also checks the tag is the commit the run built.',
+      },
+      {
+        id: 'hermes-verify-tag',
+        title: 'Verify the release before pinning',
+        gates: [],
+        actions: (state, ctx) => {
+          const h = state.hermesUnreleased ?? {};
+          const v = h.inTreeVersion ?? 'UNKNOWN';
+          return [
+            declare({
+              step: 'hermes-verify-tag',
+              mutates: false,
+              why: `check the tag, npm, latest-v1 and both iOS tarballs for ${v}, waiting up to two hours for the CDN`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'verify', v, '--branch', h.branch ?? '', '--wait', '120', ...(ctx.hermesLatestV1 === false ? ['--no-latest-v1'] : [])],
+            }),
+          ];
+        },
+        note:
+          'Do not pin until this passes. The iOS prebuild downloads the tarballs from repo.reactnative.dev, which lags Maven Central and can keep serving a 404 or an error page for hours: for 260318099.0.6 they only matched their published checksums the next morning. The check downloads both and compares the sha1, so a 200 with the wrong bytes does not pass.',
       },
       {
         id: 'hermes-pin',
-        title: 'Pin the new Hermes into the release branch',
+        title: 'Commit the pin for the release branch',
         gates: [],
         actions: state => {
           const h = state.hermesUnreleased ?? {};
@@ -789,26 +742,48 @@ export const PHASES = {
           return [
             declare({
               step: 'hermes-pin',
-              why: `bump the three Hermes pins on ${state.branch} to ${v}`,
-              cmd: 'echo',
-              args: [
-                `edit packages/react-native/sdks/hermes-engine/version.properties and packages/react-native/package.json to ${v}, and packages/react-native/sdks/.hermesv1version to hermes-v${v} (no trailing newline), then commit`,
-              ],
+              why: `commit the three Hermes pins for ${state.branch} at ${v}`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'pin', state.branch, v],
               impact: [
-                `changes which Hermes ${state.branch} consumes, from ${state.hermes?.pinned ?? '?'} to ${v}`,
-                '.hermesv1version is the tag from-source builds check out; the .0.3 and .0.4 bumps missed it',
-                'all three must agree or the hermesConsistent gate fails',
+                `commits "Bump Hermes to ${v}" on top of ${state.branch} in a throwaway worktree under ~/Library/Caches/release-copilot/hermes-pin, not in your checkout`,
+                'sets version.properties, the hermes-compiler dependency and .hermesv1version (no trailing newline), the same three files as the 260318099.0.6 pin',
+                'pushes nothing',
               ],
-              reversible: 'yes before pushing',
+              reversible: 'yes, nothing leaves your machine until the push step',
             }),
           ];
         },
         note:
-          'Do not hand-commit packages/rn-tester/Podfile.lock. publish-npm.yml regenerates it and a hand-written bump just gets overwritten.',
+          "RN's bump-hermes-version.js prompts interactively, so the copilot writes the same three files itself. Do not hand-commit packages/rn-tester/Podfile.lock: publish-npm.yml regenerates it.",
+      },
+      {
+        id: 'hermes-push',
+        title: 'Push the pin and wait for CI',
+        gates: [],
+        actions: state => {
+          const v = state.hermesUnreleased?.inTreeVersion ?? 'UNKNOWN';
+          return [
+            declare({
+              step: 'hermes-push',
+              why: `push the Hermes ${v} pin to ${state.branch}`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'push', state.branch, v],
+              impact: [
+                `pushes the pin commit to ${state.branch}, after checking it changes exactly the three pin files and sits on the branch's current tip`,
+                'triggers full branch CI and invalidates the current test artifacts',
+              ],
+              reversible: 'not in practice. a bad commit comes out by a follow-up revert',
+              confirmToken: state.branch,
+            }),
+          ];
+        },
+        note:
+          'It pushes only the commit the pin step made, never your checkout. The RC cannot proceed until CI is green on it. Re-run `plan` afterwards: hermesCurrent and hermesConsistent should both pass.',
       },
       {
         id: 'hermes-next-bump',
-        title: 'Bump the Hermes branch to the NEXT version',
+        title: 'Open the PR bumping the Hermes branch to the NEXT version',
         gates: [],
         actions: state => {
           const h = state.hermesUnreleased ?? {};
@@ -817,42 +792,20 @@ export const PHASES = {
           return [
             declare({
               step: 'hermes-next-bump',
-              why: `Open a PR bumping ${h.branch} from ${cut} to ${next}`,
-              cmd: 'echo',
-              args: [
-                `edit npm/hermes-compiler/package.json on ${h.branch} to ${next}, then open a PR (the stable ref is protected)`,
-              ],
+              why: `open a PR moving ${h.branch} from ${cut} to ${next}`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'next-bump', h.branch ?? '', cut, next],
               impact: [
-                `points the branch at ${next}, the NEXT version to publish`,
-                'without this the next cut re-cuts the version just released',
+                `creates the branch bump-hermes-compiler-${next} on ${HERMES} and opens a PR into ${h.branch}`,
+                'without it merged, the next cut re-cuts the version just released',
               ],
-              reversible: 'yes, it is one line and nothing consumes it until the next cut',
+              reversible: 'yes, close the PR and delete the branch',
+              skippable: true,
             }),
           ];
         },
         note:
-          'This is the tail of THIS release, not the head of the next one. The file must always name the next version to publish, because RN Build Static Hermes reads it verbatim. Skipping it is why the .0.4 bump was overdue: the .0.3 release never did its follow-up, so the branch still named an already-published version weeks later. IMPORT the PR once it is open: the import is what adds rn-oss and Hermes as reviewers and until then nobody can stamp it. Check the Import Status row for a D-number. See reference/hermes.md.',
-      },
-      {
-        id: 'hermes-push',
-        title: 'Push the pin and wait for CI',
-        gates: [],
-        actions: state => [
-          declare({
-            step: 'hermes-push',
-            why: `push the Hermes pin to ${state.branch}`,
-            cmd: 'git',
-            args: ['push', `https://github.com/${RN}.git`, `HEAD:${state.branch}`],
-            impact: [
-              `publishes the pin to the protected branch ${state.branch}`,
-              'triggers full branch CI and invalidates the current test artifacts',
-            ],
-            reversible: 'not in practice. a bad commit comes out by a follow-up revert',
-            confirmToken: state.branch,
-          }),
-        ],
-        note:
-          'The RC cannot proceed until this is green. Re-run `plan` afterwards: hermesCurrent and hermesConsistent should both pass and the RC phase picks up from there.',
+          'This is the tail of THIS release, not the head of the next one: the file must always name the next version to publish. IMPORT the PR once it is open, the import is what adds rn-oss and Hermes as reviewers. See reference/hermes.md.',
       },
     ],
   },

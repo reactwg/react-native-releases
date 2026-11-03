@@ -1260,7 +1260,7 @@
           "hermes-push"
         ],
         "mutatingCommands": [
-          "gh workflow run 'RN Build Static Hermes' --repo facebook/hermes --ref 260318099.0.0-stable -f release-type=release -f update-latest-v1=true"
+          "gh workflow run 'RN Build Static Hermes' --repo meta/hermes --ref 260318099.0.0-stable -f release-type=release -f update-latest-v1=true"
         ]
       }
     },
