@@ -1819,7 +1819,7 @@ test('doctor: covers all four repos a release touches', async () => {
   for (const s of [
     'react/react-native',
     'react-native-community/template',
-    'facebook/hermes',
+    'meta/hermes',
     'reactwg/react-native-releases',
   ]) {
     assert.ok(slugs.includes(s), `doctor does not check access to ${s}`);
