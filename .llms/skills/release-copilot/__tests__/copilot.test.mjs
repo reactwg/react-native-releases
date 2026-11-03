@@ -17,6 +17,17 @@ import {evaluate, classifyFailure, hasBreakingTag} from '../scripts/gates.mjs';
 import {declare, render, Runner, MODES} from '../scripts/actions.mjs';
 import {runPhase} from '../scripts/run-phase.mjs';
 import {parseVersion, nextRC, promoteToStable, releaseShape, formatVersion} from '../scripts/version.mjs';
+import {
+  loadSpec as loadReleaseSpec,
+  casesFor as releaseCasesFor,
+  renderReportBody,
+  parseReportMarker,
+  reportPassed,
+  confirmCase,
+  dotDirectoryIn,
+  RUN_ROOT as RELEASE_TEST_ROOT,
+} from '../scripts/release-test.mjs';
+import {existsSync as existsSyncNode} from 'node:fs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, '..', 'fixtures', '0.88-rc2-published');
@@ -3234,4 +3245,177 @@ test('hermes-verify-tag checks the iOS tarballs the prebuild downloads, and the 
   }
   const pin = steps.find(s => s.id === 'hermes-pin').actions(state)[0];
   assert.match(pin.args[0], /\.hermesv1version to hermes-v260318099\.0\.5/);
+});
+
+// ---------------------------------------------------------- release test pass
+
+const testPassResults = (mutate = () => {}) => {
+  const spec = loadReleaseSpec();
+  const r = {version: '0.89.0-rc.0', branch: '0.89-stable', sha: '4eb4d2e795c0123456', runId: 7, system: {Node: '22.14.0'}, dimensions: {}};
+  for (const d of spec.dimensions) {
+    r.dimensions[d.id] = {
+      warnings: [],
+      cases: Object.fromEntries(releaseCasesFor(spec, d).map(c => [c.id, {checks: c.checks.map(k => ({kind: k.kind, ok: true, detail: `${k.kind} ok`}))}])),
+    };
+  }
+  mutate(r);
+  return {spec, r};
+};
+
+test('test pass: every case passing renders a closable report and a passing marker', () => {
+  const {spec, r} = testPassResults();
+  const body = renderReportBody(r, spec);
+  assert.match(body, /^### Target Minor\n\n0\.89$/m);
+  assert.match(body, /- \[x\] RNTester \+ iOS \+ Hermes/);
+  assert.match(body, /- \[x\] RNTestProject \+ Android \+ Hermes/);
+  assert.match(body, /### Blocking Issues\?\n\nNone\./);
+  const m = parseReportMarker(body);
+  assert.equal(m.version, '0.89.0-rc.0');
+  assert.equal(m.sha, '4eb4d2e795c0123456');
+  assert.equal(reportPassed(m), true);
+  assert.equal(m.summary.pass.length, spec.dimensions.reduce((n, d) => n + releaseCasesFor(spec, d).length, 0));
+});
+
+test('test pass: a failed, pending or skipped case keeps the report from passing', () => {
+  const failing = testPassResults(r => {
+    r.dimensions['rntestproject-ios'].cases.launch.checks[1] = {kind: 'agent', ok: false, detail: 'warning toast on launch'};
+  });
+  const fb = renderReportBody(failing.r, failing.spec);
+  assert.match(fb, /- \[ \] RNTestProject \+ iOS \+ Hermes/);
+  assert.match(fb, /- rntestproject-ios\/launch \(agent\): warning toast on launch/);
+  assert.equal(reportPassed(parseReportMarker(fb)), false);
+
+  const pending = testPassResults(r => {
+    r.dimensions['rntester-ios'].cases.textinput.checks[1].ok = null;
+  });
+  const pm = parseReportMarker(renderReportBody(pending.r, pending.spec));
+  assert.deepEqual(pm.summary.pending, ['rntester-ios/textinput']);
+  assert.equal(reportPassed(pm), false);
+
+  const skipped = testPassResults(r => {
+    r.dimensions['rntester-android'] = {skipped: true, reason: 'no android device'};
+  });
+  const sb = renderReportBody(skipped.r, skipped.spec);
+  assert.match(sb, /- \[ \] RNTester \+ Android \+ Hermes \(skipped: no android device\)/);
+  assert.equal(reportPassed(parseReportMarker(sb)), false, 'a dimension that did not run is not a pass');
+});
+
+test('test pass: console warnings seen at launch are listed in the report', () => {
+  const {spec, r} = testPassResults(rr => {
+    rr.dimensions['rntestproject-ios'].warnings = ['RCTStatusBarManager is a no-op when UIViewControllerBasedStatusBarAppearance is YES'];
+  });
+  assert.match(renderReportBody(r, spec), /### Console warnings and errors seen at launch\n\n- rntestproject-ios: RCTStatusBarManager is a no-op/);
+});
+
+test('test pass: confirm records the copilot verdict and demands a reason', () => {
+  const {r} = testPassResults(rr => {
+    rr.dimensions['rntester-ios'].cases.lists.checks[1].ok = null;
+  });
+  assert.throws(() => confirmCase(r, 'rntester-ios/lists', {pass: true, why: ' '}), /say what the screenshot shows/);
+  assert.throws(() => confirmCase(r, 'rntester-ios/debugger', {pass: true, why: 'x'}), /no screenshot to confirm/);
+  assert.throws(() => confirmCase(r, 'nope/lists', {pass: true, why: 'x'}), /no case nope\/lists/);
+  confirmCase(r, 'rntester-ios/lists', {pass: false, why: 'rows overlap after item 560'});
+  const agent = r.dimensions['rntester-ios'].cases.lists.checks.find(k => k.kind === 'agent');
+  assert.deepEqual({ok: agent.ok, detail: agent.detail}, {ok: false, detail: 'rows overlap after item 560'});
+});
+
+test('test pass: refuses a run directory under a dot directory', () => {
+  assert.equal(dotDirectoryIn('/Users/x/.cache/release-copilot/rn'), '.cache');
+  assert.equal(dotDirectoryIn('/Users/x/Library/Caches/release-copilot/rn'), null);
+  assert.equal(dotDirectoryIn(RELEASE_TEST_ROOT), null, 'the default run root must not be under a dot directory');
+});
+
+test('test pass: every case in the spec has a known check and its flows exist', () => {
+  const spec = loadReleaseSpec();
+  const ids = new Set();
+  for (const c of spec.cases) {
+    assert.ok(!ids.has(c.id), `duplicate case ${c.id}`);
+    ids.add(c.id);
+    assert.ok(c.apps.every(a => spec.apps[a]), `${c.id} names an unknown app`);
+    for (const k of c.checks) {
+      assert.ok(['maestro', 'script', 'agent'].includes(k.kind), `${c.id}: unknown check ${k.kind}`);
+      if (k.kind === 'maestro') {
+        assert.ok(existsSyncNode(join(HERE, '..', 'maestro', k.flow)), `${c.id}: missing flow ${k.flow}`);
+      }
+      if (k.kind === 'agent') {
+        assert.ok(k.look && k.look.length > 20, `${c.id}: the agent check must say what to look for`);
+      }
+    }
+  }
+  assert.ok(existsSyncNode(join(HERE, '..', 'maestro', 'playground.yaml')), 'fast-refresh on RNTester needs the playground flow');
+});
+
+const testedState = over =>
+  baseState({
+    series: '0.89',
+    branch: '0.89-stable',
+    branchTip: '4eb4d2e795c0123456',
+    current: null,
+    proposedNext: '0.89.0-rc.0',
+    schedule: {series: {version: '0.89', type: 'breaking'}, isNonBreaking: false, needsManualTesting: true},
+    ...over,
+  });
+
+const reportFor = (mutate, {sha = '4eb4d2e795c0123456', version = '0.89.0-rc.0'} = {}) => {
+  const {spec, r} = testPassResults(rr => {
+    rr.sha = sha;
+    rr.version = version;
+    mutate?.(rr);
+  });
+  return {number: 1500, state: 'OPEN', url: 'u', marker: parseReportMarker(renderReportBody(r, spec))};
+};
+
+test('gate: manualTestingDone passes on a passing test report for this version at the branch tip', async () => {
+  const ev = await evaluate(['manualTestingDone'], testedState({testReport: reportFor()}), {});
+  assert.equal(ev.passed, true);
+  assert.match(ev.results[0].detail, /passed all \d+ cases \(#1500\)/);
+});
+
+test('gate: manualTestingDone fails on a report for an older tip, a failing report or none', async () => {
+  const stale = await evaluate(['manualTestingDone'], testedState({testReport: reportFor(null, {sha: 'aaaaaaaaaaa999'})}), {});
+  assert.equal(stale.passed, false);
+  assert.match(stale.results[0].detail, /is for aaaaaaaaaaa but 0\.89-stable is now at 4eb4d2e795c/);
+
+  const failed = await evaluate(
+    ['manualTestingDone'],
+    testedState({testReport: reportFor(r => (r.dimensions['rntestproject-ios'].cases.launch.checks[1].ok = false))}),
+    {},
+  );
+  assert.equal(failed.passed, false);
+  assert.match(failed.results[0].detail, /rntestproject-ios\/launch failed/);
+
+  const other = await evaluate(['manualTestingDone'], testedState({testReport: reportFor(null, {version: '0.89.0-rc.1'})}), {});
+  assert.equal(other.passed, false, 'a report for another version does not count');
+
+  const none = await evaluate(['manualTestingDone'], testedState({testReport: null}), {});
+  assert.equal(none.passed, false);
+  assert.match(none.results[0].detail, /release-test\.mjs run 0\.89\.0-rc\.0/);
+
+  const override = await evaluate(['manualTestingDone'], testedState({testReport: reportFor(r => (r.dimensions['rntester-ios'].skipped = true))}), {manualTested: true});
+  assert.equal(override.passed, true, 'the captain can still vouch after reviewing');
+});
+
+test('phase: the test step runs the pass then files the report, and does nothing when no testing is needed', async () => {
+  for (const shape of ['branch-cut', 'rc']) {
+    const result = await runPhase(testedState(), {mode: MODES.DRY_RUN, shape, ctx: {}, log: () => {}});
+    const test = result.plan.filter(p => p.step === 'test');
+    assert.equal(test.length, 2, shape);
+    assert.equal(test[0].mutates, false, `${shape}: running the pass changes nothing`);
+    assert.match(test[0].command, /release-test\.mjs.* run 0\.89\.0-rc\.0/);
+    assert.equal(test[1].mutates, true, `${shape}: filing the report asks first`);
+    assert.match(test[1].command, /release-test\.mjs.* file 0\.89\.0-rc\.0/);
+  }
+  const quiet = await runPhase(testedState({proposedNext: '0.89.0-rc.2', schedule: {series: {version: '0.89', type: 'breaking'}, needsManualTesting: false}}), {mode: MODES.DRY_RUN, shape: 'rc', ctx: {}, log: () => {}});
+  assert.equal(quiet.plan.filter(p => p.step === 'test').length, 0);
+});
+
+test('state: the test report is looked up only for a version that needs testing', async () => {
+  const asked = [];
+  const src = {...patchSrc(), testReport: async v => (asked.push(v), null)};
+  await deriveState(src, {series: '0.88', today: '2026-10-25'});
+  assert.deepEqual(asked, [], 'a patch needs no testing, so no lookup');
+  const {testReport, ...noReport} = src;
+  void testReport;
+  const s = await deriveState(noReport, {series: '0.88', today: '2026-10-25'});
+  assert.equal(s.testReport, null, 'a source without testReport reads as no report');
 });

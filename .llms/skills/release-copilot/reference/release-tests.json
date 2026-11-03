@@ -1,0 +1,64 @@
+{
+  "_comment": "What the copilot's release test pass checks, per dimension. Built from the release testing guide's priorities: debugging, developer menu, TextInput, lists and keyboard interactions, plus app launch and Fast Refresh. Each case lists its checks. 'maestro' runs a flow from ../maestro/, 'script' is a check release-test.mjs runs itself, 'agent' is the copilot reading the screenshot and recording a verdict with `release-test.mjs confirm`. A case passes only when every check it lists passes. Cases from the crew's test spreadsheet go in `spreadsheet` once someone can share it.",
+  "dimensions": [
+    {"id": "rntester-ios", "label": "RNTester + iOS + Hermes", "app": "rntester", "platform": "ios"},
+    {"id": "rntester-android", "label": "RNTester + Android + Hermes", "app": "rntester", "platform": "android"},
+    {"id": "rntestproject-ios", "label": "RNTestProject + iOS + Hermes", "app": "rntestproject", "platform": "ios"},
+    {"id": "rntestproject-android", "label": "RNTestProject + Android + Hermes", "app": "rntestproject", "platform": "android"}
+  ],
+  "apps": {
+    "rntester": {"ios": "com.meta.RNTester.localDevelopment", "android": "com.facebook.react.uiapp"},
+    "rntestproject": {"ios": "org.reactjs.native.example.RNTestProject", "android": "com.rntestproject"}
+  },
+  "cases": [
+    {
+      "id": "launch",
+      "title": "App launches and renders its first screen from Metro",
+      "apps": ["rntester", "rntestproject"],
+      "checks": [{"kind": "maestro", "flow": "launch.yaml"}, {"kind": "agent", "look": "The app's first screen rendered: RNTester shows the Components list, RNTestProject shows 'Welcome to React Native'. No red error screen, no yellow warning banner, no blank screen."}]
+    },
+    {
+      "id": "debugger",
+      "title": "Hermes debugger target is reachable and evaluates JavaScript",
+      "apps": ["rntester", "rntestproject"],
+      "checks": [{"kind": "script", "run": "debugger"}]
+    },
+    {
+      "id": "dev-menu",
+      "title": "Developer menu opens with its standard items",
+      "apps": ["rntester", "rntestproject"],
+      "checks": [{"kind": "script", "run": "dev-menu"}, {"kind": "maestro", "flow": "dev-menu.yaml"}, {"kind": "agent", "look": "The React Native developer menu is open and lists Reload, Open DevTools, Toggle Element Inspector, Disable Fast Refresh and Show Perf Monitor."}]
+    },
+    {
+      "id": "reload",
+      "title": "Reload from the developer menu brings the app back",
+      "apps": ["rntester", "rntestproject"],
+      "checks": [{"kind": "script", "run": "dev-menu"}, {"kind": "maestro", "flow": "reload.yaml"}]
+    },
+    {
+      "id": "fast-refresh",
+      "title": "Editing a component hot-updates it without a full reload",
+      "apps": ["rntester", "rntestproject"],
+      "checks": [{"kind": "script", "run": "fast-refresh"}, {"kind": "agent", "look": "The screen shows the edited text 'Fast Refresh release check' and nothing else looks broken."}]
+    },
+    {
+      "id": "textinput",
+      "title": "TextInput takes focus and typed text",
+      "apps": ["rntester"],
+      "checks": [{"kind": "maestro", "flow": "textinput.yaml"}, {"kind": "agent", "look": "The text field shows 'release test' with the cursor in it and the on-screen keyboard is up."}]
+    },
+    {
+      "id": "keyboard",
+      "title": "Keyboard dismisses on submit and keeps the typed text",
+      "apps": ["rntester"],
+      "checks": [{"kind": "maestro", "flow": "keyboard.yaml"}, {"kind": "agent", "look": "The keyboard is gone and the field still shows 'release test'."}]
+    },
+    {
+      "id": "lists",
+      "title": "FlatList renders and scrolls",
+      "apps": ["rntester"],
+      "checks": [{"kind": "maestro", "flow": "flatlist.yaml"}, {"kind": "agent", "look": "A FlatList of numbered items is on screen, scrolled past the first items, with no gaps or overlapping rows."}]
+    }
+  ],
+  "spreadsheet": []
+}

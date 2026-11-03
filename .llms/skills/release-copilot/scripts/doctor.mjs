@@ -15,6 +15,8 @@ import {existsSync, writeFileSync, unlinkSync} from 'node:fs';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
 
+import {findJdk, androidSdk} from './verify-template.mjs';
+
 const exec = promisify(execFile);
 
 const OK = 'ok';
@@ -198,6 +200,55 @@ async function checkMetaTooling() {
 }
 
 /**
+ * What the release test pass needs. Warnings only: RC0, RC1 and the golden RC
+ * are tested, everything else ships without, so a missing simulator must not
+ * block a patch.
+ */
+const TEST_PASS = 'needed for the release test pass on RC0, RC1 and the golden RC';
+
+async function checkTestPassIos() {
+  const xc = await run('xcodebuild', ['-version']);
+  if (!xc.ok) {
+    return {status: WARN, detail: 'Xcode not found', fix: `Install Xcode and its command line tools, ${TEST_PASS}.`};
+  }
+  const rt = await run('xcrun', ['simctl', 'list', 'runtimes', '-j']);
+  const runtimes = rt.ok ? JSON.parse(rt.out).runtimes.filter(r => r.platform === 'iOS' && r.isAvailable) : [];
+  return runtimes.length
+    ? {status: OK, detail: `${xc.out.split('\n')[0]}, iOS ${runtimes.at(-1).version} simulator runtime`}
+    : {status: WARN, detail: 'no iOS simulator runtime installed', fix: `Install one in Xcode > Settings > Components, ${TEST_PASS}.`};
+}
+
+async function checkTestPassAndroid() {
+  const sdk = androidSdk();
+  const jdk = await findJdk();
+  if (!sdk || !jdk) {
+    return {
+      status: WARN,
+      detail: !sdk ? 'no Android SDK found' : 'no JDK 17+ found',
+      fix: !sdk ? `Install the Android SDK and set ANDROID_HOME, ${TEST_PASS}.` : `Install JDK 17 (Android Studio ships one), ${TEST_PASS}.`,
+    };
+  }
+  const abi = process.arch === 'arm64' ? 'arm64-v8a' : 'x86_64';
+  const images = await run('sh', ['-c', `ls -d "${sdk}"/system-images/android-*/*/${abi} 2>/dev/null`]);
+  const tools = ['emulator/emulator', 'cmdline-tools/latest/bin/avdmanager'].filter(t => !existsSync(join(sdk, t)));
+  if (tools.length || !images.out.trim()) {
+    return {
+      status: WARN,
+      detail: tools.length ? `missing ${tools.join(', ')} in the Android SDK` : `no ${abi} system image installed`,
+      fix: `Install the emulator, command-line tools and a ${abi} system image with the SDK Manager, ${TEST_PASS}.`,
+    };
+  }
+  return {status: OK, detail: `Android SDK at ${sdk}, JDK ${jdk.version}`};
+}
+
+async function checkMaestro() {
+  const r = await run(join(homedir(), '.maestro', 'bin', 'maestro'), ['--version']);
+  return r.ok
+    ? {status: OK, detail: `maestro ${r.out.trim().split('\n')[0]}`}
+    : {status: WARN, detail: 'Maestro not installed', fix: `Install it: curl -Ls "https://get.maestro.mobile.dev" | bash, ${TEST_PASS}.`};
+}
+
+/**
  * Whether this machine can run the Meta-only steps.
  *
  * Same probe the doctor check uses, exported so callers branch on one
@@ -298,6 +349,9 @@ export async function runDoctor({checkout, hermesCheckout} = {}) {
     {name: 'hermes checkout', ...hermesCheck},
     ...(hermesCheck.status === FAIL ? [] : [{name: 'hermes checkout writable', ...checkWritable(hermes)}]),
     {name: 'Meta-only tooling', ...(await checkMetaTooling())},
+    {name: 'test pass: iOS simulator', ...(await checkTestPassIos())},
+    {name: 'test pass: Android emulator', ...(await checkTestPassAndroid())},
+    {name: 'test pass: Maestro', ...(await checkMaestro())},
   ];
 
   // The committer every pick records, which is permanent on the release branch.

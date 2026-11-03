@@ -1,0 +1,20 @@
+appId: ${APP_ID}
+---
+- launchApp
+- stopApp
+- openLink: rntester://example/FlatListExampleIndex/basic
+- runFlow:
+    when:
+      visible: 'Open'
+    commands:
+      - tapOn: 'Open'
+- extendedWaitUntil:
+    visible:
+      id: 'item_550'
+    timeout: 120000
+- scrollUntilVisible:
+    element:
+      id: 'item_570'
+    direction: DOWN
+    timeout: 60000
+- takeScreenshot: ${SHOTS}/lists

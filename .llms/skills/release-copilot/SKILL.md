@@ -95,6 +95,36 @@ update the project) stays `:hourglass:` and is listed at the end for you to conf
 It prints, it never posts. Generate it rather than copying the previous RC's, which is
 how rc.2's draft carried rc.1's upgrade-helper link and four premature ticks.
 
+## Running the test pass
+
+RC0, RC1 and the golden RC need a test pass before they publish. You run it. After
+the branch's Test All run is green:
+
+```sh
+node scripts/release-test.mjs run 0.89.0-rc.0
+```
+
+It takes about 15 minutes warm and builds and launches RNTester and a fresh RNTestProject
+on iOS and Android from the branch's own CI artifacts. It ends with a list of screenshots
+to confirm. For each one:
+
+1. **Open the screenshot and look at the whole screen**, not just the text the case
+   names. A warning toast, a red box, a blank area or overlapping rows is a failure even
+   when the flow passed.
+2. Record what you saw, in a sentence the report can carry:
+   `node scripts/release-test.mjs confirm 0.89.0-rc.0 --case rntester-ios/lists --pass "FlatList scrolled to item 570, rows intact"`.
+   Use `--fail "<what is wrong>"` when it is not right.
+3. Read the **console warnings and errors at launch** it lists. A new one on a freshly
+   generated app is a regression: fail that dimension's `launch` and say which warning.
+
+When nothing is pending, the `test` step's second action files the report and the
+`manualTestingDone` gate reads it. If a case failed, the issue stays open with the failure
+under Blocking Issues and the publish stops. Tell the captain what failed and why, with
+the evidence. Whether to ship anyway is their call: they re-run with `--manual-tested` after
+reading the report. Never confirm a screenshot you did not open. Never upload one.
+
+See `reference/testing.md` for what it uses and how each case is checked.
+
 ## Verifying the template
 
 ```sh
@@ -261,9 +291,9 @@ shipped with nothing in it, then rc.6 carried a single pick. A released series r
 that as `goldenByContent` in `schedule.json`, so the history shows `0.88:rc.4 (last rc.6)`
 and does not read as a series that needed six RCs.
 
-Manual testing follows from it: RC0 and RC1 unconditionally, then the golden RC. Nothing
-else is manually tested, neither the stable `.0` (promoted from the golden RC with nothing
-new in it) nor patches. Tags win over the assumption, so a released series is always
+The test pass follows from it: RC0 and RC1 unconditionally, then the golden RC. Nothing
+else is tested, neither the stable `.0` (promoted from the golden RC with nothing new in
+it) nor patches. Tags win over the assumption, so a released series is always
 answered from what actually shipped.
 
 ## Modes
@@ -324,6 +354,7 @@ is in `scripts/gates.mjs` and `reference/field-notes.md` rather than repeated he
 | `hermesCurrent` | the pinned Hermes tag is behind its branch |
 | `hermesReadyToCut` | the Hermes branch still names a published version, which would re-cut it |
 | `mainResolved` | a branch cut has no resolved SHA for main |
+| `manualTestingDone` | RC0, RC1 or the golden RC has no passing Test Report for this version at the current branch tip, unless `--manual-tested` |
 
 `classifyFailure` in `gates.mjs` encodes which CI failures are flakes and which are
 structural. `ciGreen` does not call it, so classify by hand before retrying.
@@ -351,7 +382,8 @@ the bot opens it. See `reference/process.md` for the workflow chain.
 - `reference/reverts.md`: how to scope a revert so it does not ship a second break
 - `reference/changelog.md`: opening the changelog PR, what curation does on its own (with its measured precision) and what is left for a human
 - `reference/hermes.md`: the coupling, the `latest-v1` rule and the timing trap
-- `reference/testing.md`: which releases need manual testing
+- `reference/testing.md`: which releases need a test pass and how the copilot runs it
+- `reference/release-tests.json`: the test pass's cases and how each is checked
 - `reference/blog-post.md`: the release post template, review flow and timing
 - `reference/field-notes.md`: failures with their signatures and remedies
 - `reference/schedule.json`: cadence and the golden-RC default

@@ -57,7 +57,7 @@ async function run(cmd, args, opts = {}) {
  * RN needs a JDK 17 or newer and the machine default is often older. Android
  * Studio ships one, which is the likeliest thing to be present already.
  */
-async function findJdk() {
+export async function findJdk() {
   const candidates = [
     process.env.JAVA_HOME,
     '/Applications/Android Studio.app/Contents/jbr/Contents/Home',
@@ -78,7 +78,7 @@ async function findJdk() {
   return null;
 }
 
-function androidSdk() {
+export function androidSdk() {
   for (const p of [
     process.env.ANDROID_HOME,
     process.env.ANDROID_SDK_ROOT,

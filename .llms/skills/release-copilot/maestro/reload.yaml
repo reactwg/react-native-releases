@@ -1,0 +1,10 @@
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible: 'Reload'
+    timeout: 30000
+- tapOn: 'Reload'
+- extendedWaitUntil:
+    visible: ${LANDMARK}
+    timeout: 120000
+- takeScreenshot: ${SHOTS}/reload

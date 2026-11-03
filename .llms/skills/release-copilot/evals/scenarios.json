@@ -1427,6 +1427,330 @@
           "hermes-decision"
         ]
       }
+    },
+    {
+      "id": "rc0-test-pass-passed",
+      "title": "RC0 with a passing test pass at the tip",
+      "why": "RC0 is always tested. A Test Report whose marker says every case passed at this tip is what lets it publish, without --manual-tested.",
+      "phase": "branch-cut",
+      "state": {
+        "series": "0.89",
+        "branch": "0.89-stable",
+        "branchTip": "4eb4d2e795c",
+        "current": null,
+        "proposedNext": "0.89.0-rc.0",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.88.0",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "270000000.0.0",
+          "compiler": "270000000.0.0"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.89",
+            "type": "breaking"
+          },
+          "isNonBreaking": false,
+          "manualTestingRcs": [
+            0,
+            1
+          ],
+          "needsManualTesting": true
+        },
+        "hermesUnreleased": {
+          "branch": "270000000.0.0-stable",
+          "tag": "hermes-v270000000.0.0",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": [],
+        "mainTip": "c0ffee1234567890abcdef1234567890abcdef12",
+        "testReport": {
+          "number": 1500,
+          "state": "CLOSED",
+          "url": "u",
+          "marker": {
+            "version": "0.89.0-rc.0",
+            "sha": "4eb4d2e795c0000000000000000000000000000",
+            "summary": {
+              "pass": [
+                "rntester-ios/launch",
+                "rntester-ios/debugger",
+                "rntester-ios/dev-menu",
+                "rntester-ios/reload",
+                "rntester-ios/fast-refresh",
+                "rntester-ios/textinput",
+                "rntester-ios/keyboard",
+                "rntester-ios/lists",
+                "rntester-android/launch",
+                "rntester-android/debugger",
+                "rntester-android/dev-menu",
+                "rntester-android/reload",
+                "rntester-android/fast-refresh",
+                "rntester-android/textinput",
+                "rntester-android/keyboard",
+                "rntester-android/lists",
+                "rntestproject-ios/launch",
+                "rntestproject-ios/debugger",
+                "rntestproject-ios/dev-menu",
+                "rntestproject-ios/reload",
+                "rntestproject-ios/fast-refresh",
+                "rntestproject-android/launch",
+                "rntestproject-android/debugger",
+                "rntestproject-android/dev-menu",
+                "rntestproject-android/reload",
+                "rntestproject-android/fast-refresh"
+              ],
+              "fail": [],
+              "pending": [],
+              "skipped": []
+            }
+          }
+        }
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "completes": true,
+        "stepsInclude": [
+          "artifacts",
+          "test",
+          "pre-flight",
+          "publish"
+        ]
+      }
+    },
+    {
+      "id": "rc0-test-pass-stale-tip",
+      "title": "RC0 tested, then the branch moved",
+      "why": "A push after the test pass means new artifacts nobody tested, so the old report must not count.",
+      "phase": "branch-cut",
+      "state": {
+        "series": "0.89",
+        "branch": "0.89-stable",
+        "branchTip": "4eb4d2e795c",
+        "current": null,
+        "proposedNext": "0.89.0-rc.0",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.88.0",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "270000000.0.0",
+          "compiler": "270000000.0.0"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.89",
+            "type": "breaking"
+          },
+          "isNonBreaking": false,
+          "manualTestingRcs": [
+            0,
+            1
+          ],
+          "needsManualTesting": true
+        },
+        "hermesUnreleased": {
+          "branch": "270000000.0.0-stable",
+          "tag": "hermes-v270000000.0.0",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": [],
+        "mainTip": "c0ffee1234567890abcdef1234567890abcdef12",
+        "testReport": {
+          "number": 1500,
+          "state": "CLOSED",
+          "url": "u",
+          "marker": {
+            "version": "0.89.0-rc.0",
+            "sha": "aaaaaaaaaaa00000000000000000000000000000",
+            "summary": {
+              "pass": [
+                "rntester-ios/launch",
+                "rntester-ios/debugger",
+                "rntester-ios/dev-menu",
+                "rntester-ios/reload",
+                "rntester-ios/fast-refresh",
+                "rntester-ios/textinput",
+                "rntester-ios/keyboard",
+                "rntester-ios/lists",
+                "rntester-android/launch",
+                "rntester-android/debugger",
+                "rntester-android/dev-menu",
+                "rntester-android/reload",
+                "rntester-android/fast-refresh",
+                "rntester-android/textinput",
+                "rntester-android/keyboard",
+                "rntester-android/lists",
+                "rntestproject-ios/launch",
+                "rntestproject-ios/debugger",
+                "rntestproject-ios/dev-menu",
+                "rntestproject-ios/reload",
+                "rntestproject-ios/fast-refresh",
+                "rntestproject-android/launch",
+                "rntestproject-android/debugger",
+                "rntestproject-android/dev-menu",
+                "rntestproject-android/reload",
+                "rntestproject-android/fast-refresh"
+              ],
+              "fail": [],
+              "pending": [],
+              "skipped": []
+            }
+          }
+        }
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "manualTestingDone"
+        ],
+        "failureMentions": "is now at 4eb4d2e795c",
+        "neverReaches": [
+          "publish"
+        ]
+      }
+    },
+    {
+      "id": "rc0-test-pass-failed",
+      "title": "RC0 test pass found a regression",
+      "why": "A failed case keeps the report open and must stop the publish, naming what failed.",
+      "phase": "branch-cut",
+      "state": {
+        "series": "0.89",
+        "branch": "0.89-stable",
+        "branchTip": "4eb4d2e795c",
+        "current": null,
+        "proposedNext": "0.89.0-rc.0",
+        "tagExistsForNext": false,
+        "ci": [
+          {
+            "workflow": "Test All",
+            "conclusion": "success",
+            "status": "completed",
+            "failedJobs": []
+          }
+        ],
+        "openPicks": [],
+        "breakingCommits": [],
+        "breakingBaseline": "v0.88.0",
+        "breakingScanComplete": true,
+        "hermes": {
+          "pinned": "270000000.0.0",
+          "compiler": "270000000.0.0"
+        },
+        "schedule": {
+          "series": {
+            "version": "0.89",
+            "type": "breaking"
+          },
+          "isNonBreaking": false,
+          "manualTestingRcs": [
+            0,
+            1
+          ],
+          "needsManualTesting": true
+        },
+        "hermesUnreleased": {
+          "branch": "270000000.0.0-stable",
+          "tag": "hermes-v270000000.0.0",
+          "resolved": true,
+          "commits": []
+        },
+        "pickCandidates": [],
+        "staleRed": [],
+        "mainTip": "c0ffee1234567890abcdef1234567890abcdef12",
+        "testReport": {
+          "number": 1500,
+          "state": "OPEN",
+          "url": "u",
+          "marker": {
+            "version": "0.89.0-rc.0",
+            "sha": "4eb4d2e795c0000000000000000000000000000",
+            "summary": {
+              "pass": [
+                "rntester-ios/launch",
+                "rntester-ios/debugger",
+                "rntester-ios/dev-menu",
+                "rntester-ios/reload",
+                "rntester-ios/fast-refresh",
+                "rntester-ios/textinput",
+                "rntester-ios/keyboard",
+                "rntester-ios/lists",
+                "rntester-android/launch",
+                "rntester-android/debugger",
+                "rntester-android/dev-menu",
+                "rntester-android/reload",
+                "rntester-android/fast-refresh",
+                "rntester-android/textinput",
+                "rntester-android/keyboard",
+                "rntester-android/lists",
+                "rntestproject-ios/debugger",
+                "rntestproject-ios/dev-menu",
+                "rntestproject-ios/reload",
+                "rntestproject-ios/fast-refresh",
+                "rntestproject-android/launch",
+                "rntestproject-android/debugger",
+                "rntestproject-android/dev-menu",
+                "rntestproject-android/reload",
+                "rntestproject-android/fast-refresh"
+              ],
+              "fail": [
+                "rntestproject-ios/launch"
+              ],
+              "pending": [],
+              "skipped": []
+            }
+          }
+        }
+      },
+      "ctx": {
+        "isLatest": false,
+        "workflowDryRun": false,
+        "isBreaking": false
+      },
+      "expect": {
+        "stopsAt": "pre-flight",
+        "failingGates": [
+          "manualTestingDone"
+        ],
+        "failureMentions": "rntestproject-ios/launch failed",
+        "neverReaches": [
+          "publish"
+        ]
+      }
     }
   ]
 }

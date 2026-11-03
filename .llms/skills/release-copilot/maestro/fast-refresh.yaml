@@ -1,0 +1,6 @@
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible: '.*Fast Refresh release check.*'
+    timeout: 30000
+- takeScreenshot: ${SHOTS}/fast-refresh

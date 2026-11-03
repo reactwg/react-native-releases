@@ -9,6 +9,7 @@
 
 import {parseVersion, isPrerelease, seriesOf, compareVersions} from './version.mjs';
 import {hermesOverview, hermesChoice} from './release-state.mjs';
+import {reportPassed} from './release-test.mjs';
 
 const PASS = detail => ({ok: true, detail});
 const FAIL = detail => ({ok: false, detail});
@@ -291,8 +292,11 @@ export const gates = {
 
   /**
    * The summary said "REQUIRES manual release testing" and nothing checked it,
-   * so a run could publish a golden RC nobody had tested. The captain vouches
-   * for the test pass with --manual-tested.
+   * so a run could publish a golden RC nobody had tested. The copilot's own
+   * test pass files a Test Report whose marker names the version and branch
+   * tip it tested. A push after the pass means the artifacts changed, so a
+   * report for an older tip does not count. The captain can still vouch for a
+   * pass with --manual-tested, after reading the report.
    */
   manualTestingDone(state, {manualTested}) {
     const needs = state.schedule?.needsManualTesting;
@@ -302,9 +306,33 @@ export const gates = {
     if (manualTested) {
       return PASS(`captain confirmed the manual test pass for ${state.proposedNext}`);
     }
+    const report = state.testReport;
+    const m = report?.marker;
+    if (m && m.version === state.proposedNext) {
+      const tip = String(state.branchTip ?? '');
+      if (!tip || !String(m.sha).startsWith(tip.slice(0, 11))) {
+        return FAIL(
+          `the Test Report (#${report.number}) is for ${String(m.sha).slice(0, 11)} but ${state.branch} is now at ${tip.slice(0, 11) || 'unknown'}. ` +
+            `Re-run the test pass on the new tip: node scripts/release-test.mjs run ${state.proposedNext}`,
+        );
+      }
+      if (reportPassed(m)) {
+        return PASS(`test pass for ${state.proposedNext} passed all ${m.summary.pass.length} cases (#${report.number})`);
+      }
+      const s = m.summary ?? {};
+      const open = [
+        ...(s.fail ?? []).map(id => `${id} failed`),
+        ...(s.pending ?? []).map(id => `${id} not confirmed`),
+        ...(s.skipped ?? []).map(id => `${id} not run`),
+      ];
+      return FAIL(
+        `the test pass for ${state.proposedNext} did not pass (#${report.number}): ${open.join(', ')}. ` +
+          'Fix and re-run it, or re-run with --manual-tested after reviewing the report.',
+      );
+    }
     return FAIL(
       needs === true
-        ? `${state.proposedNext} requires a manual test pass. Run it (reference/testing.md), then re-run with --manual-tested.`
+        ? `${state.proposedNext} requires a test pass. Run it: node scripts/release-test.mjs run ${state.proposedNext}, confirm each screenshot, then file it with the test step. Or re-run with --manual-tested after a manual pass.`
         : `cannot tell whether ${state.proposedNext} needs manual testing. Confirm with the captain, then re-run with --manual-tested.`,
     );
   },

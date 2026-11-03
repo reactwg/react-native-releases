@@ -1,0 +1,7 @@
+appId: ${APP_ID}
+---
+- launchApp
+- extendedWaitUntil:
+    visible: ${LANDMARK}
+    timeout: 120000
+- takeScreenshot: ${SHOTS}/launch

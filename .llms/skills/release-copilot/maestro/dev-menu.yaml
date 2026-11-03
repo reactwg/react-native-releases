@@ -1,0 +1,8 @@
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible: 'Reload'
+    timeout: 30000
+- assertVisible: 'Open DevTools'
+- assertVisible: 'Toggle Element Inspector'
+- takeScreenshot: ${SHOTS}/dev-menu

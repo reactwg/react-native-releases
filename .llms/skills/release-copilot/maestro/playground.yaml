@@ -1,0 +1,10 @@
+appId: ${APP_ID}
+---
+- launchApp
+- extendedWaitUntil:
+    visible: 'Components'
+    timeout: 60000
+- tapOn: 'Playground'
+- extendedWaitUntil:
+    visible: 'Edit "RNTesterPlayground.js" to change this file'
+    timeout: 30000
