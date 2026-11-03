@@ -3474,6 +3474,10 @@ test('hermes-skip: the decision is local state, read back by the gate, and repla
     assert.equal(hermesExceptions().filter(e => e.version === '0.89.0-rc.0').length, 1);
     assert.deepEqual(loadHermesException('0.89', ['f289631444e', 'bbbbbbbbbbb'], '0.89.0-rc.0').unacknowledged, ['bbbbbbbbbbb'], 'a later commit is not covered');
     assert.ok(hermesExceptions().some(e => e.version === '0.88.0'), 'the repo history is still read');
+    const repo088 = hermesExceptions().find(e => e.version === '0.88.0');
+    recordHermesDecision({...repo088, reason: 'local override'});
+    const both = hermesExceptions().filter(e => e.series === '0.88' && e.version === '0.88.0');
+    assert.deepEqual(both.map(e => e.reason), ['local override'], 'a local decision replaces the repo one for the same release');
   } finally {
     process.env.RELEASE_COPILOT_STATE_DIR = prev;
   }
