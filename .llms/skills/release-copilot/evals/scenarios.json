@@ -68,7 +68,7 @@
           "bump-main"
         ],
         "mutatingCommands": [
-          "gh workflow run nightly.yml --repo react/react-native --ref main"
+          "gh workflow run publish-npm.yml --repo react/react-native --ref main"
         ],
         "stopsAt": "artifacts"
       }

@@ -181,12 +181,16 @@ export const gates = {
     const deferred = state.openPicks.filter(
       p => p.targetRelease && p.targetRelease !== state.proposedNext,
     );
+    // Already on the branch: the only thing left is closing it, which the
+    // cut-picks and pick steps do. #1492 was in the 0.89 cut and still open.
+    const landed = new Set((state.pickCandidates ?? []).filter(c => c.landed).map(c => c.number));
     const outstanding = state.openPicks.filter(
-      p => !p.targetRelease || p.targetRelease === state.proposedNext,
+      p => (!p.targetRelease || p.targetRelease === state.proposedNext) && !landed.has(p.number),
     );
-    const note = deferred.length
-      ? ` ${deferred.length} deferred: ${deferred.map(p => `#${p.number}->${p.targetRelease}`).join(', ')}`
-      : '';
+    const onBranch = state.openPicks.filter(p => landed.has(p.number));
+    const note =
+      (deferred.length ? ` ${deferred.length} deferred: ${deferred.map(p => `#${p.number}->${p.targetRelease}`).join(', ')}` : '') +
+      (onBranch.length ? ` Already on ${state.branch}, close: ${onBranch.map(p => `#${p.number}`).join(', ')}.` : '');
 
     if (!outstanding.length) {
       return PASS(`no pick requests outstanding for ${state.proposedNext}.${note}`);

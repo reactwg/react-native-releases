@@ -13,6 +13,8 @@ import {readFileSync, existsSync, mkdirSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 
 import {parseReportMarker} from './release-test.mjs';
+import {findBoard, targetReleaseField, targetReleaseNames} from './board.mjs';
+import {templateBranch, proposeRow} from './branch-cut.mjs';
 
 const exec = promisify(execFile);
 
@@ -604,6 +606,37 @@ export function liveSources() {
      * pass writes into its body. The gate reads the marker, not the issue state:
      * a closed issue only says someone closed it.
      */
+    /**
+     * What the cut's side steps have already done, so a second pass does not
+     * offer them again. The nightly counts as done once publish-npm.yml was
+     * dispatched on main after the branch's first CI run.
+     */
+    async branchCutFacts(series, branch, {branchExists}) {
+      const facts = {template: null, board: null, nightly: null, supportRow: null};
+      facts.template = await templateBranch(branch).catch(() => null);
+      const board = await findBoard(series).catch(() => null);
+      if (board) {
+        const {field} = await targetReleaseField(board.number).catch(() => ({field: null}));
+        const names = new Set((field?.options ?? []).map(o => o.name));
+        facts.board = {...board, missingTargets: targetReleaseNames(series).filter(n => !names.has(n))};
+      } else {
+        facts.board = {missing: true};
+      }
+      if (branchExists) {
+        const first = parseJSON(await gh(['run', 'list', '--repo', RN_REPO, '--branch', branch, '--limit', '200', '--json', 'createdAt']).catch(() => '[]'), [])
+          .map(r => r.createdAt)
+          .sort()[0];
+        const dispatched = parseJSON(
+          await gh(['run', 'list', '--repo', RN_REPO, '--workflow', 'publish-npm.yml', '--branch', 'main', '--event', 'workflow_dispatch', '--limit', '20', '--json', 'createdAt,url,conclusion']).catch(() => '[]'),
+          [],
+        ).filter(r => first && r.createdAt >= first);
+        facts.nightly = {dispatched: dispatched.length > 0, url: dispatched.at(-1)?.url ?? null};
+      }
+      const row = await proposeRow(series, {ref: branchExists ? branch : 'main'}).catch(() => null);
+      facts.supportRow = row ? {present: Boolean(row.existing), row: row.row, notes: row.notes} : null;
+      return facts;
+    },
+
     async testReport(version) {
       const raw = await gh([
         'issue', 'list', '--repo', RELEASES_REPO, '--state', 'all',
@@ -841,6 +874,13 @@ export function fixtureSources(dir) {
         return null;
       }
     },
+    async branchCutFacts(series) {
+      try {
+        return pick('branchCutFacts', series);
+      } catch {
+        return null;
+      }
+    },
   };
 }
 
@@ -906,6 +946,7 @@ export function recordingSources(inner, dir) {
     releaseArtifacts: async (v, p) =>
       put('releaseArtifacts', v, await inner.releaseArtifacts(v, p)),
     testReport: async v => put('testReport', v, await inner.testReport(v)),
+    branchCutFacts: async (series, b, o) => put('branchCutFacts', series, await inner.branchCutFacts(series, b, o)),
     flush() {
       mkdirSync(dir, {recursive: true});
       for (const [name, data] of Object.entries(captured)) {

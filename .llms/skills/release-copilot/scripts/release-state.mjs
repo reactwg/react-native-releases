@@ -586,6 +586,12 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
   // literal string MAIN_SHA, so a guided cut would take the captain's
   // confirmation and then POST a ref with that text.
   const mainTip = shape === 'branch-cut' ? await sources.branchTip('main') : null;
+  // A source without it (a fixture, a test stub) reads as unknown, so every
+  // side step is offered rather than wrongly skipped.
+  const cut =
+    shape === 'branch-cut' && typeof sources.branchCutFacts === 'function'
+      ? await sources.branchCutFacts(resolvedSeries, branch, {branchExists: Boolean(tip)}).catch(() => null)
+      : null;
 
   const runs = await sources.workflowRuns(branch);
   const tipRuns = runs.filter(r => r.headSha && tip && r.headSha.startsWith(tip.slice(0, 11)));
@@ -851,6 +857,7 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
     shape,
     distTags,
     mainTip,
+    cut,
     tagExistsForNext: proposedNext ? tags.includes(`v${proposedNext}`) : false,
     // A release is half-done when its tag is cut but npm never got the package.
     // 0.88.0-rc.4 sat like this overnight: tag public, sibling packages

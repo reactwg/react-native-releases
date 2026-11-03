@@ -10,6 +10,7 @@
  * confirmed like every other mutating step, and a dry run prints it all.
  */
 
+import {fileURLToPath} from 'node:url';
 import {declare} from './actions.mjs';
 import {hasBreakingTag} from './gates.mjs';
 import {notPickedMarker} from './release-state.mjs';
@@ -20,6 +21,7 @@ import {validateIdentity, parseIdent} from './doctor.mjs';
 const RN = 'react/react-native';
 const RN_URL = `https://github.com/${RN}.git`;
 const RELEASES = 'reactwg/react-native-releases';
+const BOARD = fileURLToPath(new URL('./board.mjs', import.meta.url));
 
 /** The pick and every pick below it in its stack that has not landed yet. */
 export function pickChain(state, number) {
@@ -267,6 +269,20 @@ export async function runPick(state, number, runner) {
     if (res?.skipped === 'declined') {
       return {completed: false, declined: `close #${c.number}`};
     }
+    // Target Release defaults to the series' first RC and was wrong for
+    // almost every 0.88 item. It is known exactly here. The pick has landed
+    // by now, so a board failure is reported, not fatal.
+    await runner.run(
+      declare({
+        step: 'pick',
+        why: `set Target Release ${state.proposedNext} on #${c.number}`,
+        cmd: process.execPath,
+        args: [BOARD, 'set-target', state.series, String(c.number), state.proposedNext],
+        impact: [`sets Target Release on the ${state.series} board to ${state.proposedNext}, where #${c.number} landed`],
+        reversible: 'yes, change the field on the board',
+        skippable: true,
+      }),
+    ).catch(err => runner.log(`  could not set Target Release on #${c.number}: ${String(err.stderr || err.message).trim().split('\n').at(-1)}. Set it by hand.`));
   }
   return {completed: true, picked: chain.map(c => c.number)};
 }

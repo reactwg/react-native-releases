@@ -46,6 +46,10 @@ export function announceWhere(atMeta) {
 }
 const HERMES = 'meta/hermes';
 const HERMES_RELEASE = join(dirname(fileURLToPath(import.meta.url)), 'hermes-release.mjs');
+const BRANCH_CUT = join(dirname(fileURLToPath(import.meta.url)), 'branch-cut.mjs');
+const BOARD = join(dirname(fileURLToPath(import.meta.url)), 'board.mjs');
+// From docs/guide-release-candidate.md.
+const CLI_CHANNEL = 'https://discord.com/channels/514829729862516747/1232435652533031013';
 
 const triggerCreateRelease = (state, ctx) =>
   declare({
@@ -524,7 +528,7 @@ const commonPublishSteps = [
     gates: [],
     actions: () => [],
     note:
-      'Close actioned pick requests; closing moves them to Done / Picked automatically. Also set Target Release on each, from where the commit actually landed. It defaults to the series first RC and is wrong for almost every item otherwise. See reference/picks.md.',
+      'Close actioned pick requests; closing moves them to Done / Picked automatically. `pick` sets Target Release when it closes one. For anything closed by hand, set it with `node scripts/board.mjs set-target <series> <issue> <version>`, from where the commit actually landed. It defaults to the series first RC. See reference/picks.md.',
   },
 ];
 
@@ -537,8 +541,37 @@ export const PHASES = {
         id: 'external-deps',
         title: 'Update the external dependencies table',
         gates: [],
-        actions: () => [],
-        note: 'Open a PR rather than committing to main, the repo notifies watchers.',
+        actions: state => {
+          if (state.cut?.supportRow?.present) {
+            return [];
+          }
+          return [
+            declare({
+              step: 'external-deps',
+              why: `open the PR adding ${state.series} to the external dependencies table`,
+              cmd: process.execPath,
+              args: [BRANCH_CUT, 'support-row', state.series, ...(state.branchTip ? [] : ['--ref', 'main']), '--pr'],
+              impact: [
+                `opens a PR on reactwg/react-native-releases adding the ${state.series} row to docs/support.md`,
+                'Node from engines and the Android minimum from minSdk, JDK, Xcode and CocoaPods copied from the previous series',
+              ],
+              reversible: 'yes, close the PR',
+              skippable: true,
+            }),
+          ];
+        },
+        brief: state => {
+          const r = state.cut?.supportRow;
+          if (!r) {
+            return null;
+          }
+          return [
+            r.present ? `docs/support.md already has the ${state.series} row:` : `Proposed ${state.series} row for docs/support.md:`,
+            `  ${r.row}`,
+            ...r.notes.map(n => `  note: ${n}`),
+          ].join('\n');
+        },
+        note: 'A PR rather than a commit to main, the repo notifies watchers. Read the row before saying yes: only Node and the Android minimum come from the code.',
       },
       {
         id: 'create-branches',
@@ -546,33 +579,123 @@ export const PHASES = {
         gates: ['mainResolved'],
         // A cut is two passes: the branch has to exist before its CI can be
         // green. On the second pass this step is already done, so it declares
-        // nothing rather than POSTing the ref again and re-firing the nightly.
-        actions: state =>
-          state.branchTip
+        // nothing rather than POSTing the ref again.
+        actions: state => [
+          ...(state.branchTip
             ? []
             : [
-          declare({
-            step: 'create-branches',
-            why: `Create the release branch ${state.branch} from main`,
-            cmd: 'gh',
-            args: [
-              'api',
-              `repos/${RN}/git/refs`,
-              '-f',
-              `ref=refs/heads/${state.branch}`,
-              '-f',
-              `sha=${state.mainTip ?? 'UNRESOLVED_MAIN_SHA'}`,
-            ],
-            impact: [
-              `creates ${state.branch} on ${RN}, visible to everyone`,
-              'from this point main targets the next version, so picks must be requested rather than merged',
-            ],
-            reversible: 'the branch can be deleted, but anything cut from it cannot be recalled',
-            confirmToken: state.branch,
-          }),
+                declare({
+                  step: 'create-branches',
+                  why: `Create the release branch ${state.branch} from main`,
+                  cmd: 'gh',
+                  args: [
+                    'api',
+                    `repos/${RN}/git/refs`,
+                    '-f',
+                    `ref=refs/heads/${state.branch}`,
+                    '-f',
+                    `sha=${state.mainTip ?? 'UNRESOLVED_MAIN_SHA'}`,
+                  ],
+                  impact: [
+                    `creates ${state.branch} on ${RN}, visible to everyone`,
+                    'from this point main targets the next version, so picks must be requested rather than merged',
+                  ],
+                  reversible: 'the branch can be deleted, but anything cut from it cannot be recalled',
+                  confirmToken: state.branch,
+                }),
+              ]),
+          ...(state.cut?.template?.exists
+            ? []
+            : [
+                declare({
+                  step: 'create-branches',
+                  why: `Create ${state.branch} in react-native-community/template from its main`,
+                  cmd: process.execPath,
+                  args: [BRANCH_CUT, 'template', state.branch],
+                  impact: [`creates ${state.branch} on react-native-community/template, which new apps for this series are generated from`],
+                  reversible: 'the branch can be deleted until an RC is published',
+                  skippable: true,
+                }),
+              ]),
         ],
-        note:
-          'Also create the matching branch in react-native-community/template. Tell #cli: they must bump the CLI before RC1.',
+      },
+      {
+        id: 'project-board',
+        title: 'Create the release project board',
+        gates: [],
+        actions: state => {
+          const b = state.cut?.board;
+          if (b && !b.missing && !(b.missingTargets ?? []).length && b.public) {
+            return [];
+          }
+          const sched = state.schedule?.series ?? {};
+          return [
+            declare({
+              step: 'project-board',
+              why: `create the ${state.series} board on reactwg, copied from the previous series' board`,
+              cmd: process.execPath,
+              args: [BOARD, 'create', state.series, '--cut', sched.branchCut ?? 'unknown', '--release', sched.release ?? 'unknown'],
+              impact: [
+                b && !b.missing ? `updates ${b.title} (#${b.number}): public, its description, and the missing Target Release values` : `creates "React Native ${state.series} Releases" with the previous board's fields, views and workflows, empty`,
+                `makes it public and adds the Target Release values ${state.series}.0-rc.0 to ${state.series}.0`,
+              ],
+              reversible: 'yes, the board can be closed or deleted',
+              skippable: true,
+            }),
+          ];
+        },
+        note: 'GitHub has no API for the "Auto-add to project" workflow or the access list. The step prints both links: until auto-add is on, new pick requests do not reach the board.',
+      },
+      {
+        id: 'cut-picks',
+        title: 'Close pick requests the cut already includes',
+        gates: [],
+        actions: state =>
+          !state.branchTip
+            ? []
+            : (state.pickCandidates ?? [])
+                .filter(c => c.landed)
+                .flatMap(c => [
+                  declare({
+                    step: 'cut-picks',
+                    why: `close #${c.number}, already in ${state.branch}`,
+                    cmd: 'gh',
+                    args: [
+                      'issue',
+                      'close',
+                      String(c.number),
+                      '--repo',
+                      'reactwg/react-native-releases',
+                      '--comment',
+                      `Included in ${state.series} through the branch cut: ${c.resolved.map(r => `\`${r.sha}\``).join(', ')} was already on main when \`${state.branch}\` was cut, so no pick is needed.`,
+                    ],
+                    impact: [`comments on and closes #${c.number}`],
+                    reversible: 'reopen the issue',
+                  }),
+                  declare({
+                    step: 'cut-picks',
+                    why: `set Target Release ${state.proposedNext} on #${c.number}`,
+                    cmd: process.execPath,
+                    args: [BOARD, 'set-target', state.series, String(c.number), state.proposedNext],
+                    impact: [`puts #${c.number} on the ${state.series} board with Target Release ${state.proposedNext}`],
+                    reversible: 'yes, change the field on the board',
+                    skippable: true,
+                  }),
+                ]),
+        note: 'A pick requested before the cut for a commit that was already on main needs no pick, only closing. #1492 was one.',
+      },
+      {
+        id: 'tell-cli',
+        title: 'Tell the CLI team',
+        gates: [],
+        actions: () => [],
+        brief: state =>
+          [
+            `Post this in #cli on Discord (${CLI_CHANNEL}):`,
+            '',
+            `  React Native ${state.series} is cut: \`${state.branch}\` exists on react/react-native and react-native-community/template, and ${state.series}.0-rc.0 is next. Could you bump @react-native-community/cli and its compatibility table for ${state.series} before RC1?`,
+          ].join('\n'),
+        note: 'Not posted automatically. The CLI must be bumped before RC1.',
       },
       {
         id: 'hermes',
@@ -595,16 +718,24 @@ export const PHASES = {
         id: 'nightly',
         title: 'Trigger a nightly from main',
         gates: [],
-        actions: () => [
-          declare({
-            step: 'nightly',
-            why: 'Trigger a nightly build from main',
-            cmd: 'gh',
-            args: ['workflow', 'run', 'nightly.yml', '--repo', RN, '--ref', 'main'],
-            impact: ['publishes a nightly to npm that partners may integrate against'],
-            reversible: 'no, but nightlies are expected to churn',
-          }),
-        ],
+        // nightly.yml is gone since #57255 folded every npm publish into
+        // publish-npm.yml, where a manual run publishes a nightly. Once one ran
+        // after the cut, the second pass does not offer another.
+        actions: state =>
+          state.cut?.nightly?.dispatched
+            ? []
+            : [
+                declare({
+                  step: 'nightly',
+                  why: 'Trigger a nightly build from main',
+                  cmd: 'gh',
+                  args: ['workflow', 'run', 'publish-npm.yml', '--repo', RN, '--ref', 'main'],
+                  impact: ['publishes a nightly to npm that partners may integrate against'],
+                  reversible: 'no, but nightlies are expected to churn',
+                  skippable: true,
+                }),
+              ],
+        brief: state => (state.cut?.nightly?.dispatched ? `A nightly already ran on main after the cut: ${state.cut.nightly.url}` : null),
       },
       artifactsStep,
       testStep,

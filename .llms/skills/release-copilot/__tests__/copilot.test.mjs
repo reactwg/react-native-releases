@@ -32,6 +32,8 @@ import {
 } from '../scripts/release-test.mjs';
 import {existsSync as existsSyncNode} from 'node:fs';
 import {judgeRun, pinContents, judgePin, PIN_FILES, iosTarballUrls as hermesIosTarballUrls} from '../scripts/hermes-release.mjs';
+import {nodeMinimum, androidMinimum, parseTable, formatRow} from '../scripts/branch-cut.mjs';
+import {targetReleaseNames, mergeOptions, previousSeries} from '../scripts/board.mjs';
 
 // The copilot's local decisions are the captain's, not test input.
 process.env.RELEASE_COPILOT_STATE_DIR = mkdtempSync(join(tmpdir(), 'release-copilot-state-'));
@@ -1090,8 +1092,11 @@ test('gate: a branch cut cannot post a placeholder SHA', async () => {
   // A cut is two passes, because CI cannot be green on a branch that does not
   // exist. On the second the step must do nothing rather than POST the ref
   // again and re-fire the nightly.
-  const resumed = baseState({branch: '0.89-stable', mainTip: real, branchTip: 'bbbbbbbbbbb'});
+  const resumed = baseState({branch: '0.89-stable', mainTip: real, branchTip: 'bbbbbbbbbbb', cut: {template: {exists: true}}});
   assert.deepEqual(step.actions(resumed, {}), [], 'resuming declares no action');
+  const noTemplate = step.actions({...resumed, cut: {template: {exists: false}}}, {});
+  assert.deepEqual(noTemplate.map(a => a.args.slice(1).join(' ')), ['template 0.89-stable'], 'only the missing template branch is offered');
+  assert.equal(noTemplate[0].skippable, true);
   assert.equal((await evaluate(['mainResolved'], resumed, {})).passed, true, 'and does not block');
 });
 
@@ -3581,4 +3586,90 @@ test('gate: hermesCurrent fails when a newer Hermes is released but not pinned, 
   assert.match(ev.results[0].detail, /the 1 commit\(s\) beyond it/);
   const current = await evaluate(['hermesCurrent'], baseState({hermesUnreleased: {branch: 'b', tag: 'hermes-v260318099.0.5', resolved: true, pinned: '260318099.0.5', latestReleased: '260318099.0.5', pinBehind: false, commits: [{sha: 'aaa', subject: 'x'}]}}), {});
   assert.match(current.results[0].detail, /not in the latest release hermes-v260318099\.0\.5/);
+});
+
+// ---------------------------------------------------------- branch cut side steps
+
+const cutState = over =>
+  baseState({
+    series: '0.89',
+    branch: '0.89-stable',
+    proposedNext: '0.89.0-rc.0',
+    mainTip: 'c0ffee1234567890abcdef1234567890abcdef12',
+    branchTip: 'bbbbbbbbbbb',
+    schedule: {series: {version: '0.89', type: 'breaking', branchCut: '2026-11-02', release: '2026-12-07'}},
+    ...over,
+  });
+
+const cutStep = async id => (await import('../scripts/phases.mjs')).phaseFor('branch-cut').steps.find(s => s.id === id);
+
+test('branch cut: the nightly goes through publish-npm.yml and is not offered again after the cut', async () => {
+  const step = await cutStep('nightly');
+  const [a] = step.actions(cutState(), {});
+  assert.equal(render(a), 'gh workflow run publish-npm.yml --repo react/react-native --ref main');
+  assert.equal(a.skippable, true, 'a broken nightly must not stop the publish');
+  const done = cutState({cut: {nightly: {dispatched: true, url: 'https://github.com/react/react-native/actions/runs/41488715378'}}});
+  assert.deepEqual(step.actions(done, {}), []);
+  assert.match(step.brief(done), /already ran on main after the cut: .*41488715378/);
+});
+
+test('branch cut: the board, the support row and the template are offered only when missing', async () => {
+  const board = await cutStep('project-board');
+  const [b] = board.actions(cutState({cut: {board: {missing: true}}}), {});
+  assert.equal(b.args.slice(1).join(' '), 'create 0.89 --cut 2026-11-02 --release 2026-12-07');
+  assert.equal(b.skippable, true);
+  assert.deepEqual(board.actions(cutState({cut: {board: {number: 37, title: 'React Native 0.89 Releases', public: true, missingTargets: []}}}), {}), []);
+  const fix = board.actions(cutState({cut: {board: {number: 37, title: 'React Native 0.89 Releases', public: true, missingTargets: ['0.89.0']}}}), {});
+  assert.match(fix[0].impact[0], /updates React Native 0\.89 Releases \(#37\)/);
+
+  const deps = await cutStep('external-deps');
+  assert.deepEqual(deps.actions(cutState({cut: {supportRow: {present: true, row: '| 0.89 |', notes: []}}}), {}), []);
+  const before = deps.actions(cutState({branchTip: null, cut: {supportRow: {present: false, row: '| 0.89 |', notes: []}}}), {});
+  assert.equal(before[0].args.slice(1).join(' '), 'support-row 0.89 --ref main --pr', 'before the branch exists, read main');
+  assert.match(deps.brief(cutState({cut: {supportRow: {present: false, row: '| 0.89 | x |', notes: ['the 0.88 row says Node 22.11.0']}}})), /Proposed 0\.89 row[\s\S]*note: the 0\.88 row says Node 22\.11\.0/);
+});
+
+test('branch cut: a pick already in the cut is closed with the commit and gets Target Release rc.0', async () => {
+  const step = await cutStep('cut-picks');
+  const st = cutState({
+    pickCandidates: [
+      {number: 1492, landed: true, resolved: [{sha: '138c1a9a6e6'}]},
+      {number: 1495, landed: false, resolved: [{sha: '3d6462e9d26'}]},
+    ],
+  });
+  const acts = step.actions(st, {});
+  assert.deepEqual(acts.map(a => a.why), ['close #1492, already in 0.89-stable', 'set Target Release 0.89.0-rc.0 on #1492']);
+  assert.match(acts[0].args.at(-1), /Included in 0\.89 through the branch cut: `138c1a9a6e6` was already on main when `0\.89-stable` was cut/);
+  assert.equal(acts[1].args.slice(1).join(' '), 'set-target 0.89 1492 0.89.0-rc.0');
+  assert.deepEqual(step.actions(cutState({branchTip: null, pickCandidates: st.pickCandidates}), {}), [], 'nothing to close before the branch exists');
+
+  const gate = await evaluate(['noOpenPicks'], {...st, openPicks: [{number: 1492}]}, {});
+  assert.equal(gate.passed, true, 'a pick already on the branch only needs closing');
+  assert.match(gate.results[0].detail, /Already on 0\.89-stable, close: #1492/);
+  const blocked = await evaluate(['noOpenPicks'], {...st, openPicks: [{number: 1495}]}, {});
+  assert.equal(blocked.passed, false, 'a pick not on the branch still blocks');
+});
+
+test('branch cut: the #cli message names the channel from the guide', async () => {
+  const step = await cutStep('tell-cli');
+  const text = step.brief(cutState());
+  assert.match(text, /discord\.com\/channels\/514829729862516747\/1232435652533031013/);
+  assert.match(text, /React Native 0\.89 is cut: `0\.89-stable`/);
+  assert.match(text, /before RC1/);
+});
+
+test('branch cut: the support row helpers', () => {
+  assert.equal(nodeMinimum('^22.13.0 || ^24.3.0 || >= 26.0.0'), '22.13.0');
+  assert.equal(nodeMinimum('>= 22.11.0'), '22.11.0');
+  assert.equal(androidMinimum('minSdk = "24"\ntargetSdk = "37"'), 'Android 7.0');
+  const md = '| Version | a |\n| --- | --- |\n| 0.89                  | Android 7.0           |\n| 0.88 | Android 7.0 |\n';
+  assert.deepEqual(parseTable(md).map(r => r[0]), ['0.89', '0.88']);
+  assert.equal(formatRow(['0.90', 'Android 7.0']), '| 0.90                  | Android 7.0           |');
+});
+
+test('board: Target Release values for a series, merged without touching existing ones', () => {
+  assert.deepEqual(targetReleaseNames('0.90'), ['0.90.0-rc.0', '0.90.0-rc.1', '0.90.0-rc.2', '0.90.0-rc.3', '0.90.0-rc.4', '0.90.0-rc.5', '0.90.0']);
+  assert.equal(previousSeries('0.90'), '0.89');
+  const merged = mergeOptions([{name: '0.89.0', color: 'BLUE', description: 'd'}], ['0.89.0', '0.90.0-rc.0']);
+  assert.deepEqual(merged, [{name: '0.89.0', color: 'BLUE', description: 'd'}, {name: '0.90.0-rc.0', color: 'GRAY', description: ''}]);
 });
