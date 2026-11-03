@@ -10,13 +10,68 @@ Only these:
 
 Everything else needs no manual pass, including the stable `.0` and every patch. The `.0`
 is promoted from the golden RC with nothing new in it, so the golden RC's pass covers it.
-One release crew member is enough.
+One release crew member is enough. The copilot can be that member (below).
 
 The golden RC number is **not derivable in advance**. Measured from tags it landed at
 rc.5, rc.5, rc.5, rc.7, rc.3 then rc.4 across 0.82 to 0.87. For a released series
 `status` derives it from tags. For one in flight it assumes `expectedGoldenRc` from
 `schedule.json`, currently rc.5, labels that an assumption and never suggests moving
 it. Only the captain changes it.
+
+## The copilot runs the test pass
+
+`scripts/release-test.mjs` does what the crew used to do by hand: it builds and launches
+RNTester and a fresh RNTestProject on iOS and Android, runs the cases in
+`release-tests.json`, takes a screenshot per case and files the `[<version>] Test Report`.
+
+```sh
+node scripts/release-test.mjs run 0.89.0-rc.0                       # all four, about 15 minutes warm
+node scripts/release-test.mjs run 0.89.0-rc.0 --only rntester-ios   # one dimension while iterating
+node scripts/release-test.mjs confirm 0.89.0-rc.0 --case rntestproject-ios/launch --fail "warning toast on launch"
+node scripts/release-test.mjs report 0.89.0-rc.0                    # print the report body
+node scripts/release-test.mjs file 0.89.0-rc.0                      # what the test step runs, after you confirm
+```
+
+What it uses, so nothing of the captain's is touched:
+
+- the branch's **own CI artifacts** from the green Test All run at the tip
+  (`RNTesterApp-NewArch-Debug`, `rntester-debug`, `maven-local`, `react-native-package`),
+  the same ones the published RC is built from;
+- a **worktree** of the release branch under `~/Library/Caches/release-copilot/release-test/`
+  for Metro and for generating RNTestProject with RN's own `scripts/e2e/init-project-e2e.js`;
+- a dedicated **"RN Release Test" simulator** and an **`RN_Release_Test` AVD** on port 5580,
+  created on first use and left running afterwards so a failure can be looked at;
+- port **8081** for Metro. If something is already on it the pass refuses rather than
+  killing it.
+
+How each case is checked, per `release-tests.json`:
+
+- `maestro`: a flow in `maestro/` asserts text and ids and takes the screenshot.
+- `script`: the debugger (a Chrome DevTools session evaluates JavaScript in Hermes), the dev
+  menu (opened through the `DevMenu` module) and Fast Refresh (an edit must update the screen
+  while a marker set in the JS runtime survives, which tells a hot update from a full reload).
+- `agent`: **you** open the screenshot and record what it shows with `confirm`. The run
+  lists every pending one with the screenshot path and what to look for. Look at the whole
+  screen, not just the asserted text: a warning toast or a red box is a failure even when the
+  flow passed. Say what you see in the reason; it goes into the report.
+
+It also records the **console warnings and errors at launch** for each dimension. Judge
+each one: a new warning on a freshly generated app is a regression. On 0.89.0-rc.0 that is
+how the StatusBar regression showed up, as a warning toast on RNTestProject iOS.
+
+Screenshots are for you only. They stay in the run directory and are never uploaded or
+linked from the issue.
+
+The report's body carries a marker with the version, the branch tip it tested and every
+case's result. `manualTestingDone` passes only on a marker for the version being published
+at the current branch tip with every case passed: nothing failed, unconfirmed or skipped. A
+push after the pass means new artifacts, so the gate asks for a new pass. `--manual-tested`
+still overrides, after the captain has read the report.
+
+**Never run it under a dot directory** (`~/.cache` and the like). codegen's build picks
+files with micromatch, whose `**` does not cross a dot directory, so under one it copies raw
+Flow into `lib/` and prints OK. Every app then fails in codegen with "SyntaxError:
+Unexpected token '{'". The script refuses such a path.
 
 ## E2E must be green regardless
 

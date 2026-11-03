@@ -1,0 +1,22 @@
+appId: ${APP_ID}
+---
+- launchApp
+- stopApp
+- openLink: rntester://example/TextInput/uncontrolledComponent
+- runFlow:
+    when:
+      visible: 'Open'
+    commands:
+      - tapOn: 'Open'
+- extendedWaitUntil:
+    visible:
+      id: 'uncontrolled-textinput'
+    timeout: 120000
+- tapOn:
+    id: 'uncontrolled-textinput'
+- eraseText
+- inputText: 'release test'
+- assertVisible:
+    id: 'uncontrolled-textinput'
+    text: 'release test'
+- takeScreenshot: ${SHOTS}/textinput

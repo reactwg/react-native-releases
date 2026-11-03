@@ -12,6 +12,8 @@ import {promisify} from 'node:util';
 import {readFileSync, existsSync, mkdirSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 
+import {parseReportMarker} from './release-test.mjs';
+
 const exec = promisify(execFile);
 
 const RN_REPO = 'react/react-native';
@@ -568,6 +570,21 @@ export function liveSources() {
      * in-progress, checked live. Each field is independently falsifiable so the
      * message reports what is true rather than what the captain remembers.
      */
+    /**
+     * The Test Report issue for a version, with the marker the copilot's test
+     * pass writes into its body. The gate reads the marker, not the issue state:
+     * a closed issue only says someone closed it.
+     */
+    async testReport(version) {
+      const raw = await gh([
+        'issue', 'list', '--repo', RELEASES_REPO, '--state', 'all',
+        '--search', `"[${version}] Test Report" in:title`,
+        '--limit', '5', '--json', 'number,title,state,url,body',
+      ]).catch(() => '[]');
+      const issue = parseJSON(raw, []).find(i => i.title?.trim() === `[${version}] Test Report`);
+      return issue ? {number: issue.number, state: issue.state, url: issue.url, marker: parseReportMarker(issue.body)} : null;
+    },
+
     async releaseArtifacts(version, prevVersion) {
       const httpOk = async url => {
         const code = await sh(
@@ -788,6 +805,13 @@ export function fixtureSources(dir) {
     async releaseArtifacts(version) {
       return pick('releaseArtifacts', version);
     },
+    async testReport(version) {
+      try {
+        return pick('testReport', version);
+      } catch {
+        return null;
+      }
+    },
   };
 }
 
@@ -852,6 +876,7 @@ export function recordingSources(inner, dir) {
       put('pickCandidates', ps.map(p => p.number).join(','), await inner.pickCandidates(ps, b)),
     releaseArtifacts: async (v, p) =>
       put('releaseArtifacts', v, await inner.releaseArtifacts(v, p)),
+    testReport: async v => put('testReport', v, await inner.testReport(v)),
     flush() {
       mkdirSync(dir, {recursive: true});
       for (const [name, data] of Object.entries(captured)) {

@@ -1,0 +1,8 @@
+appId: ${APP_ID}
+---
+- pressKey: Enter
+- waitForAnimationToEnd
+- assertVisible:
+    id: 'uncontrolled-textinput'
+    text: 'release test'
+- takeScreenshot: ${SHOTS}/keyboard

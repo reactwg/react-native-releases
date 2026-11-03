@@ -23,6 +23,10 @@ import {liveSources} from './sources.mjs';
 import {assess, formatAssessment} from './assess-picks.mjs';
 import {formatInvestigation} from './investigate-pick.mjs';
 import {hermesOverview, hermesChoice} from './release-state.mjs';
+import {fileURLToPath} from 'node:url';
+import {dirname, join} from 'node:path';
+
+const RELEASE_TEST = join(dirname(fileURLToPath(import.meta.url)), 'release-test.mjs');
 
 const RN = 'react/react-native';
 
@@ -199,6 +203,47 @@ const artifactsStep = {
   actions: () => [],
   note:
     'Release testing uses artifacts from the most recent workflow run on the branch. Avoid pushing more commits from here until testing is done, otherwise you wait for a rebuild and must retest.',
+};
+
+/**
+ * The test pass the crew used to run by hand. It runs on the branch's CI
+ * artifacts, so it sits after `artifacts`. Filing the report is the mutating
+ * part and refuses while any screenshot is unconfirmed, so a guided run that
+ * reaches it too early stops there instead of filing a half-checked report.
+ */
+const testStep = {
+  id: 'test',
+  title: 'Run the release test pass',
+  gates: [],
+  actions: state => {
+    if (state.schedule?.needsManualTesting === false) {
+      return [];
+    }
+    const v = state.proposedNext;
+    return [
+      declare({
+        step: 'test',
+        mutates: false,
+        why: `run RNTester and a fresh RNTestProject on iOS and Android from ${state.branch}'s CI artifacts`,
+        cmd: process.execPath,
+        args: [RELEASE_TEST, 'run', v],
+      }),
+      declare({
+        step: 'test',
+        why: `file the [${v}] Test Report`,
+        cmd: process.execPath,
+        args: [RELEASE_TEST, 'file', v],
+        impact: [
+          `creates (or updates) "[${v}] Test Report" in reactwg/react-native-releases from the run's report.md`,
+          'closes it only if every case passed; otherwise it stays open with the failures under Blocking Issues',
+          'refuses while any screenshot is still unconfirmed',
+        ],
+        reversible: 'yes, the issue can be edited, reopened or closed',
+      }),
+    ];
+  },
+  note:
+    'Only RC0, RC1 and the golden RC are tested. Before answering yes to filing, open every screenshot the run lists and record what it shows with `release-test.mjs confirm`. Do not push to the branch during the pass: the report is tied to the tip it tested.',
 };
 
 /** Shared tail: everything from publish to board update. */
@@ -572,6 +617,7 @@ export const PHASES = {
         ],
       },
       artifactsStep,
+      testStep,
       ...commonPublishSteps,
       {
         id: 'bump-main',
@@ -827,13 +873,7 @@ export const PHASES = {
       },
       breakingSweepStep,
       artifactsStep,
-      {
-        id: 'test',
-        title: 'Release testing',
-        gates: [],
-        actions: () => [],
-        note: 'Manual testing only for RC0, RC1 and the golden RC. E2E must be green regardless.',
-      },
+      testStep,
       ...commonPublishSteps,
       {
         id: 'blog-post',

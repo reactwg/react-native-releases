@@ -747,6 +747,13 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
           proposedNext,
         );
 
+  // Only looked up when the version needs testing. A source without it (an
+  // older fixture, a test stub) reads as no report.
+  const testReport =
+    needsManualTesting !== false && proposedNext && typeof sources.testReport === 'function'
+      ? await sources.testReport(proposedNext).catch(() => null)
+      : null;
+
   const todayStr = today ?? new Date().toISOString().slice(0, 10);
   const lastPublishedAt = current ? publishTimes[formatVersion(current)] ?? null : null;
   // Patches have no weekly slot: they ship when the picks are in.
@@ -825,6 +832,7 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
       proposedNext,
     ),
     pickCandidates,
+    testReport,
     staleRed,
     breakingCommits,
     breakingBaseline,
