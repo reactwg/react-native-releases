@@ -576,7 +576,7 @@ async function runDimension({dim, spec, device, wt, appPath, edit, shotsDir, log
   return {cases, warnings: [...new Set(warnings)]};
 }
 
-async function buildProject(project, device, wt, mavenLocal, log) {
+async function buildProject(project, device, mavenLocal, log) {
   if (device.platform === 'ios') {
     const ios = join(project, 'ios');
     const bundled = (await run('bundle', ['install'], {cwd: ios, env: nodeEnv()})).ok && (await run('bundle', ['exec', 'pod', 'install'], {cwd: ios, env: nodeEnv({USE_HERMES: '1'})})).ok;
@@ -723,7 +723,7 @@ export async function runTestPass(version, {only = null, log = console.log} = {}
     for (const dim of projectDims) {
       try {
         log(`  building RNTestProject for ${dim.platform}`);
-        built[dim.id] = await buildProject(project, devices[dim.platform], wt, art['maven-local'], log);
+        built[dim.id] = await buildProject(project, devices[dim.platform], art['maven-local'], log);
       } catch (err) {
         results.dimensions[dim.id] = {skipped: true, reason: `build failed: ${err.message.split('\n')[0]}`, error: err.message};
         saveResults(dir, results, spec);
