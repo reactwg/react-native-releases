@@ -3673,3 +3673,16 @@ test('board: Target Release values for a series, merged without touching existin
   const merged = mergeOptions([{name: '0.89.0', color: 'BLUE', description: 'd'}], ['0.89.0', '0.90.0-rc.0']);
   assert.deepEqual(merged, [{name: '0.89.0', color: 'BLUE', description: 'd'}, {name: '0.90.0-rc.0', color: 'GRAY', description: ''}]);
 });
+
+test('phase: the test step is skipped once a passing report exists at the tip, not before', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const step = phaseFor('branch-cut').steps.find(s => s.id === 'test');
+  const at = sha => reportFor(null, {sha});
+  const tip = '4eb4d2e795c0123456';
+  assert.deepEqual(step.actions(testedState({testReport: at(tip)}), {}), [], 'passed at the tip: nothing to run');
+  assert.match(step.brief(testedState({testReport: at(tip)})), /Already passed at this tip: #1500/);
+  assert.equal(step.actions(testedState({testReport: at('aaaaaaaaaaa0000')}), {}).length, 2, 'a report for an older tip runs the pass again');
+  const failing = {...at(tip), marker: {...at(tip).marker, summary: {...at(tip).marker.summary, fail: ['x/launch']}}};
+  assert.equal(step.actions(testedState({testReport: failing}), {}).length, 2, 'a failing report runs it again');
+  assert.equal(step.brief(testedState({testReport: null})), null);
+});

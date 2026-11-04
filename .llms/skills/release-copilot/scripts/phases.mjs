@@ -23,6 +23,7 @@ import {liveSources} from './sources.mjs';
 import {assess, formatAssessment} from './assess-picks.mjs';
 import {formatInvestigation} from './investigate-pick.mjs';
 import {hermesOverview, hermesChoice} from './release-state.mjs';
+import {reportPassed} from './release-test.mjs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
@@ -205,12 +206,23 @@ const artifactsStep = {
  * part and refuses while any screenshot is unconfirmed, so a guided run that
  * reaches it too early stops there instead of filing a half-checked report.
  */
+/**
+ * The same rule manualTestingDone applies: a passing report for this version
+ * at the current tip. Without it, a guided run after a filed pass ran the whole
+ * pass again before publishing 0.89.0-rc.0.
+ */
+export function testPassDone(state) {
+  const m = state.testReport?.marker;
+  const tip = String(state.branchTip ?? '');
+  return Boolean(m && m.version === state.proposedNext && tip && String(m.sha).startsWith(tip.slice(0, 11)) && reportPassed(m));
+}
+
 const testStep = {
   id: 'test',
   title: 'Run the release test pass',
   gates: [],
   actions: state => {
-    if (state.schedule?.needsManualTesting === false) {
+    if (state.schedule?.needsManualTesting === false || testPassDone(state)) {
       return [];
     }
     const v = state.proposedNext;
@@ -236,6 +248,7 @@ const testStep = {
       }),
     ];
   },
+  brief: state => (testPassDone(state) ? `Already passed at this tip: #${state.testReport.number}. Nothing to run.` : null),
   note:
     'Only RC0, RC1 and the golden RC are tested. Before answering yes to filing, open every screenshot the run lists and record what it shows with `release-test.mjs confirm`. Do not push to the branch during the pass: the report is tied to the tip it tested.',
 };
