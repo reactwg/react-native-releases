@@ -139,20 +139,26 @@ function existingPr(version) {
   return prs[0] ?? null;
 }
 
-function prBody(version, {dotZero, entries, prev, report}) {
+export function prBody(version, {dotZero, entries, prev, report}) {
   const what = dotZero
     ? `Replaces the per-RC headings with the single \`## v${version}\` section the stable release publishes.`
-    : `Adds the \`## v${version}\` section, generated against v${prev}.`;
+    : `Adds the \`## v${version}\` section, generated against v${prev}: ${entries.length} entries.`;
+  const todo = [
+    report.prefixed.length && `Confirm the ${report.prefixed.length} prefixes the copilot added (below).`,
+    report.unprefixed.length && `Prefix the ${report.unprefixed.length} entries still without one, the ones with no \`**Scope**:\` in the diff.`,
+    report.flagged.length && `Check the ${report.flagged.length} flags (below).`,
+    'Drop internal entries and promote user-facing ones.',
+  ].filter(Boolean);
+  // The unprefixed entries are visible in the diff, so the body only counts them.
   return [
     '## Summary',
     '',
-    `${what} ${entries.length} entries, sorted by scope within each section, empty sections omitted, release machinery commits dropped.`,
+    `${what} Opened by the release copilot.`,
     '',
-    'Opened by the release copilot. Every prefix it added and every flag it raised is listed below for a human to confirm.',
+    'Before landing:',
+    ...todo.map(t => `- ${t}`),
     '',
-    formatReport(report),
-    'Also still for a human: drop internal entries and promote genuinely user-facing ones.',
-    '',
+    formatReport({...report, unprefixed: []}, {collapsed: true}),
     '## Changelog:',
     '',
     `[INTERNAL] - Add changelog for v${version}`,

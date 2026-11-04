@@ -2530,6 +2530,22 @@ test('curation: entries get their prefix and the report lists every decision', a
   assert.match(text, /Still without a prefix \(1\)/);
 });
 
+test('changelog PR body: a short checklist, the lists collapsed and the unprefixed entries only counted', async () => {
+  const {prBody} = await import('../scripts/generate-changelog.mjs');
+  const report = {
+    prefixed: [{scope: 'Text', prose: 'Add lineBreak'}],
+    unprefixed: ['Something vague', 'Another'],
+    flagged: [{prose: 'Remove X', section: 'Fixed', subsection: 'iOS specific', flags: ['changes public API']}],
+  };
+  const body = prBody('0.89.0-rc.0', {dotZero: false, entries: {length: 342}, prev: '0.88.1', report});
+  assert.match(body, /generated against v0\.88\.1: 342 entries\. Opened by the release copilot\./);
+  assert.match(body, /^- Prefix the 2 entries still without one/m);
+  assert.match(body, /<details><summary>Prefixes added \(1\)<\/summary>\n\n- `Text`: Add lineBreak/);
+  assert.match(body, /<details><summary>Consistency flags \(1\)<\/summary>/);
+  assert.doesNotMatch(body, /Something vague/, 'the unprefixed entries are visible in the diff');
+  assert.ok(body.split('<details>')[0].split('\n').length < 15, 'the open part stays short');
+});
+
 // ---------------------------------------------------------------- patches
 
 const patchSrc = ({commits = [], hermes = {resolved: false, commits: []}, seen = []} = {}) => ({
