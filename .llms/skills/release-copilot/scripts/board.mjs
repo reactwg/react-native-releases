@@ -116,6 +116,19 @@ export async function createBoard(series, {cut, release, rcs = 6, log = console.
   return board;
 }
 
+/** Items on the series board without a Target Release, by issue number. */
+export async function itemsWithoutTarget(series) {
+  const board = await findBoard(series);
+  if (!board) {
+    return null;
+  }
+  const d = await graphql(
+    `query($n:Int!){ organization(login:"${ORG}"){ projectV2(number:$n){ items(first:100){ nodes{ content{ ... on Issue { number } ... on PullRequest { number } } fieldValueByName(name:"Target Release"){ ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }`,
+    {n: board.number},
+  );
+  return d.organization.projectV2.items.nodes.filter(i => i.content?.number && !i.fieldValueByName?.name).map(i => i.content.number);
+}
+
 /** Puts an issue on the series board if needed and sets its Target Release. */
 export async function setTarget(series, issue, version, {log = console.log} = {}) {
   const board = await findBoard(series);

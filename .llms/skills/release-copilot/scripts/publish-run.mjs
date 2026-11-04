@@ -12,6 +12,7 @@
 
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {classifyFailure} from './ci-failures.mjs';
 
 const exec = promisify(execFile);
 const RN = 'react/react-native';
@@ -52,7 +53,25 @@ async function npmState(version) {
   return {published: code === '200', tags};
 }
 
-export async function waitForPublish(version, {latest = false, log = console.log, timeoutMinutes = 120} = {}) {
+/**
+ * bump_podfile_lock runs after the publish and commits [LOCAL] Bump Podfile.lock
+ * to the release branch. Rerun only that job: rerunning post_publish
+ * republishes the template. Nothing depends on bump_podfile_lock.
+ */
+export function podfileLockAdvice(runId, jobs, failedLog) {
+  const job = (jobs ?? []).find(j => j.name === 'bump_podfile_lock' || j.name.startsWith('bump_podfile_lock '));
+  if (!job || job.conclusion !== 'failure') {
+    return null;
+  }
+  const c = classifyFailure(failedLog ?? '');
+  const rerun = `gh run rerun ${runId} --repo ${RN} --job ${job.databaseId}`;
+  return c.kind === 'flake'
+    ? `bump_podfile_lock failed: ${c.reason}. Rerun only that job, not post_publish (which republishes the template): ${rerun}`
+    : `bump_podfile_lock failed for an unknown reason, so [LOCAL] Bump Podfile.lock is not on the branch. Read its log before rerunning it alone: ${rerun}`;
+}
+
+// build_android took up to 2h17 on the 0.88 publishes, so two hours timed out.
+export async function waitForPublish(version, {latest = false, log = console.log, timeoutMinutes = 180} = {}) {
   const end = Date.now() + timeoutMinutes * 60000;
   let run = null;
   while (!run && Date.now() < end) {
@@ -76,6 +95,14 @@ export async function waitForPublish(version, {latest = false, log = console.log
   log(verdict.detail);
   if (!verdict.ok) {
     return {ok: false, url: run.url};
+  }
+  const done = JSON.parse(await gh(['run', 'view', String(run.databaseId), '--repo', RN, '--json', 'jobs']));
+  if ((done.jobs ?? []).some(j => j.name.startsWith('bump_podfile_lock') && j.conclusion === 'failure')) {
+    const failedLog = await gh(['run', 'view', String(run.databaseId), '--repo', RN, '--log-failed']).catch(() => '');
+    const advice = podfileLockAdvice(run.databaseId, done.jobs, failedLog.split('\n').filter(l => l.startsWith('bump_podfile_lock')).join('\n'));
+    if (advice) {
+      log(advice);
+    }
   }
   const want = latest ? 'latest' : 'next';
   let npm = await npmState(version);

@@ -3850,3 +3850,41 @@ test('republish: replaces only the notes above ---, and only when they are what 
   assert.match(verifyRepublished(before, {...before, body: r.body, prerelease: false}, r).join(), /prerelease changed/);
   assert.match(verifyRepublished(before, {...before, body: r.body.replace('Debug', 'Dbg')}, r).join(), /body is not what was sent/);
 });
+
+test('publish: a GitHub 500 on the Podfile.lock push is a flake with a single-job rerun', async () => {
+  const {podfileLockAdvice} = await import('../scripts/publish-run.mjs');
+  const jobs = [{name: 'post_publish', conclusion: 'failure', databaseId: 9}, {name: 'bump_podfile_lock / bump-podfile-lock', conclusion: 'failure', databaseId: 126531881080}];
+  // The 0.89.0-rc.0 log.
+  const log = 'remote: Internal Server Error\nTo https://github.com/react/react-native\n ! [remote rejected]         0.89-stable -> 0.89-stable (Internal Server Error)';
+  assert.equal(classifyFailure(log).id, 'github-500');
+  const a = podfileLockAdvice(41808713786, jobs, log);
+  assert.match(a, /GitHub refused the push with a 500/);
+  assert.match(a, /gh run rerun 41808713786 --repo react\/react-native --job 126531881080/);
+  assert.match(a, /not post_publish/);
+  assert.match(podfileLockAdvice(1, jobs, 'pod install failed'), /unknown reason/);
+  assert.equal(podfileLockAdvice(1, [{name: 'bump_podfile_lock / bump-podfile-lock', conclusion: 'success', databaseId: 2}], ''), null);
+});
+
+test('crew message: template and board are ticked from recorded state, not left to a human', async () => {
+  const {buildStatusMessage} = await import('../scripts/release-message.mjs');
+  const st = baseState({series: '0.89', branch: '0.89-stable', proposedNext: '0.89.0-rc.0'});
+  const msg = a => buildStatusMessage(st, {version: '0.89.0-rc.0', artifacts: {tagged: true, npmPublished: true, ...a}});
+  assert.match(msg({}), /:hourglass: Verify template/);
+  assert.match(msg({templateVerified: true}), /:white_check_mark: Verify template/);
+  assert.match(msg({}), /:hourglass: Update GitHub project/);
+  assert.match(msg({boardReady: true}), /:white_check_mark: Update GitHub project/);
+  assert.match(msg({boardReady: false}), /:hourglass: Update GitHub project/);
+});
+
+test('template check: only a full pass on both platforms is recorded', async () => {
+  const {templateResult, TEMPLATE_RESULTS} = await import('../scripts/verify-template.mjs');
+  const {mkdirSync, writeFileSync, rmSync} = await import('node:fs');
+  const v = `0.0.0-test-${process.pid}`;
+  assert.equal(templateResult(v), null);
+  mkdirSync(TEMPLATE_RESULTS, {recursive: true});
+  writeFileSync(join(TEMPLATE_RESULTS, `${v}.json`), JSON.stringify({ok: false}));
+  assert.equal(templateResult(v), null, 'a failed check does not tick');
+  writeFileSync(join(TEMPLATE_RESULTS, `${v}.json`), JSON.stringify({version: v, ok: true}));
+  assert.equal(templateResult(v).ok, true);
+  rmSync(join(TEMPLATE_RESULTS, `${v}.json`));
+});

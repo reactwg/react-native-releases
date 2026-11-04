@@ -75,8 +75,8 @@ export function buildStatusMessage(state, {version, artifacts, publishRunUrl}) {
     ),
   );
 
-  // No signal for this one; a human runs it.
-  L.push(`${WIP} Verify template: npx @react-native-community/cli init + build for iOS+Android`);
+  // Recorded by verify-template.mjs when both platforms built on this machine.
+  L.push(line(a.templateVerified === true, 'Verify template: npx @react-native-community/cli init + build for iOS+Android'));
 
   L.push(
     line(
@@ -107,7 +107,8 @@ export function buildStatusMessage(state, {version, artifacts, publishRunUrl}) {
   L.push(
     `${WIP} Communicate release to ${ANNOUNCE_CHANNELS.join(" + ")}`,
   );
-  L.push(`${WIP} Update GitHub project`);
+  // Ticked when every item on the series board for this version carries a Target Release.
+  L.push(line(a.boardReady === true, 'Update GitHub project'));
 
   return L.join('\n');
 }
@@ -181,9 +182,9 @@ export function leftoverDrafts(artifacts) {
 /** The bits a human still has to confirm, so the captain knows what is left. */
 export function unverifiable() {
   return [
-    'Verify template: run `node scripts/verify-template.mjs <version>` (the template-check step does this), then tick',
+    'Verify template: ticked once `node scripts/verify-template.mjs <version>` passes on both platforms on this machine',
     'Communicate: you are posting the message, so tick it once posted',
-    'Update GitHub project: tick once the board items carry the right Target Release',
+    'Update GitHub project: ticked when no board item lacks a Target Release. Check each one carries the right one',
   ];
 }
 

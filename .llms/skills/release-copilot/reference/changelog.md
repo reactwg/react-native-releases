@@ -13,14 +13,25 @@ curates (`scripts/curate-changelog.mjs`):
 
 1. **Empty sections and subsections are omitted**, release machinery commits dropped, entries
    sorted by scope.
-2. **Missing prefixes are added** when two signals agree. The entry's text names a scope the
+2. **Internal entries are dropped**: CI, Fantom, test or RNTester-only changes, translation
+   syncs, Flow upgrades and bot commits titled with a file path. A change landed twice keeps
+   one entry. On 0.89.0-rc.0 that was 26 of the 29 dropped by hand, and it drops nothing the
+   crew kept in 0.88.0. Each drop is listed with its reason, so one can be restored.
+3. **`Unknown` entries are filed** by their leading verb (Fix → Fixed, Remove → Removed, and
+   so on, Changed otherwise) and their files' platform. 7 of 10 right on 0.89.0-rc.0, and
+   each move is listed.
+4. **Missing prefixes are added** when two signals agree. The entry's text names a scope the
    changelog already uses. The commit's files sit where that scope's commits have lived.
    The mapping is learned from `CHANGELOG.md` itself. Trained without the release being
    checked, 111 of 133 inferred prefixes across 0.86.0, 0.87.0 and 0.88.0 matched what the
    crew chose (89% on 0.88.0, 79% on 0.87.0, where most misses were a theme such as
    `Strict TypeScript API` against a component name). It infers for about a quarter of
-   entries. The rest stay unprefixed and are listed, never guessed.
-3. **Consistency is checked** and flagged for a human: a commit that removes or narrows a
+   entries. An author's own label ("SwiftPM: ...") is used as the scope, and a label that
+   repeats the scope is dropped from the text. The rest stay unprefixed. Where a path always
+   means one scope (`ReactCommon/yoga`, `packages/virtualized-lists`, ...) or the files'
+   history is dominated by one, the report **suggests** it, without applying it: those were
+   right only 45 to 67% of the time against the crew's own prefixes.
+5. **Consistency is checked** and flagged for a human: a commit that removes or narrows a
    public API symbol (`ReactNativeApi.d.ts`, `ReactAndroid.api`, the C++ API snapshots) filed
    outside Breaking, Removed or Deprecated; a commit tagged `[BREAKING]` filed elsewhere; a
    Breaking entry whose commit does neither; a removal filed as Added, Changed or Fixed; a
@@ -29,8 +40,9 @@ curates (`scripts/curate-changelog.mjs`):
    12 of 0.87.0's 30 breaking entries touched an API snapshot, because packaging and behaviour
    changes never do.
 
-The PR it opens lists every prefix it added, every entry still without one and every flag,
-so the review is a checklist. Reproduce the numbers with
+The PR it opens lists every prefix it added, every suggestion, every drop, every move out of
+`Unknown` and every flag, so the review is a checklist. Add `--suggestions` to `--evaluate`
+to score the suggestions. Reproduce the numbers with
 `node scripts/curate-changelog.mjs --evaluate 0.88.0`. It works in a throwaway shared clone, so your checkout is not
 touched. It opens nothing when the PR already exists. It also opens nothing when the
 release branch's own publish workflow still has its `generate_changelog` job: the bot opens
@@ -145,7 +157,9 @@ is usually the single most significant change in the release. It belongs under
 - **Hermes**: Bump Hermes to 260318099.0.3 (...)
 ```
 
-Deleting the whole bucket loses it silently. Read every entry before dropping it.
+Deleting the whole bucket loses it silently. Read every entry before dropping it. The
+generator now files the user-facing ones and drops the plumbing itself, but check its
+"Moved out of Unknown" and "Dropped" lists.
 
 ## Other rules
 
@@ -198,6 +212,10 @@ and the Upgrade Helper boilerplate, but its notes section is **empty**. The
 ```sh
 node scripts/fill-release-notes.mjs <version> --dry-run
 node scripts/fill-release-notes.mjs <version>
+# before the changelog PR lands, from its branch:
+node scripts/fill-release-notes.mjs <version> --ref changelog/v<version>
+# once it lands, replace the published notes (refuses if they were edited on the release):
+node scripts/fill-release-notes.mjs <version> --update-published --was changelog/v<version>@<sha> --dry-run
 ```
 
 It refuses to overwrite notes that are already on the draft and differ. It always sends

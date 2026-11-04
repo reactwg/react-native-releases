@@ -19,9 +19,21 @@
 
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {existsSync, mkdtempSync, rmSync, readFileSync} from 'node:fs';
+import {existsSync, mkdtempSync, rmSync, readFileSync, mkdirSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
-import {tmpdir} from 'node:os';
+import {tmpdir, homedir} from 'node:os';
+
+export const TEMPLATE_RESULTS = join(homedir(), 'Library', 'Caches', 'release-copilot', 'template-check');
+
+/** A passing template check recorded for this version, or null. */
+export function templateResult(version) {
+  try {
+    const r = JSON.parse(readFileSync(join(TEMPLATE_RESULTS, `${version}.json`), 'utf8'));
+    return r?.ok === true ? r : null;
+  } catch {
+    return null;
+  }
+}
 
 const exec = promisify(execFile);
 
@@ -266,6 +278,15 @@ export async function verifyTemplate(version, {iosOnly = false, androidOnly = fa
     );
     if (keep) {
       log(`App left at ${app}`);
+    }
+    if (failed.length === 0 && !iosOnly && !androidOnly) {
+      // The crew message ticks "Verify template" from this, nothing else can know.
+      try {
+        mkdirSync(TEMPLATE_RESULTS, {recursive: true});
+        writeFileSync(join(TEMPLATE_RESULTS, `${version}.json`), JSON.stringify({version, ok: true, at: new Date().toISOString(), results}, null, 2));
+      } catch {
+        /* the check passed, recording it is best effort */
+      }
     }
     return {version, results, ok: failed.length === 0, dir: keep ? app : null};
   }
