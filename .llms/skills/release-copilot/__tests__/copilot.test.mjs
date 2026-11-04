@@ -3759,3 +3759,12 @@ test('verify-publish: waits for the publish run on the tag and rejects a green r
   assert.deepEqual(first.args.slice(1), ['wait', '0.89.0-rc.0']);
   assert.deepEqual(step.actions(baseState({proposedNext: '0.89.0'}), {isLatest: true})[0].args.slice(1), ['wait', '0.89.0', '--latest']);
 });
+
+test('release links: a draft is linked by its tag, a published release by its own URL', async () => {
+  const {releaseLink, buildAnnouncement} = await import('../scripts/release-message.mjs');
+  const draft = {url: 'https://github.com/react/react-native/releases/tag/untagged-48547e0e58b203e0361b', isDraft: true};
+  assert.equal(releaseLink('0.89.0-rc.0', draft), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
+  assert.equal(releaseLink('0.89.0-rc.0', {url: 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0', isDraft: false}), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
+  assert.equal(releaseLink('0.89.0-rc.0', null), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
+  assert.doesNotMatch(buildAnnouncement('0.89.0-rc.0', {release: draft}), /untagged-/);
+});

@@ -15,6 +15,11 @@
  *
  *   node scripts/fill-release-notes.mjs 0.88.0
  *   node scripts/fill-release-notes.mjs 0.88.0 --dry-run
+ *   node scripts/fill-release-notes.mjs 0.89.0-rc.0 --ref changelog/v0.89.0-rc.0
+ *
+ * --ref reads CHANGELOG.md from another ref, such as the changelog PR's branch
+ * when the release goes out before that PR lands. Edits made while curating
+ * the PR then do not reach the release by themselves.
  */
 
 import {execFile} from 'node:child_process';
@@ -80,20 +85,21 @@ async function main() {
   const args = process.argv.slice(2);
   const version = args.find(a => /^\d+\.\d+\.\d+(-rc\.\d+)?$/.test(a));
   const dryRun = args.includes('--dry-run');
-  if (!version) {
-    console.error('usage: node scripts/fill-release-notes.mjs <version> [--dry-run]');
+  const ref = args.includes('--ref') ? args[args.indexOf('--ref') + 1] : 'main';
+  if (!version || !ref) {
+    console.error('usage: node scripts/fill-release-notes.mjs <version> [--ref <ref>] [--dry-run]');
     process.exit(2);
   }
 
   const changelog = await gh([
     'api',
-    `repos/${RN}/contents/CHANGELOG.md?ref=main`,
+    `repos/${RN}/contents/CHANGELOG.md?ref=${encodeURIComponent(ref)}`,
     '-H',
     'Accept: application/vnd.github.raw',
   ]);
   const section = changelogSection(changelog, version);
   if (!section) {
-    console.log(`CHANGELOG.md on main has no "## v${version}" section yet. Land the changelog first.`);
+    console.log(`CHANGELOG.md on ${ref} has no "## v${version}" section yet.${ref === 'main' ? ' Land the changelog first, or pass --ref changelog/v' + version + ' to use the open PR.' : ''}`);
     process.exit(1);
   }
 
@@ -121,7 +127,7 @@ async function main() {
     process.exit(1);
   }
   if (dryRun) {
-    console.log(`Would write ${entries} entries above the generated part of the ${version} draft.`);
+    console.log(`Would write ${entries} entries from CHANGELOG.md on ${ref} above the generated part of the ${version} draft.`);
     return;
   }
 
@@ -134,7 +140,7 @@ async function main() {
     console.log(`!! The update returned tag ${updated.tag_name}, draft=${updated.draft}. Check the release.`);
     process.exit(1);
   }
-  console.log(`Filled the ${version} draft with ${entries} entries. Still a draft on v${version}, review and publish it.`);
+  console.log(`Filled the ${version} draft with ${entries} entries from ${ref}. Still a draft on v${version}, review and publish it.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
