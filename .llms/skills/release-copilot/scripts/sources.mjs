@@ -194,7 +194,15 @@ export function liveSources() {
           '--json',
           'jobs',
         ]);
-        return parseJSON(raw, {jobs: []}).jobs ?? [];
+        const jobs = parseJSON(raw, {jobs: []}).jobs ?? [];
+        // A failed job's annotations carry the runner's own error, which is
+        // what tells an infrastructure loss from a real failure. Job logs are
+        // often not served for a job whose runner died.
+        for (const j of jobs.filter(x => x.conclusion === 'failure').slice(0, 10)) {
+          const ann = await gh(['api', `repos/${RN_REPO}/check-runs/${j.databaseId}/annotations`, '--jq', '[.[] | select(.annotation_level == "failure") | .message] | join("\\n")']).catch(() => '');
+          j.failureText = String(ann).trim().slice(0, 2000);
+        }
+        return jobs;
       } catch {
         return null;
       }

@@ -24,6 +24,7 @@ import {
   releaseShape,
   isPrerelease,
 } from './version.mjs';
+import {classifyFailure} from './ci-failures.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCHEDULE_PATH = join(HERE, '..', 'reference', 'schedule.json');
@@ -408,6 +409,7 @@ function classifyRun(run, jobs) {
     conclusion: run.conclusion,
     status: run.status,
     failedJobs: failed.map(j => j.name),
+    failures: failed.map(j => ({job: j.name, ...classifyFailure(j.failureText ?? '')})),
     totals: jobs.reduce((acc, j) => {
       const k = j.conclusion ?? j.status;
       acc[k] = (acc[k] ?? 0) + 1;

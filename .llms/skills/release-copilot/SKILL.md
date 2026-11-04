@@ -413,8 +413,10 @@ is in `scripts/gates.mjs` and `reference/field-notes.md` rather than repeated he
 | `mainResolved` | a branch cut has no resolved SHA for main |
 | `manualTestingDone` | RC0, RC1 or the golden RC has no passing Test Report for this version at the current branch tip, unless `--manual-tested` |
 
-`classifyFailure` in `gates.mjs` encodes which CI failures are flakes and which are
-structural. `ciGreen` does not call it, so classify by hand before retrying.
+`scripts/ci-failures.mjs` encodes which CI failures are flakes and which are
+structural, matched against each failed job's annotations. `ciGreen` names a known flake
+and the `gh run rerun <id> --failed` that retries it, but still blocks until it is green.
+Anything unknown still needs classifying by hand.
 
 ## Verify, never trust the tick
 

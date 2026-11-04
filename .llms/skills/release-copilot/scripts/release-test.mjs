@@ -169,6 +169,26 @@ export function reportPassed(marker) {
   return Boolean(s) && s.pass.length > 0 && s.fail.length === 0 && s.pending.length === 0 && s.skipped.length === 0;
 }
 
+/**
+ * The publish adds the bot's "Release <version>" commit on top of what was
+ * tested, which changes no app code. Looking the pass up by the new tip found
+ * nothing for 0.89.0-rc.0 once it was published, so step over that commit.
+ */
+export function testedCommit(tip, commit, version) {
+  const subject = String(commit?.message ?? '').split('\n')[0].trim();
+  const bot = /^React Native Bot$/i.test(commit?.author ?? '') || /bot@reactnative\.dev/i.test(commit?.email ?? '');
+  return bot && subject === `Release ${version}` && commit?.parents?.length === 1 ? commit.parents[0] : tip;
+}
+
+async function shaForResults(version) {
+  const tip = (await must('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branchFor(version)}`])).split('\t')[0].trim();
+  if (loadResults(runDir(version, tip))) {
+    return tip;
+  }
+  const c = JSON.parse(await must('gh', ['api', `repos/${RN_REPO}/commits/${tip}`, '--jq', '{message: .commit.message, author: .commit.author.name, email: .commit.author.email, parents: [.parents[].sha]}']));
+  return testedCommit(tip, c, version);
+}
+
 export function runDir(version, sha) {
   return join(RUN_ROOT, `${version}-${String(sha).slice(0, 11)}`);
 }
@@ -713,7 +733,9 @@ export async function runTestPass(version, {only = null, runId = null, log = con
       log(`  no ${platform} device: ${err.message}`);
     }
   }
-  results.system = await systemInfo(Object.values(devices));
+  // A rerun of some dimensions keeps what the earlier run recorded for the
+  // others: the rc.0 Android rerun dropped the iOS simulator line otherwise.
+  results.system = {...(results.system ?? {}), ...(await systemInfo(Object.values(devices)))};
   const runnable = d => devices[d.platform] != null;
 
   const go = async (dim, appPath, edit) => {
@@ -796,7 +818,7 @@ async function existingReport(version) {
 export async function fileReport(version, {log = console.log} = {}) {
   const spec = loadSpec();
   const branch = branchFor(version);
-  const sha = (await must('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branch}`])).split('\t')[0].trim();
+  const sha = await shaForResults(version);
   const dir = runDir(version, sha);
   const results = loadResults(dir);
   if (!results) {
@@ -818,12 +840,16 @@ export async function fileReport(version, {log = console.log} = {}) {
   }
   const passed = reportPassed({summary: s});
   const number = issue?.number ?? url.split('/').pop();
-  if (passed) {
+  if (passed && issue?.state !== 'CLOSED') {
     await must('gh', ['issue', 'close', String(number), '--repo', RELEASES_REPO, '--comment', `Passed: every case ran and passed on ${branch} at ${sha.slice(0, 11)}.`]);
   } else if (issue?.state === 'CLOSED') {
     await must('gh', ['issue', 'reopen', String(number), '--repo', RELEASES_REPO]);
   }
   log(`${passed ? 'Filed and closed' : 'Filed, left open with blocking issues:'} ${url}`);
+  // Auto-add puts the report on the board but leaves Target Release empty.
+  const series = /^(\d+\.\d+)\./.exec(version)[1];
+  const board = await run(process.execPath, [join(HERE, 'board.mjs'), 'set-target', series, String(number), version]);
+  log(board.ok ? board.out.trim() : `could not set Target Release on #${number}, set it by hand: ${board.out.trim().split('\n').at(-1)}`);
   return {url, passed};
 }
 
@@ -876,7 +902,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const {dir, results} = await runTestPass(version, {only: typeof args.only === 'string' ? args.only.split(',') : null, runId: typeof args.run === 'string' ? args.run : null});
       console.log(formatSummary(dir, results, spec));
     } else if (cmd === 'confirm' || cmd === 'report') {
-      const sha = (await must('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branchFor(version)}`])).split('\t')[0].trim();
+      const sha = await shaForResults(version);
       const dir = runDir(version, sha);
       const results = loadResults(dir);
       if (!results) {

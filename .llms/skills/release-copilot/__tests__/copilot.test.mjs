@@ -29,11 +29,13 @@ import {
   confirmCase,
   dotDirectoryIn,
   RUN_ROOT as RELEASE_TEST_ROOT,
+  testedCommit,
 } from '../scripts/release-test.mjs';
 import {existsSync as existsSyncNode} from 'node:fs';
 import {judgeRun, pinContents, judgePin, PIN_FILES, iosTarballUrls as hermesIosTarballUrls} from '../scripts/hermes-release.mjs';
 import {nodeMinimum, androidMinimum, parseTable, formatRow} from '../scripts/branch-cut.mjs';
 import {targetReleaseNames, mergeOptions, previousSeries} from '../scripts/board.mjs';
+import {pickPublishRun, judgePublishRun} from '../scripts/publish-run.mjs';
 
 // The copilot's local decisions are the captain's, not test input.
 process.env.RELEASE_COPILOT_STATE_DIR = mkdtempSync(join(tmpdir(), 'release-copilot-state-'));
@@ -3685,4 +3687,59 @@ test('phase: the test step is skipped once a passing report exists at the tip, n
   const failing = {...at(tip), marker: {...at(tip).marker, summary: {...at(tip).marker.summary, fail: ['x/launch']}}};
   assert.equal(step.actions(testedState({testReport: failing}), {}).length, 2, 'a failing report runs it again');
   assert.equal(step.brief(testedState({testReport: null})), null);
+});
+
+// ---------------------------------------------------------- CI failure classification
+
+test('ci: a runner lost mid-job is a known flake and the gate says to re-run it', async () => {
+  // test_e2e_ios_templateapp / build (Release) on efef4667ba8, run 41740841646 attempt 1.
+  const text = 'The hosted runner lost communication with the server. Anything in your workflow that terminates the runner process, starves it for CPU/Memory, or blocks its network access can cause this error.';
+  assert.deepEqual(classifyFailure(text).id, 'runner-lost');
+  assert.equal(classifyFailure(text).retryable, true);
+  assert.equal(classifyFailure('error: use of undeclared identifier').kind, 'unknown');
+
+  const red = (failures, failedJobs = failures.map(f => f.job)) => baseState({
+    ci: [{workflow: 'Test All', runId: 41740841646, conclusion: 'failure', status: 'completed', failedJobs, failures}],
+  });
+  const flake = await evaluate(['ciGreen'], red([{job: 'test_e2e_ios_templateapp / build (Release)', kind: 'flake', id: 'runner-lost'}]), {});
+  assert.equal(flake.passed, false, 'a flake still blocks until the job is re-run');
+  assert.match(flake.results[0].detail, /known flake, re-run the failed jobs \(gh run rerun 41740841646 --failed\): test_e2e_ios_templateapp \/ build \(Release\) \(runner-lost\)/);
+
+  const unknown = await evaluate(['ciGreen'], red([{job: 'test_android', kind: 'unknown'}]), {});
+  assert.match(unknown.results[0].detail, /test_android\. Classify it before proceeding, do not blanket-retry/);
+  assert.doesNotMatch(unknown.results[0].detail, /re-run/);
+
+  const legacy = await evaluate(['ciGreen'], red([], ['old_job']), {});
+  assert.match(legacy.results[0].detail, /old_job\. Classify it/, 'a state without failures still names the jobs');
+});
+
+test('test pass: after the publish, the report is found through the bot release commit and nothing else', () => {
+  const bot = {message: 'Release 0.89.0-rc.0\n\n#publish-packages-to-npm', author: 'React Native Bot', email: 'bot@reactnative.dev', parents: ['efef4667ba8aadbf']};
+  assert.equal(testedCommit('1992b6cbbba', bot, '0.89.0-rc.0'), 'efef4667ba8aadbf');
+  assert.equal(testedCommit('1992b6cbbba', bot, '0.89.0-rc.1'), '1992b6cbbba', 'a release commit for another version is a real change');
+  assert.equal(testedCommit('aaa', {...bot, author: 'Someone', email: 'someone@x'}, '0.89.0-rc.0'), 'aaa', 'only the bot commit is stepped over');
+  assert.equal(testedCommit('aaa', {...bot, parents: ['p1', 'p2']}, '0.89.0-rc.0'), 'aaa');
+});
+
+test('verify-publish: waits for the publish run on the tag and rejects a green run that skipped the publish', async () => {
+  const runs = [
+    {databaseId: 41808713865, headBranch: '0.89-stable', status: 'completed', conclusion: 'success'},
+    {databaseId: 41808713786, headBranch: 'v0.89.0-rc.0', status: 'in_progress'},
+  ];
+  assert.equal(pickPublishRun(runs, '0.89.0-rc.0').databaseId, 41808713786);
+  assert.equal(pickPublishRun(runs, '0.89.0-rc.1'), null);
+  const done = jobs => judgePublishRun({databaseId: 1, status: 'completed', conclusion: 'success', url: 'u', jobs});
+  const branchRun = done([{name: 'determine_mode', conclusion: 'success'}, {name: 'publish_react_native', conclusion: 'skipped'}]);
+  assert.equal(branchRun.ok, false);
+  assert.match(branchRun.detail, /publish_react_native was skipped/);
+  assert.equal(done([{name: 'publish_react_native', conclusion: 'success'}]).ok, true);
+  assert.match(done([{name: 'publish_react_native', conclusion: 'success'}, {name: 'post_publish', conclusion: 'failure'}]).detail, /post_publish was failure/);
+  assert.equal(judgePublishRun({databaseId: 1, status: 'in_progress', url: 'u'}).done, false);
+
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const step = phaseFor('rc').steps.find(s => s.id === 'verify-publish');
+  const [first] = step.actions(baseState({proposedNext: '0.89.0-rc.0'}), {});
+  assert.match(first.args[0], /publish-run\.mjs$/);
+  assert.deepEqual(first.args.slice(1), ['wait', '0.89.0-rc.0']);
+  assert.deepEqual(step.actions(baseState({proposedNext: '0.89.0'}), {isLatest: true})[0].args.slice(1), ['wait', '0.89.0', '--latest']);
 });

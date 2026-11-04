@@ -10,52 +10,12 @@
 import {parseVersion, isPrerelease, seriesOf, compareVersions} from './version.mjs';
 import {hermesOverview, hermesChoice} from './release-state.mjs';
 import {reportPassed} from './release-test.mjs';
+import {classifyFailure, FLAKE_SIGNATURES, STRUCTURAL_SIGNATURES} from './ci-failures.mjs';
+
+export {classifyFailure, FLAKE_SIGNATURES, STRUCTURAL_SIGNATURES};
 
 const PASS = detail => ({ok: true, detail});
 const FAIL = detail => ({ok: false, detail});
-
-/**
- * Failures we have repeatedly confirmed are unrelated to the change under test.
- * Being on this list makes a failure *retryable*, never ignorable.
- */
-export const FLAKE_SIGNATURES = [
-  {
-    id: 'rubygems-dns',
-    match: /UnknownHostError|Could not download gem|rubygems\.org/i,
-    reason: 'rubygems.org DNS failure on the runner',
-  },
-  {
-    id: 'missing-artifact',
-    match: /Artifact not found for name/i,
-    reason: 'artifact missing because an upstream build job failed; fix that job, not this one',
-  },
-];
-
-/**
- * Structural failures: real, reproducible and not fixed by retrying.
- * `cache-key-test` was one of these on every release branch until it was fixed.
- */
-export const STRUCTURAL_SIGNATURES = [
-  {
-    id: 'release-branch-only-test',
-    match: /cache-key-test/i,
-    reason: 'test asserts main-build behaviour and cannot pass on a release branch',
-  },
-];
-
-export function classifyFailure(text) {
-  for (const s of STRUCTURAL_SIGNATURES) {
-    if (s.match.test(text)) {
-      return {kind: 'structural', id: s.id, reason: s.reason, retryable: false};
-    }
-  }
-  for (const s of FLAKE_SIGNATURES) {
-    if (s.match.test(text)) {
-      return {kind: 'flake', id: s.id, reason: s.reason, retryable: true};
-    }
-  }
-  return {kind: 'unknown', id: null, reason: 'not a known signature, investigate before retrying', retryable: false};
-}
 
 /**
  * Surfaces where a change can break a consumer who does not touch their code.
@@ -170,8 +130,18 @@ export const gates = {
           'so the failure cannot be classified. Open the run in the browser before proceeding',
       );
     }
-    const jobs = red.flatMap(r => r.failedJobs);
-    return FAIL(`failing: ${jobs.join(', ')}. Classify each before proceeding, do not blanket-retry`);
+    // Fixtures recorded before failures existed carry only failedJobs.
+    const failures = red.flatMap(r => (r.failures?.length ? r.failures : (r.failedJobs ?? []).map(job => ({job, kind: 'unknown'}))));
+    const flakes = failures.filter(f => f.kind === 'flake');
+    const rest = failures.filter(f => f.kind !== 'flake');
+    const parts = [];
+    if (flakes.length) {
+      parts.push(`known flake, re-run the failed jobs (${red.filter(r => (r.failures ?? []).some(f => f.kind === 'flake')).map(r => `gh run rerun ${r.runId} --failed`).join('; ')}): ${flakes.map(f => `${f.job} (${f.id})`).join(', ')}`);
+    }
+    if (rest.length) {
+      parts.push(`${rest.map(f => f.job + (f.kind === 'structural' ? ` (structural: ${f.reason})` : '')).join(', ')}. Classify ${rest.length === 1 ? 'it' : 'each'} before proceeding, do not blanket-retry`);
+    }
+    return FAIL(`failing: ${parts.join('. ')}`);
   },
 
   noOpenPicks(state) {

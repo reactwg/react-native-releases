@@ -49,6 +49,7 @@ const HERMES = 'meta/hermes';
 const HERMES_RELEASE = join(dirname(fileURLToPath(import.meta.url)), 'hermes-release.mjs');
 const BRANCH_CUT = join(dirname(fileURLToPath(import.meta.url)), 'branch-cut.mjs');
 const BOARD = join(dirname(fileURLToPath(import.meta.url)), 'board.mjs');
+const PUBLISH_RUN = join(dirname(fileURLToPath(import.meta.url)), 'publish-run.mjs');
 // From docs/guide-release-candidate.md.
 const CLI_CHANNEL = 'https://discord.com/channels/514829729862516747/1232435652533031013';
 
@@ -336,7 +337,14 @@ const commonPublishSteps = [
     id: 'verify-publish',
     title: 'Verify the release actually happened',
     gates: [],
-    actions: state => [
+    actions: (state, ctx) => [
+      declare({
+        step: 'verify-publish',
+        mutates: false,
+        why: `wait for the npm publish run on the tag v${state.proposedNext} and check publish_react_native ran`,
+        cmd: process.execPath,
+        args: [PUBLISH_RUN, 'wait', state.proposedNext, ...(ctx.isLatest ? ['--latest'] : [])],
+      }),
       declare({
         step: 'verify-publish',
         mutates: false,
@@ -367,7 +375,7 @@ const commonPublishSteps = [
       }),
     ],
     note:
-      'Never conclude from the workflow conclusion alone. Guard-skipped runs go green having done nothing. Expect post_publish to fail on one of its 3-minute waits ("Wait for template to be published" or "Verify Release is on NPM") while the publish itself succeeded. A timeout there also skips the rn-diff-purge dispatch, so the upgrade helper gets no diff: the status message prints the dispatch command when the diff is missing. A "[LOCAL] Bump Podfile.lock" commit should appear on the branch; if it is missing, see reference/field-notes.md before bumping by hand.',
+      'The first check waits for the publish, about 45 minutes. The publish is the publish-npm.yml run on the tag, not the one on the branch: the branch run for the bot\'s release commit goes green with publish_react_native skipped. Never conclude from the workflow conclusion alone. Guard-skipped runs go green having done nothing. Expect post_publish to fail on one of its 3-minute waits ("Wait for template to be published" or "Verify Release is on NPM") while the publish itself succeeded. A timeout there also skips the rn-diff-purge dispatch, so the upgrade helper gets no diff: the status message prints the dispatch command when the diff is missing. A "[LOCAL] Bump Podfile.lock" commit should appear on the branch; if it is missing, see reference/field-notes.md before bumping by hand.',
   },
   {
     id: 'template-check',
