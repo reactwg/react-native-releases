@@ -9,7 +9,7 @@
  * records its verdict with `confirm`, so a case passes only when the scripted
  * checks and the copilot's look at the screen both say so.
  *
- *   node scripts/release-test.mjs run 0.89.0-rc.0 [--only rntester-ios,...]
+ *   node scripts/release-test.mjs run 0.89.0-rc.0 [--only rntester-ios,...] [--run <test-all-run-id>]
  *   node scripts/release-test.mjs confirm 0.89.0-rc.0 --case rntester-ios/launch --pass "why"
  *   node scripts/release-test.mjs report 0.89.0-rc.0
  *   node scripts/release-test.mjs file 0.89.0-rc.0
@@ -169,6 +169,26 @@ export function reportPassed(marker) {
   return Boolean(s) && s.pass.length > 0 && s.fail.length === 0 && s.pending.length === 0 && s.skipped.length === 0;
 }
 
+/**
+ * The publish adds the bot's "Release <version>" commit on top of what was
+ * tested, which changes no app code. Looking the pass up by the new tip found
+ * nothing for 0.89.0-rc.0 once it was published, so step over that commit.
+ */
+export function testedCommit(tip, commit, version) {
+  const subject = String(commit?.message ?? '').split('\n')[0].trim();
+  const bot = /^React Native Bot$/i.test(commit?.author ?? '') || /bot@reactnative\.dev/i.test(commit?.email ?? '');
+  return bot && subject === `Release ${version}` && commit?.parents?.length === 1 ? commit.parents[0] : tip;
+}
+
+async function shaForResults(version) {
+  const tip = (await must('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branchFor(version)}`])).split('\t')[0].trim();
+  if (loadResults(runDir(version, tip))) {
+    return tip;
+  }
+  const c = JSON.parse(await must('gh', ['api', `repos/${RN_REPO}/commits/${tip}`, '--jq', '{message: .commit.message, author: .commit.author.name, email: .commit.author.email, parents: [.parents[].sha]}']));
+  return testedCommit(tip, c, version);
+}
+
 export function runDir(version, sha) {
   return join(RUN_ROOT, `${version}-${String(sha).slice(0, 11)}`);
 }
@@ -242,7 +262,23 @@ async function portFree(port) {
   return !r.ok || r.out.trim().split('\n').length < 2;
 }
 
-async function testAllRun(branch, sha) {
+/**
+ * Normally the green Test All run at the tip. With an explicit run id, any run
+ * at the tip: its artifacts exist before the run finishes, and a job that died
+ * on infrastructure (0.89.0-rc.0 lost a runner mid-build) does not change
+ * them. ciGreen still has to pass before anything publishes.
+ */
+async function testAllRun(branch, sha, runId) {
+  if (runId) {
+    const r = JSON.parse(await must('gh', ['run', 'view', String(runId), '--repo', RN_REPO, '--json', 'databaseId,headSha,conclusion,status,workflowName']));
+    if (r.headSha !== sha) {
+      throw new Error(`Test All run ${runId} is for ${r.headSha.slice(0, 11)}, not the ${branch} tip ${sha.slice(0, 11)}`);
+    }
+    if (r.workflowName !== 'Test All') {
+      throw new Error(`run ${runId} is ${r.workflowName}, not Test All`);
+    }
+    return r;
+  }
   const out = await must('gh', ['run', 'list', '--repo', RN_REPO, '--branch', branch, '--workflow', 'Test All', '--limit', '20', '--json', 'databaseId,headSha,conclusion,status']);
   return JSON.parse(out).find(r => r.headSha === sha && r.status === 'completed' && r.conclusion === 'success') ?? null;
 }
@@ -460,7 +496,16 @@ async function install(device, app, appId) {
     await run('xcrun', ['simctl', 'terminate', device.id, appId]);
     await must('xcrun', ['simctl', 'install', device.id, app]);
   } else {
-    await must(device.adb, ['-s', device.id, 'install', '-r', app]);
+    // Each CI run signs its debug APK with its own key, so yesterday's build
+    // refuses an update. The test app holds nothing worth keeping.
+    const r = await run(device.adb, ['-s', device.id, 'install', '-r', app]);
+    if (!r.ok) {
+      if (!/INSTALL_FAILED_UPDATE_INCOMPATIBLE/.test(r.out)) {
+        throw new Error(`adb install ${app} failed:\n${r.out.trim().split('\n').slice(-5).join('\n')}`);
+      }
+      await must(device.adb, ['-s', device.id, 'uninstall', appId]);
+      await must(device.adb, ['-s', device.id, 'install', app]);
+    }
     await must(device.adb, ['-s', device.id, 'reverse', `tcp:${METRO_PORT}`, `tcp:${METRO_PORT}`]);
   }
 }
@@ -532,8 +577,22 @@ async function runDimension({dim, spec, device, wt, appPath, edit, shotsDir, log
     }
   }
 
+  // Android: the menu key, as Cmd+M sends. DevMenu.show() from JS builds the
+  // dialog on the native-modules thread there (DevMenuModule.show() has no
+  // runOnUiThread) and dismissing it crashed RNTestProject on 0.89.0-rc.0.
+  // iOS: DevMenu.show(), since the simulator has no key for it.
   const openDevMenu = async () => {
     try {
+      if (device.platform === 'android') {
+        // The key toggles: pressed with the menu up, it closes it.
+        const screen = (await run(device.adb, ['-s', device.id, 'exec-out', 'uiautomator', 'dump', '/dev/tty'])).out;
+        if (/text="Reload"/.test(screen)) {
+          return {kind: 'script', ok: true, detail: 'the dev menu was already open'};
+        }
+        await must(device.adb, ['-s', device.id, 'shell', 'input', 'keyevent', '82']);
+        await sleep(1500);
+        return {kind: 'script', ok: true, detail: 'opened the dev menu with the menu key'};
+      }
       await (await fresh()).evaluate('nativeModuleProxy.DevMenu.show()');
       return {kind: 'script', ok: true, detail: 'opened the dev menu through the DevMenu module'};
     } catch (err) {
@@ -622,7 +681,7 @@ async function systemInfo(devices) {
   return info;
 }
 
-export async function runTestPass(version, {only = null, log = console.log} = {}) {
+export async function runTestPass(version, {only = null, runId = null, log = console.log} = {}) {
   const spec = loadSpec();
   const branch = branchFor(version);
   if (!branch) {
@@ -635,9 +694,12 @@ export async function runTestPass(version, {only = null, log = console.log} = {}
   if (!sha) {
     throw new Error(`${branch} does not exist`);
   }
-  const ci = await testAllRun(branch, sha);
+  const ci = await testAllRun(branch, sha, runId);
   if (!ci) {
-    throw new Error(`no successful Test All run on ${branch} at ${sha.slice(0, 11)} yet, so there are no artifacts to test. Wait for CI.`);
+    throw new Error(`no successful Test All run on ${branch} at ${sha.slice(0, 11)} yet. Wait for CI, or pass --run <id> to test the artifacts of a run still in progress.`);
+  }
+  if (ci.conclusion !== 'success') {
+    log(`Using Test All run ${ci.databaseId}, which is ${ci.status}${ci.conclusion ? ` (${ci.conclusion})` : ''}. Its artifacts are tested, the run itself still has to go green before publishing.`);
   }
   const dir = runDir(version, sha);
   mkdirSync(dir, {recursive: true});
@@ -671,7 +733,9 @@ export async function runTestPass(version, {only = null, log = console.log} = {}
       log(`  no ${platform} device: ${err.message}`);
     }
   }
-  results.system = await systemInfo(Object.values(devices));
+  // A rerun of some dimensions keeps what the earlier run recorded for the
+  // others: the rc.0 Android rerun dropped the iOS simulator line otherwise.
+  results.system = {...(results.system ?? {}), ...(await systemInfo(Object.values(devices)))};
   const runnable = d => devices[d.platform] != null;
 
   const go = async (dim, appPath, edit) => {
@@ -754,7 +818,7 @@ async function existingReport(version) {
 export async function fileReport(version, {log = console.log} = {}) {
   const spec = loadSpec();
   const branch = branchFor(version);
-  const sha = (await must('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branch}`])).split('\t')[0].trim();
+  const sha = await shaForResults(version);
   const dir = runDir(version, sha);
   const results = loadResults(dir);
   if (!results) {
@@ -776,12 +840,16 @@ export async function fileReport(version, {log = console.log} = {}) {
   }
   const passed = reportPassed({summary: s});
   const number = issue?.number ?? url.split('/').pop();
-  if (passed) {
+  if (passed && issue?.state !== 'CLOSED') {
     await must('gh', ['issue', 'close', String(number), '--repo', RELEASES_REPO, '--comment', `Passed: every case ran and passed on ${branch} at ${sha.slice(0, 11)}.`]);
   } else if (issue?.state === 'CLOSED') {
     await must('gh', ['issue', 'reopen', String(number), '--repo', RELEASES_REPO]);
   }
   log(`${passed ? 'Filed and closed' : 'Filed, left open with blocking issues:'} ${url}`);
+  // Auto-add puts the report on the board but leaves Target Release empty.
+  const series = /^(\d+\.\d+)\./.exec(version)[1];
+  const board = await run(process.execPath, [join(HERE, 'board.mjs'), 'set-target', series, String(number), version]);
+  log(board.ok ? board.out.trim() : `could not set Target Release on #${number}, set it by hand: ${board.out.trim().split('\n').at(-1)}`);
   return {url, passed};
 }
 
@@ -831,10 +899,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
     const spec = loadSpec();
     if (cmd === 'run') {
-      const {dir, results} = await runTestPass(version, {only: typeof args.only === 'string' ? args.only.split(',') : null});
+      const {dir, results} = await runTestPass(version, {only: typeof args.only === 'string' ? args.only.split(',') : null, runId: typeof args.run === 'string' ? args.run : null});
       console.log(formatSummary(dir, results, spec));
     } else if (cmd === 'confirm' || cmd === 'report') {
-      const sha = (await must('git', ['ls-remote', `https://github.com/${RN_REPO}.git`, `refs/heads/${branchFor(version)}`])).split('\t')[0].trim();
+      const sha = await shaForResults(version);
       const dir = runDir(version, sha);
       const results = loadResults(dir);
       if (!results) {

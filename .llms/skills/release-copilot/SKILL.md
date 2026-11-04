@@ -240,15 +240,45 @@ node scripts/cli.mjs plan --series 0.88 --shape hermes-release
 node scripts/cli.mjs run  --series 0.88 --shape hermes-release
 ```
 
-Seven steps: `hermes-preflight`, `hermes-cut`, `hermes-monitor`, `hermes-verify-tag`,
-`hermes-pin`, `hermes-next-bump`, `hermes-push`. The pin is a local commit that
-`hermes-push` pushes to the release branch. The next-version bump is printed as an
-instruction, because the Hermes stable ref is protected and it has to go through a PR.
+Seven steps, the last five through `scripts/hermes-release.mjs`:
 
-The gate that matters is `hermesReadyToCut`, because `RN Build Static Hermes` has **no
-version input** and reads `npm/hermes-compiler/package.json` verbatim. A re-land is
-named in the confirmation, since that is the last cheap moment to stop. Verifying the
-tag means checking what it **contains**, not that it exists.
+1. `hermes-preflight`: `hermesReadyToCut` and `hermesPublishable`.
+2. `hermes-cut`: dispatches `RN Build Static Hermes` on `meta/hermes`.
+3. `hermes-monitor`: waits for the run, about an hour. A green run is not enough: it
+   fails unless `set_release_type`, `create-tag`, `build_android` and `publish` all ran,
+   and the tag must be the commit the run built.
+4. `hermes-verify-tag`: tag, npm, `latest-v1` and both iOS tarballs, downloaded and
+   checked against their published sha1. It polls for up to two hours, since the CDN
+   lags. Do not pin until it passes.
+5. `hermes-pin`: commits the three pin files in a worktree under
+   `~/Library/Caches/release-copilot/hermes-pin`, never in your checkout.
+6. `hermes-push`: pushes that commit only, after checking it changes exactly the three
+   pin files and sits on the branch's current tip.
+7. `hermes-next-bump`: opens the PR moving the Hermes branch to the next version.
+   Skippable, since the pin does not depend on it.
+
+`hermesReadyToCut` matters because `RN Build Static Hermes` has **no version input**
+and reads `npm/hermes-compiler/package.json` verbatim. `hermesPublishable` checks the
+workflow's repository guard and `repository.url` name the repo the workflow runs in:
+the first 260318099.0.6 dispatch went green and published nothing because the guard
+still said `facebook/hermes`. npm's trusted publisher must name the repo too, which
+nothing can read from outside npmjs.com. A re-land is named in the confirmation,
+since that is the last cheap moment to stop.
+
+Unreleased commits are counted from the latest Hermes release on the line, not from the
+branch's pin. A pin behind the latest release fails `hermesCurrent` on its own.
+
+**Shipping without a cut.** When the commits beyond the release can wait, record the
+decision instead of cutting:
+
+```sh
+node scripts/cli.mjs hermes-skip --series 0.89 --reason "only a Java warnings cleanup, no runtime change"
+```
+
+It is local copilot state, not a PR: `~/Library/Application Support/release-copilot/hermes-decisions.json`
+(`RELEASE_COPILOT_STATE_DIR` overrides it). It acknowledges exactly the commits that are
+unreleased right now, so one landing later is not covered and the gate asks again.
+`reference/hermes-exceptions.json` keeps the earlier decisions and is still read.
 
 See `reference/hermes.md` for all three traps and their evidence.
 
@@ -334,6 +364,32 @@ blunt `declined, stopping this step`. A test asserts it cannot leak.
 The riskiest actions (publishing a version, cutting a release branch) ask the
 captain to **retype the version or branch** rather than accept `y`.
 
+Declining normally **stops the run**, because later steps assume earlier ones
+happened. Side steps nothing later depends on are **skippable** and say so with a
+`skip:` line: the nightly, the template branch, the board, the support-table PR, a
+board Target Release and the Hermes next bump. Declining one skips it, the run carries
+on and lists it at the end as still to do. On the 0.89 cut the broken nightly could
+only be accepted (and fail) or declined (and stop), so it blocked the publish.
+
+## The branch cut
+
+`run --series <x.y>` on a series with no branch is two passes: the first creates the
+branch, the second (once its CI is green) publishes RC0. Each side step checks first
+and is not offered once done:
+
+- **external-deps:** opens the `docs/support.md` PR. Node comes from `engines` and the
+  Android minimum from `minSdk`. JDK, Xcode and CocoaPods are policy, copied from the
+  previous row and flagged if their source changed. The Xcode column is not
+  `min_xcode_version_supported`.
+- **create-branches:** the release branch, then the template branch from its `main`.
+- **project-board:** copies the previous series' board, makes it public and adds the
+  Target Release values. GitHub has no API for "Auto-add to project" or the access list,
+  so it prints both links. Until auto-add is on, new picks do not reach the board.
+- **cut-picks:** closes pick requests whose commit was already on `main` at the cut
+  and sets their Target Release to rc.0.
+- **tell-cli:** prints the #cli message and channel. Not posted for you.
+- **nightly:** a manual run of `publish-npm.yml` on `main`. `nightly.yml` is gone.
+
 ## Gates
 
 Preconditions are executable and block. Each prints why it failed, so the rationale
@@ -346,18 +402,21 @@ is in `scripts/gates.mjs` and `reference/field-notes.md` rather than repeated he
 | `dryRunExplicit` | the workflow's `dry-run` input is not explicitly false. It defaults to true |
 | `distTagCorrect` | a prerelease would take `latest` |
 | `ciGreen` | tip red or running, no runs found at all, a path-filtered workflow red on an earlier commit that never re-ran |
-| `noOpenPicks` | any pick request for the series is still open |
+| `noOpenPicks` | a pick request for this release is still open and not yet on the branch |
 | `rcHasContent` | an RC with nothing in it: the previous RC was golden, promote instead |
 | `noBreakingChanges` | new `[BREAKING]` commits in a non-breaking series or a truncated scan |
 | `picksNotBreaking` | an open pick is annotated breaking or touches a watched surface |
 | `hermesConsistent` | the three Hermes pin files disagree |
-| `hermesCurrent` | the pinned Hermes tag is behind its branch |
+| `hermesCurrent` | the pin is behind the latest Hermes release, or the branch has commits that release lacks |
 | `hermesReadyToCut` | the Hermes branch still names a published version, which would re-cut it |
+| `hermesPublishable` | the Hermes workflow's repository guard or `repository.url` names another repo, so a dispatch would publish nothing |
 | `mainResolved` | a branch cut has no resolved SHA for main |
 | `manualTestingDone` | RC0, RC1 or the golden RC has no passing Test Report for this version at the current branch tip, unless `--manual-tested` |
 
-`classifyFailure` in `gates.mjs` encodes which CI failures are flakes and which are
-structural. `ciGreen` does not call it, so classify by hand before retrying.
+`scripts/ci-failures.mjs` encodes which CI failures are flakes and which are
+structural, matched against each failed job's annotations. `ciGreen` names a known flake
+and the `gh run rerun <id> --failed` that retries it, but still blocks until it is green.
+Anything unknown still needs classifying by hand.
 
 ## Verify, never trust the tick
 
@@ -433,7 +492,7 @@ changelog diff also needs Meta tooling, but that step runs no commands at all, s
 is a note rather than a flag. See `reference/changelog.md`.
 
 The **Hermes cut is not in that list**. It is `gh workflow run` against
-`facebook/hermes`, so it needs dispatch access to that repo rather than a Meta
+`meta/hermes`, so it needs dispatch access to that repo rather than a Meta
 machine and `doctor` checks exactly that. Run it through `plan --shape hermes-release`.
 
 ## Status

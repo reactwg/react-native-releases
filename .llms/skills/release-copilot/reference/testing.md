@@ -68,6 +68,16 @@ at the current branch tip with every case passed: nothing failed, unconfirmed or
 push after the pass means new artifacts, so the gate asks for a new pass. `--manual-tested`
 still overrides, after the captain has read the report.
 
+`--run <id>` tests the artifacts of a Test All run at the tip that has not finished, for
+example while a job lost to infrastructure is re-run. `ciGreen` still gates the publish.
+After the publish, `report` and `file` find the pass through the bot's `Release <version>`
+commit, which changes no app code. `file` sets the report's Target Release on the board.
+
+On Android the dev menu is opened with the menu key, as Cmd+M does. `DevMenu.show()` from
+JavaScript builds the dialog off the UI thread there (`DevMenuModule.show()` has no
+`runOnUiThread`, unlike `reload()`) and dismissing it crashed RNTestProject on
+0.89.0-rc.0. That is an upstream bug, unchanged since 0.88.
+
 **Never run it under a dot directory** (`~/.cache` and the like). codegen's build picks
 files with micromatch, whose `**` does not cross a dot directory, so under one it copies raw
 Flow into `lib/` and prints OK. Every app then fails in codegen with "SyntaxError:

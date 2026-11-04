@@ -23,6 +23,7 @@ import {liveSources} from './sources.mjs';
 import {assess, formatAssessment} from './assess-picks.mjs';
 import {formatInvestigation} from './investigate-pick.mjs';
 import {hermesOverview, hermesChoice} from './release-state.mjs';
+import {reportPassed} from './release-test.mjs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
@@ -44,18 +45,13 @@ export function announceWhere(atMeta) {
     ? `Post this to ${discord}. ${slack} is internal to Meta, so ${ask}:`
     : `Post this to ${discord}, and to ${slack} if you work at Meta. If you do not, ${ask}:`;
 }
-const HERMES = 'facebook/hermes';
-
-/**
- * The tarballs the iOS prebuild (prebuild_react_native_core) downloads for a
- * Hermes version. They come from repo.reactnative.dev, not Maven Central, and
- * appear there later, so a pin pushed as soon as Maven has the artifact fails
- * every iOS slice with a 404.
- */
-export function hermesIosTarballUrls(version) {
-  const base = `https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/${version}`;
-  return ['debug', 'release'].map(b => `${base}/hermes-ios-${version}-hermes-ios-${b}.tar.gz`);
-}
+const HERMES = 'meta/hermes';
+const HERMES_RELEASE = join(dirname(fileURLToPath(import.meta.url)), 'hermes-release.mjs');
+const BRANCH_CUT = join(dirname(fileURLToPath(import.meta.url)), 'branch-cut.mjs');
+const BOARD = join(dirname(fileURLToPath(import.meta.url)), 'board.mjs');
+const PUBLISH_RUN = join(dirname(fileURLToPath(import.meta.url)), 'publish-run.mjs');
+// From docs/guide-release-candidate.md.
+const CLI_CHANNEL = 'https://discord.com/channels/514829729862516747/1232435652533031013';
 
 const triggerCreateRelease = (state, ctx) =>
   declare({
@@ -146,7 +142,7 @@ const hermesDecisionStep = {
       `  To cut: run \`plan --shape hermes-release\`. It cuts ${h.inTreeVersion ?? 'the next version'}, verifies the tag and pins it on ${state.branch}. Re-run this plan once the pin is on the branch.`,
     );
     L.push(
-      `  Not to cut: add an entry for version ${state.proposedNext} to reference/hermes-exceptions.json with the reason and the commits it acknowledges.`,
+      `  Not to cut: node scripts/cli.mjs hermes-skip --series ${state.series} --reason "<why>". It records the decision in the copilot's local state and acknowledges exactly these commits.`,
     );
     L.push('  Settle it before the artifacts build: a pin bump after the test pass means testing again.');
     return L.join('\n');
@@ -211,12 +207,23 @@ const artifactsStep = {
  * part and refuses while any screenshot is unconfirmed, so a guided run that
  * reaches it too early stops there instead of filing a half-checked report.
  */
+/**
+ * The same rule manualTestingDone applies: a passing report for this version
+ * at the current tip. Without it, a guided run after a filed pass ran the whole
+ * pass again before publishing 0.89.0-rc.0.
+ */
+export function testPassDone(state) {
+  const m = state.testReport?.marker;
+  const tip = String(state.branchTip ?? '');
+  return Boolean(m && m.version === state.proposedNext && tip && String(m.sha).startsWith(tip.slice(0, 11)) && reportPassed(m));
+}
+
 const testStep = {
   id: 'test',
   title: 'Run the release test pass',
   gates: [],
   actions: state => {
-    if (state.schedule?.needsManualTesting === false) {
+    if (state.schedule?.needsManualTesting === false || testPassDone(state)) {
       return [];
     }
     const v = state.proposedNext;
@@ -242,6 +249,7 @@ const testStep = {
       }),
     ];
   },
+  brief: state => (testPassDone(state) ? `Already passed at this tip: #${state.testReport.number}. Nothing to run.` : null),
   note:
     'Only RC0, RC1 and the golden RC are tested. Before answering yes to filing, open every screenshot the run lists and record what it shows with `release-test.mjs confirm`. Do not push to the branch during the pass: the report is tied to the tip it tested.',
 };
@@ -329,7 +337,14 @@ const commonPublishSteps = [
     id: 'verify-publish',
     title: 'Verify the release actually happened',
     gates: [],
-    actions: state => [
+    actions: (state, ctx) => [
+      declare({
+        step: 'verify-publish',
+        mutates: false,
+        why: `wait for the npm publish run on the tag v${state.proposedNext} and check publish_react_native ran`,
+        cmd: process.execPath,
+        args: [PUBLISH_RUN, 'wait', state.proposedNext, ...(ctx.isLatest ? ['--latest'] : [])],
+      }),
       declare({
         step: 'verify-publish',
         mutates: false,
@@ -360,7 +375,7 @@ const commonPublishSteps = [
       }),
     ],
     note:
-      'Never conclude from the workflow conclusion alone. Guard-skipped runs go green having done nothing. Expect post_publish to fail on one of its 3-minute waits ("Wait for template to be published" or "Verify Release is on NPM") while the publish itself succeeded. A timeout there also skips the rn-diff-purge dispatch, so the upgrade helper gets no diff: the status message prints the dispatch command when the diff is missing. A "[LOCAL] Bump Podfile.lock" commit should appear on the branch; if it is missing, see reference/field-notes.md before bumping by hand.',
+      'The first check waits for the publish, about 45 minutes. The publish is the publish-npm.yml run on the tag, not the one on the branch: the branch run for the bot\'s release commit goes green with publish_react_native skipped. Never conclude from the workflow conclusion alone. Guard-skipped runs go green having done nothing. Expect post_publish to fail on one of its 3-minute waits ("Wait for template to be published" or "Verify Release is on NPM") while the publish itself succeeded. A timeout there also skips the rn-diff-purge dispatch, so the upgrade helper gets no diff: the status message prints the dispatch command when the diff is missing. A "[LOCAL] Bump Podfile.lock" commit should appear on the branch; if it is missing, see reference/field-notes.md before bumping by hand.',
   },
   {
     id: 'template-check',
@@ -486,7 +501,7 @@ const commonPublishSteps = [
       }),
     ],
     note:
-      'The generated draft has the dSYM links and boilerplate but an EMPTY notes section, so the notes are filled from the curated changelog section on main first. That section has to have landed: an RC or patch through its changelog PR, a .0 through the consolidation change. Then publish: Pre-release for an RC, Latest for a stable on the newest series. Also publish any earlier release of the series still sitting as a draft (0.88.0-rc.6 was left as one), which the status message lists.',
+      'The generated draft has the dSYM links and boilerplate but an EMPTY notes section, so the notes are filled from the curated changelog section on main first. That section has to have landed: an RC or patch through its changelog PR, a .0 through the consolidation change. To publish before the PR lands, `fill-release-notes.mjs <version> --ref changelog/v<version>` reads the PR branch instead (0.89.0-rc.0 went out that way). Curation done on the PR afterwards does not reach the release by itself. Then publish: Pre-release for an RC, Latest for a stable on the newest series. Also publish any earlier release of the series still sitting as a draft (0.88.0-rc.6 was left as one), which the status message lists.',
   },
   {
     id: 'announce',
@@ -515,7 +530,7 @@ const commonPublishSteps = [
         '',
         buildAnnouncement(version, {
           changelogPr: artifacts.changelogPr?.url,
-          releaseUrl: artifacts.release?.url,
+          release: artifacts.release,
         }),
       ].join('\n');
     },
@@ -534,7 +549,7 @@ const commonPublishSteps = [
     gates: [],
     actions: () => [],
     note:
-      'Close actioned pick requests; closing moves them to Done / Picked automatically. Also set Target Release on each, from where the commit actually landed. It defaults to the series first RC and is wrong for almost every item otherwise. See reference/picks.md.',
+      'Close actioned pick requests; closing moves them to Done / Picked automatically. `pick` sets Target Release when it closes one. For anything closed by hand, set it with `node scripts/board.mjs set-target <series> <issue> <version>`, from where the commit actually landed. It defaults to the series first RC. See reference/picks.md.',
   },
 ];
 
@@ -547,8 +562,37 @@ export const PHASES = {
         id: 'external-deps',
         title: 'Update the external dependencies table',
         gates: [],
-        actions: () => [],
-        note: 'Open a PR rather than committing to main, the repo notifies watchers.',
+        actions: state => {
+          if (state.cut?.supportRow?.present) {
+            return [];
+          }
+          return [
+            declare({
+              step: 'external-deps',
+              why: `open the PR adding ${state.series} to the external dependencies table`,
+              cmd: process.execPath,
+              args: [BRANCH_CUT, 'support-row', state.series, ...(state.branchTip ? [] : ['--ref', 'main']), '--pr'],
+              impact: [
+                `opens a PR on reactwg/react-native-releases adding the ${state.series} row to docs/support.md`,
+                'Node from engines and the Android minimum from minSdk, JDK, Xcode and CocoaPods copied from the previous series',
+              ],
+              reversible: 'yes, close the PR',
+              skippable: true,
+            }),
+          ];
+        },
+        brief: state => {
+          const r = state.cut?.supportRow;
+          if (!r) {
+            return null;
+          }
+          return [
+            r.present ? `docs/support.md already has the ${state.series} row:` : `Proposed ${state.series} row for docs/support.md:`,
+            `  ${r.row}`,
+            ...r.notes.map(n => `  note: ${n}`),
+          ].join('\n');
+        },
+        note: 'A PR rather than a commit to main, the repo notifies watchers. Read the row before saying yes: only Node and the Android minimum come from the code.',
       },
       {
         id: 'create-branches',
@@ -556,33 +600,123 @@ export const PHASES = {
         gates: ['mainResolved'],
         // A cut is two passes: the branch has to exist before its CI can be
         // green. On the second pass this step is already done, so it declares
-        // nothing rather than POSTing the ref again and re-firing the nightly.
-        actions: state =>
-          state.branchTip
+        // nothing rather than POSTing the ref again.
+        actions: state => [
+          ...(state.branchTip
             ? []
             : [
-          declare({
-            step: 'create-branches',
-            why: `Create the release branch ${state.branch} from main`,
-            cmd: 'gh',
-            args: [
-              'api',
-              `repos/${RN}/git/refs`,
-              '-f',
-              `ref=refs/heads/${state.branch}`,
-              '-f',
-              `sha=${state.mainTip ?? 'UNRESOLVED_MAIN_SHA'}`,
-            ],
-            impact: [
-              `creates ${state.branch} on ${RN}, visible to everyone`,
-              'from this point main targets the next version, so picks must be requested rather than merged',
-            ],
-            reversible: 'the branch can be deleted, but anything cut from it cannot be recalled',
-            confirmToken: state.branch,
-          }),
+                declare({
+                  step: 'create-branches',
+                  why: `Create the release branch ${state.branch} from main`,
+                  cmd: 'gh',
+                  args: [
+                    'api',
+                    `repos/${RN}/git/refs`,
+                    '-f',
+                    `ref=refs/heads/${state.branch}`,
+                    '-f',
+                    `sha=${state.mainTip ?? 'UNRESOLVED_MAIN_SHA'}`,
+                  ],
+                  impact: [
+                    `creates ${state.branch} on ${RN}, visible to everyone`,
+                    'from this point main targets the next version, so picks must be requested rather than merged',
+                  ],
+                  reversible: 'the branch can be deleted, but anything cut from it cannot be recalled',
+                  confirmToken: state.branch,
+                }),
+              ]),
+          ...(state.cut?.template?.exists
+            ? []
+            : [
+                declare({
+                  step: 'create-branches',
+                  why: `Create ${state.branch} in react-native-community/template from its main`,
+                  cmd: process.execPath,
+                  args: [BRANCH_CUT, 'template', state.branch],
+                  impact: [`creates ${state.branch} on react-native-community/template, which new apps for this series are generated from`],
+                  reversible: 'the branch can be deleted until an RC is published',
+                  skippable: true,
+                }),
+              ]),
         ],
-        note:
-          'Also create the matching branch in react-native-community/template. Tell #cli: they must bump the CLI before RC1.',
+      },
+      {
+        id: 'project-board',
+        title: 'Create the release project board',
+        gates: [],
+        actions: state => {
+          const b = state.cut?.board;
+          if (b && !b.missing && !(b.missingTargets ?? []).length && b.public) {
+            return [];
+          }
+          const sched = state.schedule?.series ?? {};
+          return [
+            declare({
+              step: 'project-board',
+              why: `create the ${state.series} board on reactwg, copied from the previous series' board`,
+              cmd: process.execPath,
+              args: [BOARD, 'create', state.series, '--cut', sched.branchCut ?? 'unknown', '--release', sched.release ?? 'unknown'],
+              impact: [
+                b && !b.missing ? `updates ${b.title} (#${b.number}): public, its description, and the missing Target Release values` : `creates "React Native ${state.series} Releases" with the previous board's fields, views and workflows, empty`,
+                `makes it public and adds the Target Release values ${state.series}.0-rc.0 to ${state.series}.0`,
+              ],
+              reversible: 'yes, the board can be closed or deleted',
+              skippable: true,
+            }),
+          ];
+        },
+        note: 'GitHub has no API for the "Auto-add to project" workflow or the access list. The step prints both links: until auto-add is on, new pick requests do not reach the board.',
+      },
+      {
+        id: 'cut-picks',
+        title: 'Close pick requests the cut already includes',
+        gates: [],
+        actions: state =>
+          !state.branchTip
+            ? []
+            : (state.pickCandidates ?? [])
+                .filter(c => c.landed)
+                .flatMap(c => [
+                  declare({
+                    step: 'cut-picks',
+                    why: `close #${c.number}, already in ${state.branch}`,
+                    cmd: 'gh',
+                    args: [
+                      'issue',
+                      'close',
+                      String(c.number),
+                      '--repo',
+                      'reactwg/react-native-releases',
+                      '--comment',
+                      `Included in ${state.series} through the branch cut: ${c.resolved.map(r => `\`${r.sha}\``).join(', ')} was already on main when \`${state.branch}\` was cut, so no pick is needed.`,
+                    ],
+                    impact: [`comments on and closes #${c.number}`],
+                    reversible: 'reopen the issue',
+                  }),
+                  declare({
+                    step: 'cut-picks',
+                    why: `set Target Release ${state.proposedNext} on #${c.number}`,
+                    cmd: process.execPath,
+                    args: [BOARD, 'set-target', state.series, String(c.number), state.proposedNext],
+                    impact: [`puts #${c.number} on the ${state.series} board with Target Release ${state.proposedNext}`],
+                    reversible: 'yes, change the field on the board',
+                    skippable: true,
+                  }),
+                ]),
+        note: 'A pick requested before the cut for a commit that was already on main needs no pick, only closing. #1492 was one.',
+      },
+      {
+        id: 'tell-cli',
+        title: 'Tell the CLI team',
+        gates: [],
+        actions: () => [],
+        brief: state =>
+          [
+            `Post this in #cli on Discord (${CLI_CHANNEL}):`,
+            '',
+            `  React Native ${state.series} is cut: \`${state.branch}\` exists on react/react-native and react-native-community/template, and ${state.series}.0-rc.0 is next. Could you bump @react-native-community/cli and its compatibility table for ${state.series} before RC1?`,
+          ].join('\n'),
+        note: 'Not posted automatically. The CLI must be bumped before RC1.',
       },
       {
         id: 'hermes',
@@ -605,16 +739,24 @@ export const PHASES = {
         id: 'nightly',
         title: 'Trigger a nightly from main',
         gates: [],
-        actions: () => [
-          declare({
-            step: 'nightly',
-            why: 'Trigger a nightly build from main',
-            cmd: 'gh',
-            args: ['workflow', 'run', 'nightly.yml', '--repo', RN, '--ref', 'main'],
-            impact: ['publishes a nightly to npm that partners may integrate against'],
-            reversible: 'no, but nightlies are expected to churn',
-          }),
-        ],
+        // nightly.yml is gone since #57255 folded every npm publish into
+        // publish-npm.yml, where a manual run publishes a nightly. Once one ran
+        // after the cut, the second pass does not offer another.
+        actions: state =>
+          state.cut?.nightly?.dispatched
+            ? []
+            : [
+                declare({
+                  step: 'nightly',
+                  why: 'Trigger a nightly build from main',
+                  cmd: 'gh',
+                  args: ['workflow', 'run', 'publish-npm.yml', '--repo', RN, '--ref', 'main'],
+                  impact: ['publishes a nightly to npm that partners may integrate against'],
+                  reversible: 'no, but nightlies are expected to churn',
+                  skippable: true,
+                }),
+              ],
+        brief: state => (state.cut?.nightly?.dispatched ? `A nightly already ran on main after the cut: ${state.cut.nightly.url}` : null),
       },
       artifactsStep,
       testStep,
@@ -651,7 +793,7 @@ export const PHASES = {
       {
         id: 'hermes-preflight',
         title: 'Pre-flight the Hermes cut',
-        gates: ['hermesReadyToCut'],
+        gates: ['hermesReadyToCut', 'hermesPublishable'],
         actions: () => [],
         note:
           'RN Build Static Hermes has no version input: it reads npm/hermes-compiler/package.json verbatim. A stale value re-cuts a published version. If a bump PR is needed, remember to import it so rn-oss and Hermes can stamp it. See reference/hermes.md.',
@@ -704,84 +846,47 @@ export const PHASES = {
       },
       {
         id: 'hermes-monitor',
-        title: 'Find the run and watch it',
-        gates: [],
-        actions: () => [
-          declare({
-            step: 'hermes-monitor',
-            mutates: false,
-            why: 'get the dispatched run so you have a link to watch',
-            cmd: 'gh',
-            args: [
-              'run',
-              'list',
-              '--repo',
-              HERMES,
-              '--workflow',
-              'RN Build Static Hermes',
-              '--limit',
-              '1',
-              '--json',
-              'databaseId,status,conclusion,url',
-            ],
-          }),
-        ],
-        note:
-          'The dispatch returns nothing, so the run has to be looked up. It takes a while: the Apple slices and the Android build dominate. Watch with `gh run watch <id> --repo facebook/hermes`.',
-      },
-      {
-        id: 'hermes-verify-tag',
-        title: 'Verify the tag before pinning',
+        title: 'Wait for the run to publish',
         gates: [],
         actions: state => {
           const h = state.hermesUnreleased ?? {};
           const v = h.inTreeVersion ?? 'UNKNOWN';
           return [
             declare({
-              step: 'hermes-verify-tag',
+              step: 'hermes-monitor',
               mutates: false,
-              why: `confirm hermes-v${v} exists on the remote`,
-              cmd: 'git',
-              args: ['ls-remote', '--tags', `https://github.com/${HERMES}.git`, `refs/tags/hermes-v${v}`],
+              why: `wait for the ${v} run to finish and check it really tagged and published`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'wait', v, '--branch', h.branch ?? ''],
             }),
-            declare({
-              step: 'hermes-verify-tag',
-              mutates: false,
-              why: 'confirm the version resolves on npm',
-              cmd: 'curl',
-              args: [
-                '-s',
-                '-o',
-                '/dev/null',
-                '-w',
-                '%{http_code}\\n',
-                `https://registry.npmjs.org/hermes-compiler/${v}?t=${Date.now()}`,
-              ],
-            }),
-            declare({
-              step: 'hermes-verify-tag',
-              mutates: false,
-              why: 'confirm the dist-tags moved as intended',
-              cmd: 'curl',
-              args: ['-s', `https://registry.npmjs.org/hermes-compiler?t=${Date.now()}`],
-            }),
-            ...hermesIosTarballUrls(v).map(url =>
-              declare({
-                step: 'hermes-verify-tag',
-                mutates: false,
-                why: `confirm the iOS prebuild can download ${url.split('/').pop()}`,
-                cmd: 'curl',
-                args: ['-s', '-I', '-L', '-o', '/dev/null', '-w', '%{http_code}\\n', url],
-              }),
-            ),
           ];
         },
         note:
-          'Check the tag CONTAINS the commits you expect, not just that it exists. hermes-v260318099.0.2 was tagged eight hours before a crash fix was backed out and shipped the bad version anyway. Use `git merge-base --is-ancestor <sha> hermes-v<version>`. Do not pin until both iOS tarballs answer 200: the iOS prebuild downloads them from repo.reactnative.dev, which lags Maven Central. The 260318099.0.5 pin landed about 30 minutes after the Maven publish and all six iOS prebuild slices failed with 404.',
+          'This waits for the whole run, about an hour, and prints when it finishes. A green run is not enough: the first 260318099.0.6 dispatch went green with set_release_type, create-tag, build_android and publish all skipped, because the workflow still checked for facebook/hermes. It also checks the tag is the commit the run built.',
+      },
+      {
+        id: 'hermes-verify-tag',
+        title: 'Verify the release before pinning',
+        gates: [],
+        actions: (state, ctx) => {
+          const h = state.hermesUnreleased ?? {};
+          const v = h.inTreeVersion ?? 'UNKNOWN';
+          return [
+            declare({
+              step: 'hermes-verify-tag',
+              mutates: false,
+              why: `check the tag, npm, latest-v1 and both iOS tarballs for ${v}, waiting up to two hours for the CDN`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'verify', v, '--branch', h.branch ?? '', '--wait', '120', ...(ctx.hermesLatestV1 === false ? ['--no-latest-v1'] : [])],
+            }),
+          ];
+        },
+        note:
+          'Do not pin until this passes. The iOS prebuild downloads the tarballs from repo.reactnative.dev, which lags Maven Central and can keep serving a 404 or an error page for hours: for 260318099.0.6 they only matched their published checksums the next morning. The check downloads both and compares the sha1, so a 200 with the wrong bytes does not pass.',
       },
       {
         id: 'hermes-pin',
-        title: 'Pin the new Hermes into the release branch',
+        title: 'Commit the pin for the release branch',
         gates: [],
         actions: state => {
           const h = state.hermesUnreleased ?? {};
@@ -789,26 +894,48 @@ export const PHASES = {
           return [
             declare({
               step: 'hermes-pin',
-              why: `bump the three Hermes pins on ${state.branch} to ${v}`,
-              cmd: 'echo',
-              args: [
-                `edit packages/react-native/sdks/hermes-engine/version.properties and packages/react-native/package.json to ${v}, and packages/react-native/sdks/.hermesv1version to hermes-v${v} (no trailing newline), then commit`,
-              ],
+              why: `commit the three Hermes pins for ${state.branch} at ${v}`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'pin', state.branch, v],
               impact: [
-                `changes which Hermes ${state.branch} consumes, from ${state.hermes?.pinned ?? '?'} to ${v}`,
-                '.hermesv1version is the tag from-source builds check out; the .0.3 and .0.4 bumps missed it',
-                'all three must agree or the hermesConsistent gate fails',
+                `commits "Bump Hermes to ${v}" on top of ${state.branch} in a throwaway worktree under ~/Library/Caches/release-copilot/hermes-pin, not in your checkout`,
+                'sets version.properties, the hermes-compiler dependency and .hermesv1version (no trailing newline), the same three files as the 260318099.0.6 pin',
+                'pushes nothing',
               ],
-              reversible: 'yes before pushing',
+              reversible: 'yes, nothing leaves your machine until the push step',
             }),
           ];
         },
         note:
-          'Do not hand-commit packages/rn-tester/Podfile.lock. publish-npm.yml regenerates it and a hand-written bump just gets overwritten.',
+          "RN's bump-hermes-version.js prompts interactively, so the copilot writes the same three files itself. Do not hand-commit packages/rn-tester/Podfile.lock: publish-npm.yml regenerates it.",
+      },
+      {
+        id: 'hermes-push',
+        title: 'Push the pin and wait for CI',
+        gates: [],
+        actions: state => {
+          const v = state.hermesUnreleased?.inTreeVersion ?? 'UNKNOWN';
+          return [
+            declare({
+              step: 'hermes-push',
+              why: `push the Hermes ${v} pin to ${state.branch}`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'push', state.branch, v],
+              impact: [
+                `pushes the pin commit to ${state.branch}, after checking it changes exactly the three pin files and sits on the branch's current tip`,
+                'triggers full branch CI and invalidates the current test artifacts',
+              ],
+              reversible: 'not in practice. a bad commit comes out by a follow-up revert',
+              confirmToken: state.branch,
+            }),
+          ];
+        },
+        note:
+          'It pushes only the commit the pin step made, never your checkout. The RC cannot proceed until CI is green on it. Re-run `plan` afterwards: hermesCurrent and hermesConsistent should both pass.',
       },
       {
         id: 'hermes-next-bump',
-        title: 'Bump the Hermes branch to the NEXT version',
+        title: 'Open the PR bumping the Hermes branch to the NEXT version',
         gates: [],
         actions: state => {
           const h = state.hermesUnreleased ?? {};
@@ -817,42 +944,20 @@ export const PHASES = {
           return [
             declare({
               step: 'hermes-next-bump',
-              why: `Open a PR bumping ${h.branch} from ${cut} to ${next}`,
-              cmd: 'echo',
-              args: [
-                `edit npm/hermes-compiler/package.json on ${h.branch} to ${next}, then open a PR (the stable ref is protected)`,
-              ],
+              why: `open a PR moving ${h.branch} from ${cut} to ${next}`,
+              cmd: process.execPath,
+              args: [HERMES_RELEASE, 'next-bump', h.branch ?? '', cut, next],
               impact: [
-                `points the branch at ${next}, the NEXT version to publish`,
-                'without this the next cut re-cuts the version just released',
+                `creates the branch bump-hermes-compiler-${next} on ${HERMES} and opens a PR into ${h.branch}`,
+                'without it merged, the next cut re-cuts the version just released',
               ],
-              reversible: 'yes, it is one line and nothing consumes it until the next cut',
+              reversible: 'yes, close the PR and delete the branch',
+              skippable: true,
             }),
           ];
         },
         note:
-          'This is the tail of THIS release, not the head of the next one. The file must always name the next version to publish, because RN Build Static Hermes reads it verbatim. Skipping it is why the .0.4 bump was overdue: the .0.3 release never did its follow-up, so the branch still named an already-published version weeks later. IMPORT the PR once it is open: the import is what adds rn-oss and Hermes as reviewers and until then nobody can stamp it. Check the Import Status row for a D-number. See reference/hermes.md.',
-      },
-      {
-        id: 'hermes-push',
-        title: 'Push the pin and wait for CI',
-        gates: [],
-        actions: state => [
-          declare({
-            step: 'hermes-push',
-            why: `push the Hermes pin to ${state.branch}`,
-            cmd: 'git',
-            args: ['push', `https://github.com/${RN}.git`, `HEAD:${state.branch}`],
-            impact: [
-              `publishes the pin to the protected branch ${state.branch}`,
-              'triggers full branch CI and invalidates the current test artifacts',
-            ],
-            reversible: 'not in practice. a bad commit comes out by a follow-up revert',
-            confirmToken: state.branch,
-          }),
-        ],
-        note:
-          'The RC cannot proceed until this is green. Re-run `plan` afterwards: hermesCurrent and hermesConsistent should both pass and the RC phase picks up from there.',
+          'This is the tail of THIS release, not the head of the next one: the file must always name the next version to publish. IMPORT the PR once it is open, the import is what adds rn-oss and Hermes as reviewers. See reference/hermes.md.',
       },
     ],
   },

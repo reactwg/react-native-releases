@@ -9,7 +9,7 @@
  */
 
 import {liveSources, fixtureSources, recordingSources} from './sources.mjs';
-import {deriveState, summarize} from './release-state.mjs';
+import {deriveState, summarize, hermesSkipEntry, recordHermesDecision} from './release-state.mjs';
 import {runPhase, MODES} from './run-phase.mjs';
 import {
   buildStatusMessage,
@@ -24,6 +24,10 @@ import {gatherPickEvidence, gatherHermesEvidence} from './evidence.mjs';
 import {Runner} from './actions.mjs';
 import {runPick, dropActions} from './pick-actions.mjs';
 import {readFileSync} from 'node:fs';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+
+const execFileP = promisify(execFile);
 
 /**
  * Confirmation input.
@@ -109,6 +113,10 @@ async function main() {
 
   plan    --series <x.y>               dry run: print every command, execute none
   run     --series <x.y>               guided: describe and confirm every mutating step
+
+  hermes-skip --series <x.y> --reason <text>
+                                       ship the next release on the pinned Hermes. Records the
+                                       decision in local copilot state, not the repo
 
   pick    --series <x.y> --pick <n>    cherry-pick a pick (its stack from the bottom), push, close it
   drop    --series <x.y> --pick <n> --to <version|never> --reason <file>
@@ -228,6 +236,28 @@ async function main() {
     const answer = await readAnswer('    run this? [y/N] ');
     return answer.trim().toLowerCase() === 'y';
   };
+
+  if (cmd === 'hermes-skip') {
+    if (typeof args.series !== 'string' || typeof args.reason !== 'string') {
+      throw new Error('hermes-skip needs --series <x.y> and --reason <text>');
+    }
+    const state = await deriveState(liveSources(), {series: args.series});
+    const reviewedBy = (await execFileP('gh', ['api', 'user', '--jq', '.login']).catch(() => ({stdout: ''}))).stdout.trim() || 'unknown';
+    const entry = hermesSkipEntry(state, {reason: args.reason, reviewedBy, today: new Date().toISOString().slice(0, 10)});
+    console.log(`${entry.decision}. Acknowledges:`);
+    for (const a of entry.acknowledged) {
+      console.log(`  ${a.sha} ${a.subject}`);
+    }
+    console.log(`Reason: ${entry.reason}`);
+    const ok = await confirm({confirmToken: entry.version});
+    await closeReadline();
+    if (!ok) {
+      console.log('not recorded');
+      process.exit(1);
+    }
+    console.log(`recorded in ${recordHermesDecision(entry)}`);
+    return;
+  }
 
   if (cmd === 'pick' || cmd === 'drop') {
     const number = Number(args.pick);

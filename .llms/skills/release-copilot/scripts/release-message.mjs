@@ -49,7 +49,9 @@ export function buildStatusMessage(state, {version, artifacts, publishRunUrl}) {
   const testReportDone = a.testReport != null;
 
   const releasePublished = a.release != null && a.release.isDraft === false;
-  const releaseUrl = a.release?.url ?? `https://github.com/${RN}/releases/tag/v${version}`;
+  // A draft's URL is a temporary /releases/tag/untagged-<hash> that breaks
+  // once it is published. The tag URL works before and after.
+  const releaseUrl = releaseLink(version, a.release);
 
   const L = [];
   L.push(`# ${version}`);
@@ -204,8 +206,12 @@ export function publishCaveat(artifacts) {
  * used to name the channels and stop there, so the text got improvised each
  * time.
  */
-export function buildAnnouncement(version, {changelogPr, releaseUrl} = {}) {
-  const tag = releaseUrl ?? `https://github.com/${RN}/releases/tag/v${version}`;
+export function releaseLink(version, release) {
+  return release?.url && !release.isDraft ? release.url : `https://github.com/${RN}/releases/tag/v${version}`;
+}
+
+export function buildAnnouncement(version, {changelogPr, release} = {}) {
+  const tag = releaseLink(version, release);
   const L = [`:loudspeaker: ${version} is out!`, ''];
   L.push(`:package: Release tag: ${tag}`);
   if (changelogPr) {

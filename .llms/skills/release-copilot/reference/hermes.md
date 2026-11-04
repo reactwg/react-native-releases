@@ -21,7 +21,9 @@ it, so anyone building Hermes from source with 0.88.0 got `.0.2`.
 Pin only once the iOS tarballs download. The iOS prebuild fetches
 `hermes-ios-<version>-hermes-ios-{debug,release}.tar.gz` from `repo.reactnative.dev`,
 which lags Maven Central. The `260318099.0.5` pin landed about 30 minutes after the Maven
-publish and all six iOS prebuild slices failed with a 404. `hermes-verify-tag` checks both.
+publish and all six iOS prebuild slices failed with a 404. For `260318099.0.6` the CDN
+served a 404, then an error page whose checksum did not match, until the next morning.
+`hermes-verify-tag` downloads both and compares them with the published `.sha1`.
 
 On `main`, `hermes-compiler` is the `0.0.0` placeholder. On a release branch it is
 the real version. Do not copy a main-side bump onto a release branch.
@@ -60,7 +62,7 @@ So the file must already name the version you want before you dispatch. Dispatch
 while it still names the released version re-cuts that version. Check it first:
 
 ```sh
-curl -s https://raw.githubusercontent.com/facebook/hermes/<branch>/npm/hermes-compiler/package.json \
+curl -s https://raw.githubusercontent.com/meta/hermes/<branch>/npm/hermes-compiler/package.json \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"
 ```
 
@@ -77,14 +79,14 @@ feature branch pushes fine; only the stable ref is protected.
 
 ### The PR has to be imported before anyone can stamp it
 
-Opening the PR is not enough. A `facebook/hermes` PR is reviewed as a Phabricator
+Opening the PR is not enough. A `meta/hermes` PR is reviewed as a Phabricator
 diff and the import is what puts **rn-oss** and **Hermes** on it as reviewers. Until
 that happens there is nobody who can accept it, so it just sits.
 
 Check the `Import Status` row on the PR:
 
 ```sh
-gh pr view <n> --repo facebook/hermes --json statusCheckRollup \
+gh pr view <n> --repo meta/hermes --json statusCheckRollup \
   --jq '.statusCheckRollup[] | select(.name|test("Import";"i")) | "\(.name): \(.state // .conclusion)  \(.detailsUrl // .targetUrl)"'
 ```
 
@@ -126,7 +128,7 @@ Workflow: **RN Build Static Hermes** (`rn-build-hermes.yml`), dispatched on the
 Hermes stable branch.
 
 ```sh
-gh workflow run "RN Build Static Hermes" --repo facebook/hermes \
+gh workflow run "RN Build Static Hermes" --repo meta/hermes \
   --ref 260318099.0.0-stable \
   -f release-type=release \
   -f update-latest-v1=true
@@ -139,6 +141,28 @@ Inputs:
 
 The in-tree version in `npm/hermes-compiler/package.json` decides what gets cut, so
 bump it before releasing.
+
+## A green run can publish nothing
+
+The publishing jobs (`set_release_type`, `create-tag`, `build_android`, `publish`) only
+run when `github.repository` matches the guard in `rn-build-hermes.yml`. After the repo
+moved from `facebook/hermes` to `meta/hermes`, the guard still named the old repo, so the
+first `260318099.0.6` dispatch (run 41490254955) built every slice, went green and
+skipped all four. Fixed in meta/hermes#2281.
+
+Two more things must name the repo the workflow runs in. Otherwise the publish fails at
+the very end:
+
+- `repository.url` in `npm/hermes-compiler/package.json`. npm's provenance check
+  compares it with the repo in the OIDC token. `git+ssh://git@github.com/meta/hermes.git`
+  works.
+- npm's trusted publisher for `hermes-compiler` (organization, repository, workflow
+  `rn-build-hermes.yml`, environment `npm-publish`). It can only be read on npmjs.com.
+  Add the new repo as a second publisher and delete the old one once a publish
+  validates it.
+
+`hermesPublishable` checks the first two. `hermes-monitor` fails a run where any
+publishing job did not run.
 
 ## The `latest-v1` rule
 

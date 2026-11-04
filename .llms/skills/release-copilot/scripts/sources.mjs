@@ -13,12 +13,14 @@ import {readFileSync, existsSync, mkdirSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 
 import {parseReportMarker} from './release-test.mjs';
+import {findBoard, targetReleaseField, targetReleaseNames} from './board.mjs';
+import {templateBranch, proposeRow} from './branch-cut.mjs';
 
 const exec = promisify(execFile);
 
 const RN_REPO = 'react/react-native';
 const RELEASES_REPO = 'reactwg/react-native-releases';
-const HERMES_REPO = 'facebook/hermes';
+const HERMES_REPO = 'meta/hermes';
 const PROJECT_OWNER = 'reactwg';
 
 async function sh(cmd, args, {allowFail = false} = {}) {
@@ -192,7 +194,15 @@ export function liveSources() {
           '--json',
           'jobs',
         ]);
-        return parseJSON(raw, {jobs: []}).jobs ?? [];
+        const jobs = parseJSON(raw, {jobs: []}).jobs ?? [];
+        // A failed job's annotations carry the runner's own error, which is
+        // what tells an infrastructure loss from a real failure. Job logs are
+        // often not served for a job whose runner died.
+        for (const j of jobs.filter(x => x.conclusion === 'failure').slice(0, 10)) {
+          const ann = await gh(['api', `repos/${RN_REPO}/check-runs/${j.databaseId}/annotations`, '--jq', '[.[] | select(.annotation_level == "failure") | .message] | join("\\n")']).catch(() => '');
+          j.failureText = String(ann).trim().slice(0, 2000);
+        }
+        return jobs;
       } catch {
         return null;
       }
@@ -282,9 +292,18 @@ export function liveSources() {
       if (!m) {
         return null;
       }
-      const [, line, minor] = m;
+      const [, line, minor, pinPatch] = m;
       const branch = `${line}.${minor}.0-stable`;
-      const tag = `hermes-v${pinnedVersion}`;
+      // Unreleased means not in the LATEST release on this line, not "not in
+      // the pin". At the 0.89 cut the branch pinned .0.2 while .0.5 had shipped,
+      // so comparing from the pin listed 34 commits where 4 were new.
+      const released = Object.keys((await npmDocument('hermes-compiler').catch(() => ({versions: {}}))).versions ?? {})
+        .map(v => new RegExp(`^${line}\\.${minor}\\.(\\d+)$`).exec(v))
+        .filter(Boolean)
+        .map(x => Number(x[1]));
+      const latestPatch = released.length ? Math.max(...released) : Number(pinPatch);
+      const latestReleased = `${line}.${minor}.${Math.max(latestPatch, Number(pinPatch))}`;
+      const tag = `hermes-v${latestReleased}`;
       const raw = await gh([
         'api',
         `repos/${HERMES_REPO}/compare/${tag}...${branch}?per_page=100`,
@@ -303,6 +322,20 @@ export function liveSources() {
       );
       const inTreeVersion = parseJSON(pkgRaw, {}).version ?? null;
 
+      // What decides whether a dispatch publishes anything. After the repo
+      // moved to meta/hermes, the workflow's `github.repository ==
+      // 'facebook/hermes'` guard skipped every publishing job of a green run,
+      // and npm's provenance check needs repository.url to name the repo the
+      // workflow runs in.
+      const hostRepo = (await gh(['api', `repos/${HERMES_REPO}`, '--jq', '.full_name']).catch(() => '')).trim() || null;
+      const workflowRaw = await sh(
+        'curl',
+        ['-s', '-f', `https://raw.githubusercontent.com/${HERMES_REPO}/${branch}/.github/workflows/rn-build-hermes.yml`],
+        {allowFail: true},
+      );
+      const workflowGuards = [...String(workflowRaw ?? '').matchAll(/github\.repository\s*==\s*'([^']+)'/g)].map(x => x[1]);
+      const repositoryUrl = parseJSON(pkgRaw, {}).repository?.url ?? null;
+
       // Can we cut? The question is whether the in-tree version is ALREADY
       // PUBLISHED, not whether it matches what RN pins. Comparing against the
       // RN pin only looked right by coincidence: after cutting .0.4 the branch
@@ -316,6 +349,12 @@ export function liveSources() {
         branch,
         tag,
         resolved: true,
+        pinned: pinnedVersion,
+        latestReleased,
+        pinBehind: latestReleased !== pinnedVersion,
+        hostRepo,
+        workflowGuards,
+        repositoryUrl,
         inTreeVersion,
         inTreePublished,
         wouldRecut: inTreePublished,
@@ -575,6 +614,37 @@ export function liveSources() {
      * pass writes into its body. The gate reads the marker, not the issue state:
      * a closed issue only says someone closed it.
      */
+    /**
+     * What the cut's side steps have already done, so a second pass does not
+     * offer them again. The nightly counts as done once publish-npm.yml was
+     * dispatched on main after the branch's first CI run.
+     */
+    async branchCutFacts(series, branch, {branchExists}) {
+      const facts = {template: null, board: null, nightly: null, supportRow: null};
+      facts.template = await templateBranch(branch).catch(() => null);
+      const board = await findBoard(series).catch(() => null);
+      if (board) {
+        const {field} = await targetReleaseField(board.number).catch(() => ({field: null}));
+        const names = new Set((field?.options ?? []).map(o => o.name));
+        facts.board = {...board, missingTargets: targetReleaseNames(series).filter(n => !names.has(n))};
+      } else {
+        facts.board = {missing: true};
+      }
+      if (branchExists) {
+        const first = parseJSON(await gh(['run', 'list', '--repo', RN_REPO, '--branch', branch, '--limit', '200', '--json', 'createdAt']).catch(() => '[]'), [])
+          .map(r => r.createdAt)
+          .sort()[0];
+        const dispatched = parseJSON(
+          await gh(['run', 'list', '--repo', RN_REPO, '--workflow', 'publish-npm.yml', '--branch', 'main', '--event', 'workflow_dispatch', '--limit', '20', '--json', 'createdAt,url,conclusion']).catch(() => '[]'),
+          [],
+        ).filter(r => first && r.createdAt >= first);
+        facts.nightly = {dispatched: dispatched.length > 0, url: dispatched.at(-1)?.url ?? null};
+      }
+      const row = await proposeRow(series, {ref: branchExists ? branch : 'main'}).catch(() => null);
+      facts.supportRow = row ? {present: Boolean(row.existing), row: row.row, notes: row.notes} : null;
+      return facts;
+    },
+
     async testReport(version) {
       const raw = await gh([
         'issue', 'list', '--repo', RELEASES_REPO, '--state', 'all',
@@ -812,6 +882,13 @@ export function fixtureSources(dir) {
         return null;
       }
     },
+    async branchCutFacts(series) {
+      try {
+        return pick('branchCutFacts', series);
+      } catch {
+        return null;
+      }
+    },
   };
 }
 
@@ -877,6 +954,7 @@ export function recordingSources(inner, dir) {
     releaseArtifacts: async (v, p) =>
       put('releaseArtifacts', v, await inner.releaseArtifacts(v, p)),
     testReport: async v => put('testReport', v, await inner.testReport(v)),
+    branchCutFacts: async (series, b, o) => put('branchCutFacts', series, await inner.branchCutFacts(series, b, o)),
     flush() {
       mkdirSync(dir, {recursive: true});
       for (const [name, data] of Object.entries(captured)) {

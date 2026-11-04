@@ -7,15 +7,18 @@
  */
 
 import {test} from 'node:test';
+import {mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
 import {fixtureSources, npmVersionStatus, parseNpmDocument} from '../scripts/sources.mjs';
-import {deriveState} from '../scripts/release-state.mjs';
+import {deriveState, hermesSkipEntry, recordHermesDecision, loadHermesException, hermesExceptions} from '../scripts/release-state.mjs';
 import {evaluate, classifyFailure, hasBreakingTag} from '../scripts/gates.mjs';
 import {declare, render, Runner, MODES} from '../scripts/actions.mjs';
 import {runPhase} from '../scripts/run-phase.mjs';
+import {PHASES} from '../scripts/phases.mjs';
 import {parseVersion, nextRC, promoteToStable, releaseShape, formatVersion} from '../scripts/version.mjs';
 import {
   loadSpec as loadReleaseSpec,
@@ -26,8 +29,16 @@ import {
   confirmCase,
   dotDirectoryIn,
   RUN_ROOT as RELEASE_TEST_ROOT,
+  testedCommit,
 } from '../scripts/release-test.mjs';
 import {existsSync as existsSyncNode} from 'node:fs';
+import {judgeRun, pinContents, judgePin, PIN_FILES, iosTarballUrls as hermesIosTarballUrls} from '../scripts/hermes-release.mjs';
+import {nodeMinimum, androidMinimum, parseTable, formatRow} from '../scripts/branch-cut.mjs';
+import {targetReleaseNames, mergeOptions, previousSeries} from '../scripts/board.mjs';
+import {pickPublishRun, judgePublishRun} from '../scripts/publish-run.mjs';
+
+// The copilot's local decisions are the captain's, not test input.
+process.env.RELEASE_COPILOT_STATE_DIR = mkdtempSync(join(tmpdir(), 'release-copilot-state-'));
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, '..', 'fixtures', '0.88-rc2-published');
@@ -1083,8 +1094,11 @@ test('gate: a branch cut cannot post a placeholder SHA', async () => {
   // A cut is two passes, because CI cannot be green on a branch that does not
   // exist. On the second the step must do nothing rather than POST the ref
   // again and re-fire the nightly.
-  const resumed = baseState({branch: '0.89-stable', mainTip: real, branchTip: 'bbbbbbbbbbb'});
+  const resumed = baseState({branch: '0.89-stable', mainTip: real, branchTip: 'bbbbbbbbbbb', cut: {template: {exists: true}}});
   assert.deepEqual(step.actions(resumed, {}), [], 'resuming declares no action');
+  const noTemplate = step.actions({...resumed, cut: {template: {exists: false}}}, {});
+  assert.deepEqual(noTemplate.map(a => a.args.slice(1).join(' ')), ['template 0.89-stable'], 'only the missing template branch is offered');
+  assert.equal(noTemplate[0].skippable, true);
   assert.equal((await evaluate(['mainResolved'], resumed, {})).passed, true, 'and does not block');
 });
 
@@ -1812,7 +1826,7 @@ test('doctor: covers all four repos a release touches', async () => {
   for (const s of [
     'react/react-native',
     'react-native-community/template',
-    'facebook/hermes',
+    'meta/hermes',
     'reactwg/react-native-releases',
   ]) {
     assert.ok(slugs.includes(s), `doctor does not check access to ${s}`);
@@ -2514,6 +2528,22 @@ test('curation: entries get their prefix and the report lists every decision', a
   const text = formatReport(report);
   assert.match(text, /Prefixes added \(1\)/);
   assert.match(text, /Still without a prefix \(1\)/);
+});
+
+test('changelog PR body: a short checklist, the lists collapsed and the unprefixed entries only counted', async () => {
+  const {prBody} = await import('../scripts/generate-changelog.mjs');
+  const report = {
+    prefixed: [{scope: 'Text', prose: 'Add lineBreak'}],
+    unprefixed: ['Something vague', 'Another'],
+    flagged: [{prose: 'Remove X', section: 'Fixed', subsection: 'iOS specific', flags: ['changes public API']}],
+  };
+  const body = prBody('0.89.0-rc.0', {dotZero: false, entries: {length: 342}, prev: '0.88.1', report});
+  assert.match(body, /generated against v0\.88\.1: 342 entries\. Opened by the release copilot\./);
+  assert.match(body, /^- Prefix the 2 entries still without one/m);
+  assert.match(body, /<details><summary>Prefixes added \(1\)<\/summary>\n\n- `Text`: Add lineBreak/);
+  assert.match(body, /<details><summary>Consistency flags \(1\)<\/summary>/);
+  assert.doesNotMatch(body, /Something vague/, 'the unprefixed entries are visible in the diff');
+  assert.ok(body.split('<details>')[0].split('\n').length < 15, 'the open part stays short');
 });
 
 // ---------------------------------------------------------------- patches
@@ -3231,20 +3261,62 @@ test('verify-template: a Gradle failure shows "What went wrong", not the daemon 
   assert.equal(failureDetail('a\nb\nerror: something broke'), 'a\nb\nerror: something broke', 'no Gradle section, keep the tail');
 });
 
-test('hermes-verify-tag checks the iOS tarballs the prebuild downloads, and the pin names all three files', async () => {
-  const {phaseFor, hermesIosTarballUrls} = await import('../scripts/phases.mjs');
+test('hermes phase: wait, verify, pin, push and next bump all go through hermes-release.mjs', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
   assert.deepEqual(hermesIosTarballUrls('260318099.0.5'), [
     'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-debug.tar.gz',
     'https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/260318099.0.5/hermes-ios-260318099.0.5-hermes-ios-release.tar.gz',
   ]);
   const steps = phaseFor('hermes-release').steps;
-  const state = baseState({hermesUnreleased: {inTreeVersion: '260318099.0.5', commits: []}});
-  const verify = steps.find(s => s.id === 'hermes-verify-tag').actions(state);
-  for (const url of hermesIosTarballUrls('260318099.0.5')) {
-    assert.ok(verify.some(a => a.args.includes(url)), `verify-tag should check ${url}`);
+  assert.deepEqual(steps.map(s => s.id), ['hermes-preflight', 'hermes-cut', 'hermes-monitor', 'hermes-verify-tag', 'hermes-pin', 'hermes-push', 'hermes-next-bump'], 'pin and push before the optional next bump');
+  assert.ok(steps[0].gates.includes('hermesPublishable'));
+  const state = baseState({branch: '0.89-stable', hermesUnreleased: {branch: '260318099.0.0-stable', inTreeVersion: '260318099.0.5', commits: []}});
+  const one = (id, ctx = {}) => steps.find(s => s.id === id).actions(state, ctx)[0];
+  const tail = a => a.args.slice(1).join(' ');
+  assert.equal(one('hermes-cut').args[4], 'meta/hermes');
+  assert.equal(tail(one('hermes-monitor')), 'wait 260318099.0.5 --branch 260318099.0.0-stable');
+  assert.equal(one('hermes-monitor').mutates, false);
+  assert.equal(tail(one('hermes-verify-tag')), 'verify 260318099.0.5 --branch 260318099.0.0-stable --wait 120');
+  assert.match(tail(one('hermes-verify-tag', {hermesLatestV1: false})), /--no-latest-v1$/);
+  assert.equal(tail(one('hermes-pin')), 'pin 0.89-stable 260318099.0.5');
+  const push = one('hermes-push');
+  assert.equal(tail(push), 'push 0.89-stable 260318099.0.5');
+  assert.equal(push.confirmToken, '0.89-stable');
+  const bump = one('hermes-next-bump');
+  assert.equal(tail(bump), 'next-bump 260318099.0.0-stable 260318099.0.5 260318099.0.6');
+  assert.equal(bump.skippable, true, 'the next bump does not block the pin');
+  for (const a of [one('hermes-monitor'), one('hermes-verify-tag'), one('hermes-pin'), push, bump]) {
+    assert.match(a.args[0], /hermes-release\.mjs$/);
   }
-  const pin = steps.find(s => s.id === 'hermes-pin').actions(state)[0];
-  assert.match(pin.args[0], /\.hermesv1version to hermes-v260318099\.0\.5/);
+});
+
+test('hermes: a green run whose publishing jobs were skipped is not a release', () => {
+  const job = (name, conclusion = 'success') => ({name, conclusion});
+  const base = {databaseId: 1, status: 'completed', conclusion: 'success', url: 'u'};
+  // The first 260318099.0.6 dispatch (41490254955), after the repo moved to meta/hermes.
+  const dry = judgeRun({...base, jobs: [job('build_hermesc_linux / build-hermesc-linux'), job('set_release_type', 'skipped'), job('create-tag', 'skipped'), job('build_android', 'skipped'), job('publish', 'skipped')]});
+  assert.equal(dry.ok, false);
+  assert.match(dry.detail, /green but published nothing: set_release_type=skipped, create-tag=skipped, build_android=skipped, publish=skipped/);
+  // The real one (41524889130): reusable-workflow jobs are named "<id> / <inner>".
+  const real = judgeRun({...base, jobs: [job('set_release_type'), job('build_android / build-android'), job('create-tag / publish'), job('publish')]});
+  assert.equal(real.ok, true);
+  assert.equal(judgeRun({...base, status: 'in_progress'}).done, false);
+  assert.equal(judgeRun({...base, conclusion: 'failure'}).ok, false);
+});
+
+test('hermes: the pin reproduces the 260318099.0.6 commit and the push refuses anything else', () => {
+  const before = {properties: 'HERMES_VERSION_NAME=260318099.0.2\nHERMES_V1_VERSION_NAME=x\n', packageJson: '{\n  "dependencies": {\n    "hermes-compiler": "0.0.0",\n    "x": "1"\n  }\n}\n'};
+  const c = pinContents(before, '260318099.0.6');
+  assert.equal(c.properties, 'HERMES_VERSION_NAME=260318099.0.6\nHERMES_V1_VERSION_NAME=x\n');
+  assert.match(c.packageJson, /"hermes-compiler": "260318099\.0\.6"/);
+  assert.match(c.packageJson, /"x": "1"/);
+  assert.equal(c.tag, 'hermes-v260318099.0.6', 'no trailing newline');
+  const ok = {parent: 'a'.repeat(40), remoteTip: 'a'.repeat(40), changed: Object.values(PIN_FILES), contents: c, version: '260318099.0.6'};
+  assert.deepEqual(judgePin(ok), []);
+  assert.match(judgePin({...ok, remoteTip: 'b'.repeat(40)}).join(), /branch is now at bbbbbbbbbbb/);
+  assert.match(judgePin({...ok, changed: [...ok.changed, 'packages/rn-tester/Podfile.lock']}).join(), /not exactly the three pin files/);
+  assert.match(judgePin({...ok, contents: {...c, tag: 'hermes-v260318099.0.6\n'}}).join(), /without a newline/);
+  assert.match(judgePin({...ok, version: '260318099.0.7'}).join(), /does not name 260318099\.0\.7/);
 });
 
 // ---------------------------------------------------------- release test pass
@@ -3418,4 +3490,281 @@ test('state: the test report is looked up only for a version that needs testing'
   void testReport;
   const s = await deriveState(noReport, {series: '0.88', today: '2026-10-25'});
   assert.equal(s.testReport, null, 'a source without testReport reads as no report');
+});
+
+// ---------------------------------------------------------- local Hermes decisions
+
+const hermesState = over =>
+  baseState({
+    series: '0.89',
+    branch: '0.89-stable',
+    proposedNext: '0.89.0-rc.0',
+    hermes: {pinned: '260318099.0.6', compiler: '260318099.0.6'},
+    hermesUnreleased: {
+      branch: '260318099.0.0-stable',
+      tag: 'hermes-v260318099.0.6',
+      resolved: true,
+      inTreeVersion: '260318099.0.7',
+      commits: [
+        {sha: 'f289631444e', subject: 'shermes stable + staging intl-java-impl: strict (2 targets)'},
+        {sha: 'aaaaaaaaaaa', subject: 'Bump hermes-compiler version to 260318099.0.7', versionBump: true},
+      ],
+    },
+    ...over,
+  });
+
+test('hermes-skip: acknowledges exactly the unreleased payload, not the version bump', () => {
+  const e = hermesSkipEntry(hermesState(), {reason: 'Java warnings cleanup only', reviewedBy: 'fabriziocucci', today: '2026-11-03'});
+  assert.equal(e.version, '0.89.0-rc.0');
+  assert.equal(e.decision, 'ship 0.89.0-rc.0 on 260318099.0.6, do not cut 260318099.0.7');
+  assert.deepEqual(e.acknowledged.map(a => a.sha), ['f289631444e']);
+  assert.equal(e.reviewedBy, 'fabriziocucci');
+  assert.throws(() => hermesSkipEntry(hermesState(), {reason: ' '}), /say why/);
+  const nothing = hermesState({hermesUnreleased: {...hermesState().hermesUnreleased, commits: [hermesState().hermesUnreleased.commits[1]]}});
+  assert.throws(() => hermesSkipEntry(nothing, {reason: 'x'}), /no decision is needed/);
+});
+
+test('hermes-skip: the decision is local state, read back by the gate, and replaced not duplicated', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rc-state-'));
+  const prev = process.env.RELEASE_COPILOT_STATE_DIR;
+  process.env.RELEASE_COPILOT_STATE_DIR = dir;
+  try {
+    assert.equal(loadHermesException('0.89', ['f289631444e'], '0.89.0-rc.0'), null);
+    const first = hermesSkipEntry(hermesState(), {reason: 'first', reviewedBy: 'a', today: '2026-11-03'});
+    const path = recordHermesDecision(first);
+    assert.ok(path.startsWith(dir), 'written under the state dir, not the repo');
+    recordHermesDecision({...first, reason: 'second'});
+    const ex = loadHermesException('0.89', ['f289631444e'], '0.89.0-rc.0');
+    assert.equal(ex.reason, 'second');
+    assert.deepEqual(ex.unacknowledged, []);
+    assert.equal(hermesExceptions().filter(e => e.version === '0.89.0-rc.0').length, 1);
+    assert.deepEqual(loadHermesException('0.89', ['f289631444e', 'bbbbbbbbbbb'], '0.89.0-rc.0').unacknowledged, ['bbbbbbbbbbb'], 'a later commit is not covered');
+    assert.ok(hermesExceptions().some(e => e.version === '0.88.0'), 'the repo history is still read');
+    const repo088 = hermesExceptions().find(e => e.version === '0.88.0');
+    recordHermesDecision({...repo088, reason: 'local override'});
+    const both = hermesExceptions().filter(e => e.series === '0.88' && e.version === '0.88.0');
+    assert.deepEqual(both.map(e => e.reason), ['local override'], 'a local decision replaces the repo one for the same release');
+  } finally {
+    process.env.RELEASE_COPILOT_STATE_DIR = prev;
+  }
+});
+
+// ---------------------------------------------------------- skippable actions
+
+const skipPhaseState = () => baseState({});
+
+test('runner: declining a skippable action carries on and lists it, a normal one still stops', async () => {
+  const phase = {
+    id: 'x',
+    title: 'x',
+    steps: [
+      {id: 'side', title: 'side', gates: [], actions: () => [declare({step: 'side', why: 'side job', cmd: 'true', args: [], impact: ['x'], skippable: true}), declare({step: 'side', why: 'side follow-up', cmd: 'true', args: [], impact: ['x']})]},
+      {id: 'main', title: 'main', gates: [], actions: () => [declare({step: 'main', why: 'main job', cmd: 'true', args: [], impact: ['x']})]},
+    ],
+  };
+  PHASES.__skiptest = phase;
+  try {
+    const seen = [];
+    const logs = [];
+    const r = await runPhase(skipPhaseState(), {mode: MODES.GUIDED, shape: '__skiptest', confirm: async a => (seen.push(a.why), a.why === 'main job'), log: l => logs.push(l)});
+    assert.equal(r.completed, true);
+    assert.deepEqual(seen, ['side job', 'main job'], 'the rest of the skipped step is skipped too, the next step runs');
+    assert.deepEqual(r.skipped.map(s => s.step), ['side']);
+    assert.ok(logs.some(l => /Skipped, still to do/.test(l)));
+
+    const stop = await runPhase(skipPhaseState(), {mode: MODES.GUIDED, shape: '__skiptest', confirm: async a => a.why === 'side job', log: () => {}});
+    assert.equal(stop.completed, false, 'declining a non-skippable action still stops the run');
+    assert.equal(stop.stopped[0].step, 'side');
+  } finally {
+    delete PHASES.__skiptest;
+  }
+});
+
+test('gate: hermesPublishable catches a workflow guard or repository.url naming the old repo', async () => {
+  const h = over => baseState({hermesUnreleased: {branch: '260318099.0.0-stable', tag: 't', resolved: true, commits: [], hostRepo: 'meta/hermes', workflowGuards: ['meta/hermes'], repositoryUrl: 'git+ssh://git@github.com/meta/hermes.git', ...over}});
+  const ok = await evaluate(['hermesPublishable'], h({}), {});
+  assert.equal(ok.passed, true, ok.results[0].detail);
+  const guard = await evaluate(['hermesPublishable'], h({workflowGuards: ['facebook/hermes']}), {});
+  assert.equal(guard.passed, false);
+  assert.match(guard.results[0].detail, /github\.repository == 'facebook\/hermes', but the workflow runs in meta\/hermes/);
+  const url = await evaluate(['hermesPublishable'], h({repositoryUrl: 'git+ssh://git@github.com/facebook/hermes.git'}), {});
+  assert.equal(url.passed, false);
+  assert.match(url.results[0].detail, /repository\.url is git\+ssh:\/\/git@github\.com\/facebook\/hermes\.git, not meta\/hermes/);
+  assert.match(url.results[0].detail, /trusted publisher/);
+});
+
+test('gate: hermesCurrent fails when a newer Hermes is released but not pinned, counting from that release', async () => {
+  const st = baseState({
+    branch: '0.89-stable',
+    hermesUnreleased: {branch: '260318099.0.0-stable', tag: 'hermes-v260318099.0.5', resolved: true, pinned: '260318099.0.2', latestReleased: '260318099.0.5', pinBehind: true, commits: [{sha: 'aaa', subject: 'x'}]},
+  });
+  const ev = await evaluate(['hermesCurrent'], st, {});
+  assert.equal(ev.passed, false);
+  assert.match(ev.results[0].detail, /0\.89-stable pins 260318099\.0\.2 but 260318099\.0\.5 is already released/);
+  assert.match(ev.results[0].detail, /the 1 commit\(s\) beyond it/);
+  const current = await evaluate(['hermesCurrent'], baseState({hermesUnreleased: {branch: 'b', tag: 'hermes-v260318099.0.5', resolved: true, pinned: '260318099.0.5', latestReleased: '260318099.0.5', pinBehind: false, commits: [{sha: 'aaa', subject: 'x'}]}}), {});
+  assert.match(current.results[0].detail, /not in the latest release hermes-v260318099\.0\.5/);
+});
+
+// ---------------------------------------------------------- branch cut side steps
+
+const cutState = over =>
+  baseState({
+    series: '0.89',
+    branch: '0.89-stable',
+    proposedNext: '0.89.0-rc.0',
+    mainTip: 'c0ffee1234567890abcdef1234567890abcdef12',
+    branchTip: 'bbbbbbbbbbb',
+    schedule: {series: {version: '0.89', type: 'breaking', branchCut: '2026-11-02', release: '2026-12-07'}},
+    ...over,
+  });
+
+const cutStep = async id => (await import('../scripts/phases.mjs')).phaseFor('branch-cut').steps.find(s => s.id === id);
+
+test('branch cut: the nightly goes through publish-npm.yml and is not offered again after the cut', async () => {
+  const step = await cutStep('nightly');
+  const [a] = step.actions(cutState(), {});
+  assert.equal(render(a), 'gh workflow run publish-npm.yml --repo react/react-native --ref main');
+  assert.equal(a.skippable, true, 'a broken nightly must not stop the publish');
+  const done = cutState({cut: {nightly: {dispatched: true, url: 'https://github.com/react/react-native/actions/runs/41488715378'}}});
+  assert.deepEqual(step.actions(done, {}), []);
+  assert.match(step.brief(done), /already ran on main after the cut: .*41488715378/);
+});
+
+test('branch cut: the board, the support row and the template are offered only when missing', async () => {
+  const board = await cutStep('project-board');
+  const [b] = board.actions(cutState({cut: {board: {missing: true}}}), {});
+  assert.equal(b.args.slice(1).join(' '), 'create 0.89 --cut 2026-11-02 --release 2026-12-07');
+  assert.equal(b.skippable, true);
+  assert.deepEqual(board.actions(cutState({cut: {board: {number: 37, title: 'React Native 0.89 Releases', public: true, missingTargets: []}}}), {}), []);
+  const fix = board.actions(cutState({cut: {board: {number: 37, title: 'React Native 0.89 Releases', public: true, missingTargets: ['0.89.0']}}}), {});
+  assert.match(fix[0].impact[0], /updates React Native 0\.89 Releases \(#37\)/);
+
+  const deps = await cutStep('external-deps');
+  assert.deepEqual(deps.actions(cutState({cut: {supportRow: {present: true, row: '| 0.89 |', notes: []}}}), {}), []);
+  const before = deps.actions(cutState({branchTip: null, cut: {supportRow: {present: false, row: '| 0.89 |', notes: []}}}), {});
+  assert.equal(before[0].args.slice(1).join(' '), 'support-row 0.89 --ref main --pr', 'before the branch exists, read main');
+  assert.match(deps.brief(cutState({cut: {supportRow: {present: false, row: '| 0.89 | x |', notes: ['the 0.88 row says Node 22.11.0']}}})), /Proposed 0\.89 row[\s\S]*note: the 0\.88 row says Node 22\.11\.0/);
+});
+
+test('branch cut: a pick already in the cut is closed with the commit and gets Target Release rc.0', async () => {
+  const step = await cutStep('cut-picks');
+  const st = cutState({
+    pickCandidates: [
+      {number: 1492, landed: true, resolved: [{sha: '138c1a9a6e6'}]},
+      {number: 1495, landed: false, resolved: [{sha: '3d6462e9d26'}]},
+    ],
+  });
+  const acts = step.actions(st, {});
+  assert.deepEqual(acts.map(a => a.why), ['close #1492, already in 0.89-stable', 'set Target Release 0.89.0-rc.0 on #1492']);
+  assert.match(acts[0].args.at(-1), /Included in 0\.89 through the branch cut: `138c1a9a6e6` was already on main when `0\.89-stable` was cut/);
+  assert.equal(acts[1].args.slice(1).join(' '), 'set-target 0.89 1492 0.89.0-rc.0');
+  assert.deepEqual(step.actions(cutState({branchTip: null, pickCandidates: st.pickCandidates}), {}), [], 'nothing to close before the branch exists');
+
+  const gate = await evaluate(['noOpenPicks'], {...st, openPicks: [{number: 1492}]}, {});
+  assert.equal(gate.passed, true, 'a pick already on the branch only needs closing');
+  assert.match(gate.results[0].detail, /Already on 0\.89-stable, close: #1492/);
+  const blocked = await evaluate(['noOpenPicks'], {...st, openPicks: [{number: 1495}]}, {});
+  assert.equal(blocked.passed, false, 'a pick not on the branch still blocks');
+});
+
+test('branch cut: the #cli message names the channel from the guide', async () => {
+  const step = await cutStep('tell-cli');
+  const text = step.brief(cutState());
+  assert.match(text, /discord\.com\/channels\/514829729862516747\/1232435652533031013/);
+  assert.match(text, /React Native 0\.89 is cut: `0\.89-stable`/);
+  assert.match(text, /before RC1/);
+});
+
+test('branch cut: the support row helpers', () => {
+  assert.equal(nodeMinimum('^22.13.0 || ^24.3.0 || >= 26.0.0'), '22.13.0');
+  assert.equal(nodeMinimum('>= 22.11.0'), '22.11.0');
+  assert.equal(androidMinimum('minSdk = "24"\ntargetSdk = "37"'), 'Android 7.0');
+  const md = '| Version | a |\n| --- | --- |\n| 0.89                  | Android 7.0           |\n| 0.88 | Android 7.0 |\n';
+  assert.deepEqual(parseTable(md).map(r => r[0]), ['0.89', '0.88']);
+  assert.equal(formatRow(['0.90', 'Android 7.0']), '| 0.90                  | Android 7.0           |');
+});
+
+test('board: Target Release values for a series, merged without touching existing ones', () => {
+  assert.deepEqual(targetReleaseNames('0.90'), ['0.90.0-rc.0', '0.90.0-rc.1', '0.90.0-rc.2', '0.90.0-rc.3', '0.90.0-rc.4', '0.90.0-rc.5', '0.90.0']);
+  assert.equal(previousSeries('0.90'), '0.89');
+  const merged = mergeOptions([{name: '0.89.0', color: 'BLUE', description: 'd'}], ['0.89.0', '0.90.0-rc.0']);
+  assert.deepEqual(merged, [{name: '0.89.0', color: 'BLUE', description: 'd'}, {name: '0.90.0-rc.0', color: 'GRAY', description: ''}]);
+});
+
+test('phase: the test step is skipped once a passing report exists at the tip, not before', async () => {
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const step = phaseFor('branch-cut').steps.find(s => s.id === 'test');
+  const at = sha => reportFor(null, {sha});
+  const tip = '4eb4d2e795c0123456';
+  assert.deepEqual(step.actions(testedState({testReport: at(tip)}), {}), [], 'passed at the tip: nothing to run');
+  assert.match(step.brief(testedState({testReport: at(tip)})), /Already passed at this tip: #1500/);
+  assert.equal(step.actions(testedState({testReport: at('aaaaaaaaaaa0000')}), {}).length, 2, 'a report for an older tip runs the pass again');
+  const failing = {...at(tip), marker: {...at(tip).marker, summary: {...at(tip).marker.summary, fail: ['x/launch']}}};
+  assert.equal(step.actions(testedState({testReport: failing}), {}).length, 2, 'a failing report runs it again');
+  assert.equal(step.brief(testedState({testReport: null})), null);
+});
+
+// ---------------------------------------------------------- CI failure classification
+
+test('ci: a runner lost mid-job is a known flake and the gate says to re-run it', async () => {
+  // test_e2e_ios_templateapp / build (Release) on efef4667ba8, run 41740841646 attempt 1.
+  const text = 'The hosted runner lost communication with the server. Anything in your workflow that terminates the runner process, starves it for CPU/Memory, or blocks its network access can cause this error.';
+  assert.deepEqual(classifyFailure(text).id, 'runner-lost');
+  assert.equal(classifyFailure(text).retryable, true);
+  assert.equal(classifyFailure('error: use of undeclared identifier').kind, 'unknown');
+
+  const red = (failures, failedJobs = failures.map(f => f.job)) => baseState({
+    ci: [{workflow: 'Test All', runId: 41740841646, conclusion: 'failure', status: 'completed', failedJobs, failures}],
+  });
+  const flake = await evaluate(['ciGreen'], red([{job: 'test_e2e_ios_templateapp / build (Release)', kind: 'flake', id: 'runner-lost'}]), {});
+  assert.equal(flake.passed, false, 'a flake still blocks until the job is re-run');
+  assert.match(flake.results[0].detail, /known flake, re-run the failed jobs \(gh run rerun 41740841646 --failed\): test_e2e_ios_templateapp \/ build \(Release\) \(runner-lost\)/);
+
+  const unknown = await evaluate(['ciGreen'], red([{job: 'test_android', kind: 'unknown'}]), {});
+  assert.match(unknown.results[0].detail, /test_android\. Classify it before proceeding, do not blanket-retry/);
+  assert.doesNotMatch(unknown.results[0].detail, /re-run/);
+
+  const legacy = await evaluate(['ciGreen'], red([], ['old_job']), {});
+  assert.match(legacy.results[0].detail, /old_job\. Classify it/, 'a state without failures still names the jobs');
+});
+
+test('test pass: after the publish, the report is found through the bot release commit and nothing else', () => {
+  const bot = {message: 'Release 0.89.0-rc.0\n\n#publish-packages-to-npm', author: 'React Native Bot', email: 'bot@reactnative.dev', parents: ['efef4667ba8aadbf']};
+  assert.equal(testedCommit('1992b6cbbba', bot, '0.89.0-rc.0'), 'efef4667ba8aadbf');
+  assert.equal(testedCommit('1992b6cbbba', bot, '0.89.0-rc.1'), '1992b6cbbba', 'a release commit for another version is a real change');
+  assert.equal(testedCommit('aaa', {...bot, author: 'Someone', email: 'someone@x'}, '0.89.0-rc.0'), 'aaa', 'only the bot commit is stepped over');
+  assert.equal(testedCommit('aaa', {...bot, parents: ['p1', 'p2']}, '0.89.0-rc.0'), 'aaa');
+});
+
+test('verify-publish: waits for the publish run on the tag and rejects a green run that skipped the publish', async () => {
+  const runs = [
+    {databaseId: 41808713865, headBranch: '0.89-stable', status: 'completed', conclusion: 'success'},
+    {databaseId: 41808713786, headBranch: 'v0.89.0-rc.0', status: 'in_progress'},
+  ];
+  assert.equal(pickPublishRun(runs, '0.89.0-rc.0').databaseId, 41808713786);
+  assert.equal(pickPublishRun(runs, '0.89.0-rc.1'), null);
+  const done = jobs => judgePublishRun({databaseId: 1, status: 'completed', conclusion: 'success', url: 'u', jobs});
+  const branchRun = done([{name: 'determine_mode', conclusion: 'success'}, {name: 'publish_react_native', conclusion: 'skipped'}]);
+  assert.equal(branchRun.ok, false);
+  assert.match(branchRun.detail, /publish_react_native was skipped/);
+  assert.equal(done([{name: 'publish_react_native', conclusion: 'success'}]).ok, true);
+  assert.match(done([{name: 'publish_react_native', conclusion: 'success'}, {name: 'post_publish', conclusion: 'failure'}]).detail, /post_publish was failure/);
+  assert.equal(judgePublishRun({databaseId: 1, status: 'in_progress', url: 'u'}).done, false);
+
+  const {phaseFor} = await import('../scripts/phases.mjs');
+  const step = phaseFor('rc').steps.find(s => s.id === 'verify-publish');
+  const [first] = step.actions(baseState({proposedNext: '0.89.0-rc.0'}), {});
+  assert.match(first.args[0], /publish-run\.mjs$/);
+  assert.deepEqual(first.args.slice(1), ['wait', '0.89.0-rc.0']);
+  assert.deepEqual(step.actions(baseState({proposedNext: '0.89.0'}), {isLatest: true})[0].args.slice(1), ['wait', '0.89.0', '--latest']);
+});
+
+test('release links: a draft is linked by its tag, a published release by its own URL', async () => {
+  const {releaseLink, buildAnnouncement} = await import('../scripts/release-message.mjs');
+  const draft = {url: 'https://github.com/react/react-native/releases/tag/untagged-48547e0e58b203e0361b', isDraft: true};
+  assert.equal(releaseLink('0.89.0-rc.0', draft), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
+  assert.equal(releaseLink('0.89.0-rc.0', {url: 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0', isDraft: false}), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
+  assert.equal(releaseLink('0.89.0-rc.0', null), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
+  assert.doesNotMatch(buildAnnouncement('0.89.0-rc.0', {release: draft}), /untagged-/);
 });

@@ -18,12 +18,16 @@
  *   node evals/run.mjs --json     machine-readable
  */
 
-import {readFileSync} from 'node:fs';
+import {readFileSync, mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
 import {runPhase, MODES} from '../scripts/run-phase.mjs';
 import {PHASES} from '../scripts/phases.mjs';
+
+// The copilot's local decisions are the captain's, not test input.
+process.env.RELEASE_COPILOT_STATE_DIR = mkdtempSync(join(tmpdir(), 'release-copilot-state-'));
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const scenarios = JSON.parse(readFileSync(join(HERE, 'scenarios.json'), 'utf8')).scenarios;

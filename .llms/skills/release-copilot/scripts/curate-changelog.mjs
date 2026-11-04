@@ -247,22 +247,28 @@ export function curateEntries(entries, {model, factsOf}) {
   return {entries: out, report: {prefixed, unprefixed, flagged}};
 }
 
-export function formatReport({prefixed, unprefixed, flagged}) {
+/**
+ * The curation decisions for a human to confirm. `collapsed` folds each list
+ * into a <details> block, for a PR description: the 0.89.0-rc.0 one ran to
+ * nearly 400 lines with all three lists open.
+ */
+export function formatReport({prefixed, unprefixed, flagged}, {collapsed = false} = {}) {
   const L = [];
+  const block = (title, lines) => {
+    if (collapsed) {
+      L.push(`<details><summary>${title}</summary>`, '', ...lines, '', '</details>', '');
+    } else {
+      L.push(`**${title}.**`, '', ...lines, '');
+    }
+  };
   if (prefixed.length) {
-    L.push(`**Prefixes added (${prefixed.length}).** The entry names the scope and its files sit where that scope's commits have lived. Confirm each:`, '');
-    for (const p of prefixed) L.push(`- \`${p.scope}\`: ${p.prose}`);
-    L.push('');
+    block(`Prefixes added (${prefixed.length})`, prefixed.map(p => `- \`${p.scope}\`: ${p.prose}`));
   }
   if (unprefixed.length) {
-    L.push(`**Still without a prefix (${unprefixed.length}).** The text and the files did not agree on one:`, '');
-    for (const p of unprefixed) L.push(`- ${p}`);
-    L.push('');
+    block(`Still without a prefix (${unprefixed.length})`, unprefixed.map(p => `- ${p}`));
   }
   if (flagged.length) {
-    L.push(`**Consistency flags (${flagged.length}).** Signals, not verdicts:`, '');
-    for (const f of flagged) L.push(`- ${f.prose} (${f.section}${f.subsection ? `, ${f.subsection}` : ''}): ${f.flags.join('; ')}`);
-    L.push('');
+    block(`Consistency flags (${flagged.length})`, flagged.map(f => `- ${f.prose} (${f.section}${f.subsection ? `, ${f.subsection}` : ''}): ${f.flags.join('; ')}`));
   }
   return L.join('\n');
 }

@@ -21,19 +21,22 @@ So after one dispatch you curate outputs rather than creating them.
 
 ## branch-cut (RC0)
 
-1. **External dependencies table.** Add a column for the new RC in
-   `docs/support.md`. Open a PR rather than committing to `main`, the repo
-   notifies watchers.
+1. **External dependencies table.** Add a row for the new series in
+   `docs/support.md`, through a PR rather than a commit to `main`, the repo
+   notifies watchers. The copilot opens it (`branch-cut.mjs support-row`).
 2. **Create branches.** `X.Y-stable` in `react/react-native`, plus the matching
-   branch in `react-native-community/template`. Tell the `#cli` Discord channel:
-   they must bump `@react-native-community/cli` and its compatibility table
-   **before RC1**.
-3. **Hermes.** Publish the Hermes release and land the version bump on the branch.
+   branch in `react-native-community/template` from its `main`.
+3. **Project board.** Copy the previous series' board, public, with the series'
+   Target Release values. Turn on "Auto-add to project" by hand.
+4. **Close picks the cut already includes,** with Target Release rc.0.
+5. **Tell the `#cli` Discord channel:** they must bump
+   `@react-native-community/cli` and its compatibility table **before RC1**.
+6. **Hermes.** Publish the Hermes release and land the pin on the branch.
    Do not continue until the branch carries it. See `hermes.md`.
-4. **Nightly.** Trigger one from `main` before release-specific fixes land, so
-   partners integrating with nightlies get a clean one.
-5. Then the common publish path.
-6. **Bump `main`.** `js1 publish react-native 0.<next>.0-main` in fbsource. Meta
+7. **Nightly.** A manual run of `publish-npm.yml` on `main`, so partners integrating
+   with nightlies get a clean one. `nightly.yml` no longer exists.
+8. Then the common publish path.
+9. **Bump `main`.** `js1 publish react-native 0.<next>.0-main` in fbsource. Meta
    only.
 
 ## rc
@@ -88,5 +91,5 @@ place as steps land. The publish step prints it for you.
 ## Prerequisites
 
 Write access to `react/react-native`, `react-native-community/template`,
-`facebook/hermes` and `reactwg/react-native-releases`. Plus `gh auth login`, and
+`meta/hermes` and `reactwg/react-native-releases`. Plus `gh auth login`, and
 `gh auth refresh -s read:project,project` for the board.
