@@ -19,12 +19,20 @@
  *
  * --ref reads CHANGELOG.md from another ref, such as the changelog PR's branch
  * when the release goes out before that PR lands. Edits made while curating
- * the PR then do not reach the release by themselves.
+ * the PR then do not reach the release by themselves: once it lands,
+ *
+ *   node scripts/fill-release-notes.mjs 0.89.0-rc.0 --update-published --was changelog/v0.89.0-rc.0@<sha>
+ *
+ * replaces a published release's notes with the section on main. It refuses
+ * unless the notes on the release are exactly the section at --was, so a hand
+ * edit made on the release is never overwritten. It keeps everything from the
+ * first `---` on, saves the old body first and reads the release back.
  */
 
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {writeFileSync, mkdtempSync} from 'node:fs';
+import {writeFileSync, mkdtempSync, mkdirSync} from 'node:fs';
+import {homedir} from 'node:os';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 
@@ -76,6 +84,40 @@ export function releasePatch(version, body, draft) {
   return {tag_name: `v${version}`, body, draft};
 }
 
+/**
+ * The body a published release gets: `section` above its first `---`, the
+ * rest kept byte for byte. Refuses unless its current notes are `was`.
+ */
+export function republishBody(section, current, was) {
+  const idx = (current ?? '').search(/^---\s*$/m);
+  if (idx === -1) {
+    return {status: 'no-separator'};
+  }
+  const notes = current.slice(0, idx).trim();
+  const tail = current.slice(idx);
+  if (normalize(notes) === normalize(section)) {
+    return {status: 'unchanged'};
+  }
+  if (normalize(notes) !== normalize(was ?? '')) {
+    return {status: 'edited', existing: notes};
+  }
+  return {status: 'replace', body: `${section}\n\n${tail}`, tail};
+}
+
+/** What must still hold after the update. Returns the failures. */
+export function verifyRepublished(before, after, {body, tail}) {
+  const norm = t => String(t ?? '').replace(/\r\n/g, '\n').trim();
+  const fails = [];
+  if (after.id !== before.id) fails.push('a different release came back');
+  if (after.tag_name !== before.tag_name) fails.push(`tag moved from ${before.tag_name} to ${after.tag_name}`);
+  if (after.draft !== before.draft) fails.push(`draft changed to ${after.draft}`);
+  if (after.prerelease !== before.prerelease) fails.push(`prerelease changed to ${after.prerelease}`);
+  if (after.name !== before.name) fails.push('the name changed');
+  if (norm(after.body) !== norm(body)) fails.push('the body is not what was sent');
+  if (!norm(after.body).endsWith(norm(tail))) fails.push('the part from --- on changed');
+  return fails;
+}
+
 async function gh(args) {
   const {stdout} = await exec('gh', args, {maxBuffer: 32 * 1024 * 1024});
   return stdout;
@@ -86,6 +128,8 @@ async function main() {
   const version = args.find(a => /^\d+\.\d+\.\d+(-rc\.\d+)?$/.test(a));
   const dryRun = args.includes('--dry-run');
   const ref = args.includes('--ref') ? args[args.indexOf('--ref') + 1] : 'main';
+  const republish = args.includes('--update-published');
+  const was = args.includes('--was') ? args[args.indexOf('--was') + 1] : null;
   if (!version || !ref) {
     console.error('usage: node scripts/fill-release-notes.mjs <version> [--ref <ref>] [--dry-run]');
     process.exit(2);
@@ -110,9 +154,56 @@ async function main() {
     console.log(`No GitHub release for ${version}. The publish workflow creates the draft.`);
     process.exit(1);
   }
-  if (!release.draft) {
-    console.log(`The ${version} release is already published. Edit its notes by hand if they need changing.`);
+  if (!release.draft && !republish) {
+    console.log(`The ${version} release is already published. To replace its notes, use --update-published --was <ref>, where <ref> is what they came from.`);
     process.exit(1);
+  }
+  if (republish) {
+    if (release.draft) {
+      console.log(`The ${version} release is still a draft. Run without --update-published.`);
+      process.exit(1);
+    }
+    if (!was) {
+      console.log('--update-published needs --was <ref>: the ref the notes on the release came from, so a hand edit is not overwritten.');
+      process.exit(2);
+    }
+    const old = changelogSection(
+      await gh(['api', `repos/${RN}/contents/CHANGELOG.md?ref=${encodeURIComponent(was)}`, '-H', 'Accept: application/vnd.github.raw']),
+      version,
+    );
+    const r = republishBody(section, release.body, old);
+    const entries = section.split('\n').filter(l => l.startsWith('- ')).length;
+    if (r.status === 'unchanged') {
+      console.log(`The ${version} release already carries the section on ${ref}. Nothing to do.`);
+      return;
+    }
+    if (r.status === 'no-separator') {
+      console.log(`The ${version} release body has no --- line, so the generated part cannot be told from the notes. Not touching it.`);
+      process.exit(1);
+    }
+    if (r.status === 'edited') {
+      console.log(`The notes on the ${version} release are not the section at ${was}: someone edited them on the release. Not overwriting. Reconcile by hand.`);
+      process.exit(1);
+    }
+    if (dryRun) {
+      console.log(`Would replace the ${version} release notes with ${entries} entries from ${ref}, keeping the ${r.tail.split('\n').length} lines from --- on.`);
+      return;
+    }
+    const dir = join(homedir(), 'Library', 'Caches', 'release-copilot', 'release-edit');
+    mkdirSync(dir, {recursive: true});
+    const backup = join(dir, `${version}-${Date.now()}.json`);
+    writeFileSync(backup, JSON.stringify(release, null, 2));
+    const file = join(mkdtempSync(join(tmpdir(), 'release-notes-')), 'patch.json');
+    // Not `draft`: it is unchanged. make_latest=false so a prerelease or an older line never takes latest.
+    writeFileSync(file, JSON.stringify({tag_name: `v${version}`, body: r.body, make_latest: 'false'}));
+    const after = JSON.parse(await gh(['api', '-X', 'PATCH', `repos/${RN}/releases/${release.id}`, '--input', file]));
+    const fails = verifyRepublished(release, after, r);
+    if (fails.length) {
+      console.log(`!! The ${version} release came back changed: ${fails.join('; ')}. The old body is in ${backup}.`);
+      process.exit(1);
+    }
+    console.log(`Replaced the ${version} release notes with ${entries} entries from ${ref}. Old body saved in ${backup}.`);
+    return;
   }
 
   const r = buildReleaseBody(section, release.body);

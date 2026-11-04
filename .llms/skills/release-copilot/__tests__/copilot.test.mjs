@@ -3831,3 +3831,22 @@ test('curation: path and history only suggest a scope, they never apply one', as
   assert.deepEqual(report.unprefixed, [{prose: 'Avoid exponential measurement', suggest: 'Yoga'}]);
   assert.match(formatReport(report), /Suggested prefixes \(1\), not applied[\s\S]*`Yoga`\?: Avoid exponential/);
 });
+
+test('republish: replaces only the notes above ---, and only when they are what --was says', async () => {
+  const {republishBody, verifyRepublished} = await import('../scripts/fill-release-notes.mjs');
+  const tail = '---\n\nHermes V1 dSYMS:\n- [Debug](x)\n';
+  const current = `### Fixed\n\n- old entry\n\n${tail}`;
+  const r = republishBody('### Fixed\n\n- **Text**: curated entry', current, '### Fixed\n\n- old entry');
+  assert.equal(r.status, 'replace');
+  assert.equal(r.body, `### Fixed\n\n- **Text**: curated entry\n\n${tail}`);
+  assert.ok(r.body.endsWith(tail), 'the generated part is kept byte for byte');
+  assert.equal(republishBody('### Fixed\n\n- old entry', current, 'whatever').status, 'unchanged');
+  assert.equal(republishBody('new', current, '### Fixed\n\n- a different old entry').status, 'edited', 'a hand edit on the release is not overwritten');
+  assert.equal(republishBody('new', '### Fixed\n\n- no separator', '### Fixed\n\n- no separator').status, 'no-separator');
+
+  const before = {id: 1, tag_name: 'v0.89.0-rc.0', draft: false, prerelease: true, name: '0.89.0-rc.0', body: current};
+  assert.deepEqual(verifyRepublished(before, {...before, body: r.body}, r), []);
+  assert.match(verifyRepublished(before, {...before, body: r.body, tag_name: 'untagged-abc'}, r).join(), /tag moved/);
+  assert.match(verifyRepublished(before, {...before, body: r.body, prerelease: false}, r).join(), /prerelease changed/);
+  assert.match(verifyRepublished(before, {...before, body: r.body.replace('Debug', 'Dbg')}, r).join(), /body is not what was sent/);
+});
