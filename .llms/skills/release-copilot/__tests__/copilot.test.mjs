@@ -2457,18 +2457,18 @@ test('curation: a prefix is added only when the text and the files agree', async
   const {learnScopes, inferScope} = await curation();
   const model = learnScopes(historyChangelog, s => historyFiles[s] ?? []);
   const inTextInput = ['packages/react-native/Libraries/Components/TextInput/Other.js'];
-  assert.equal(inferScope(model, 'TextInput loses the caret', inTextInput), 'TextInput');
-  assert.equal(inferScope(model, 'Image loses its tint', inTextInput), null, 'text says Image, files say TextInput');
-  assert.equal(inferScope(model, 'the caret is lost', inTextInput), null, 'files alone are not enough');
-  assert.equal(inferScope(model, 'TextInput loses the caret', ['somewhere/else.js']), null, 'text alone is not enough');
+  assert.equal(inferScope(model, 'TextInput loses the caret', inTextInput)?.scope ?? null, 'TextInput');
+  assert.equal(inferScope(model, 'Image loses its tint', inTextInput)?.scope ?? null, null, 'text says Image, files say TextInput');
+  assert.equal(inferScope(model, 'the caret is lost', inTextInput)?.scope ?? null, null, 'files alone are not enough');
+  assert.equal(inferScope(model, 'TextInput loses the caret', ['somewhere/else.js'])?.scope ?? null, null, 'text alone is not enough');
 });
 
 test('curation: tests do not pull the prefix towards wherever the test lives', async () => {
   const {learnScopes, inferScope} = await curation();
   const model = learnScopes(historyChangelog, s => historyFiles[s] ?? []);
   const files = ['packages/react-native/Libraries/Image/Image.android.js', 'packages/react-native/Libraries/Components/TextInput/__tests__/x-test.js'];
-  assert.equal(inferScope(model, 'Image and TextInput', files), null, 'the text names TextInput, but only its test was touched');
-  assert.equal(inferScope(model, 'Image tint', files), 'Image');
+  assert.equal(inferScope(model, 'Image and TextInput', files)?.scope ?? null, null, 'the text names TextInput, but only its test was touched');
+  assert.equal(inferScope(model, 'Image tint', files)?.scope ?? null, 'Image');
 });
 
 test('curation: the API check counts removed symbols, not edited lines', async () => {
@@ -2523,11 +2523,11 @@ test('curation: entries get their prefix and the report lists every decision', a
   assert.match(out[0].text, /^- \*\*TextInput\*\*: TextInput keeps its caret/);
   assert.match(out[1].text, /^- Something vague/, 'left alone rather than guessed');
   assert.match(out[2].text, /^- \*\*Image\*\*: already prefixed/);
-  assert.deepEqual(report.prefixed, [{scope: 'TextInput', prose: 'TextInput keeps its caret'}]);
-  assert.deepEqual(report.unprefixed, ['Something vague']);
+  assert.deepEqual(report.prefixed, [{scope: 'TextInput', prose: 'TextInput keeps its caret', why: 'text+files'}]);
+  assert.deepEqual(report.unprefixed.map(p => p.prose), ['Something vague']);
   const text = formatReport(report);
   assert.match(text, /Prefixes added \(1\)/);
-  assert.match(text, /Still without a prefix \(1\)/);
+  assert.match(text, /Suggested prefixes \(1\), not applied[\s\S]*`TextInput`\?: Something vague/, 'its file says TextInput, its text says nothing');
 });
 
 test('changelog PR body: a short checklist, the lists collapsed and the unprefixed entries only counted', async () => {
@@ -3767,4 +3767,67 @@ test('release links: a draft is linked by its tag, a published release by its ow
   assert.equal(releaseLink('0.89.0-rc.0', {url: 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0', isDraft: false}), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
   assert.equal(releaseLink('0.89.0-rc.0', null), 'https://github.com/react/react-native/releases/tag/v0.89.0-rc.0');
   assert.doesNotMatch(buildAnnouncement('0.89.0-rc.0', {release: draft}), /untagged-/);
+});
+
+
+test('curation: internal entries are dropped and listed, nothing the crew kept in 0.88.0', async () => {
+  const {internalReason} = await curation();
+  const f = files => ({files, message: 'x'});
+  assert.equal(internalReason('Pause RNTester visual regression checks', f(['.github/workflows/test-all.yml'])), 'CI only');
+  assert.equal(internalReason('Clear Fantom shutdown timer', f(['private/react-native-fantom/runner/x.js'])), 'Fantom only');
+  assert.equal(internalReason('Migrate a test', f(['packages/react-native/ReactAndroid/src/test/java/X.kt'])), 'tests or RNTester only');
+  assert.equal(internalReason('Translation auto-update for batch 3/64 on master', f(['packages/react-native/React/I18n/strings/x'])), 'a translation sync');
+  assert.equal(internalReason('Xplat/js/react-native-github/packages/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp', f(['a.cpp'])), 'a bot commit titled with a file path');
+  assert.equal(internalReason('Upgrade Flow in fbsource', f(['packages/react-native/Libraries/Animated/x.js'])), 'a Flow upgrade');
+  assert.equal(internalReason('Combine the 0.88 RC sections into v0.88.0', f(['CHANGELOG.md'])), 'a changelog edit');
+  assert.equal(internalReason('Fix TextInput caret', f(['packages/react-native/Libraries/Components/TextInput/TextInput.js', 'packages/react-native/Libraries/Components/TextInput/__tests__/x-test.js'])), null, 'a real change with a test is kept');
+  assert.equal(internalReason('Fix TextInput caret', null), null, 'no facts, no guess');
+});
+
+test('curation: Unknown entries are filed by verb and platform, repeats collapse, redundant labels go', async () => {
+  const {placeUnknown, stripRedundantLabel, curateEntries, learnScopes, formatReport} = await curation();
+  assert.deepEqual(placeUnknown('Fix `Style::operator==` ignoring `boxSizing`', ['packages/react-native/ReactCommon/yoga/yoga/style/Style.h']), {section: 'Fixed', subsection: ''});
+  assert.deepEqual(placeUnknown('Build the scroll event payload in one JNI call', ['packages/react-native/ReactAndroid/src/main/java/com/facebook/react/views/scroll/X.kt']), {section: 'Changed', subsection: 'Android specific'});
+  assert.deepEqual(placeUnknown('Remove dead code', ['packages/react-native/React/Base/RCTBridge.mm']), {section: 'Removed', subsection: 'iOS specific'});
+  assert.equal(stripRedundantLabel('SwiftPM: write build settings', 'SwiftPM'), 'Write build settings');
+  assert.equal(stripRedundantLabel('Android: stop re-arming the callback', 'Renderer'), 'Stop re-arming the callback');
+  assert.equal(stripRedundantLabel('Babel preset: Hermes profiles keep regexes', 'Babel'), 'Hermes profiles keep regexes');
+  assert.equal(stripRedundantLabel('Text inside Modal now updates', 'Text'), 'Text inside Modal now updates', 'a scope word that is the subject is not a label');
+  assert.equal(stripRedundantLabel('keeps the author\'s casing', 'Text'), 'keeps the author\'s casing', 'nothing stripped, nothing rewritten');
+
+  const model = learnScopes(historyChangelog, s => historyFiles[s] ?? []);
+  const line = (n, text) => `- ${text} ([${sha(n).slice(0, 10)}](https://github.com/react/react-native/commit/${sha(n)}))`;
+  const entries = [
+    {section: 'Fixed', subsection: '', text: line('1', 'TextInput keeps its caret')},
+    {section: 'Fixed', subsection: '', text: line('2', 'TextInput keeps its caret')},
+    {section: 'Unknown', subsection: '', text: line('3', 'Fix a thing in Image')},
+    {section: 'Unknown', subsection: '', text: line('4', 'Pause visual checks')},
+  ];
+  const facts = {
+    [sha('1')]: {files: ['packages/react-native/Libraries/Components/TextInput/TextInput.js'], message: '', api: []},
+    [sha('2')]: {files: ['packages/react-native/Libraries/Components/TextInput/TextInput.js'], message: '', api: []},
+    [sha('3')]: {files: ['packages/react-native/Libraries/Image/Image.ios.js'], message: '', api: []},
+    [sha('4')]: {files: ['.github/workflows/test-all.yml'], message: '', api: []},
+  };
+  const {entries: out, report} = curateEntries(entries, {model, factsOf: s => facts[s] ?? null});
+  assert.equal(out.length, 2, 'the repeat and the CI entry are gone');
+  assert.deepEqual(report.dropped.map(d => d.why), ['a repeat of the same change', 'CI only']);
+  assert.equal(out[1].section, 'Fixed', 'the Unknown fix is filed under Fixed');
+  assert.deepEqual(report.moved.map(m => m.to), ['Fixed']);
+  const text = formatReport(report);
+  assert.match(text, /Dropped \(2\)/);
+  assert.match(text, /Moved out of Unknown \(1\)/);
+});
+
+test('curation: path and history only suggest a scope, they never apply one', async () => {
+  const {learnScopes, inferScope, suggestScope, curateEntries, formatReport} = await curation();
+  const model = learnScopes(historyChangelog, s => historyFiles[s] ?? []);
+  const yoga = ['packages/react-native/ReactCommon/yoga/yoga/algorithm/CalculateLayout.cpp'];
+  assert.equal(inferScope(model, 'Avoid exponential measurement', yoga), null, 'the text names no scope');
+  assert.deepEqual(suggestScope(model, yoga), {scope: 'Yoga', why: 'path'});
+  const line = `- Avoid exponential measurement ([${sha('9').slice(0, 10)}](https://github.com/react/react-native/commit/${sha('9')}))`;
+  const {entries: out, report} = curateEntries([{section: 'Fixed', subsection: '', text: line}], {model, factsOf: () => ({files: yoga, message: '', api: []})});
+  assert.match(out[0].text, /^- Avoid exponential/, 'left unprefixed');
+  assert.deepEqual(report.unprefixed, [{prose: 'Avoid exponential measurement', suggest: 'Yoga'}]);
+  assert.match(formatReport(report), /Suggested prefixes \(1\), not applied[\s\S]*`Yoga`\?: Avoid exponential/);
 });
