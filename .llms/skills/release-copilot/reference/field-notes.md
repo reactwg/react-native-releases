@@ -89,6 +89,19 @@ version tag push.
 locally is also unreliable: `pod install` on a release branch can fail in codegen
 before it gets that far.
 
+**If the job is red:** read its log. On 0.89.0-rc.0 the commit was made and GitHub
+refused the push with "Internal Server Error" during an incident on Git operations.
+Rerun only that job once githubstatus.com is clear, never `post_publish`, which
+republishes the template. Nothing depends on `bump_podfile_lock`, so the rerun touches
+nothing else. `verify-publish` prints the command:
+
+```sh
+gh run rerun <publish-run-id> --repo react/react-native --job <bump-podfile-lock-job-id>
+```
+
+The same 500 hit rn-diff-purge's own push, so the upgrade helper had no diff. Resend
+its dispatch (below) once GitHub is clear.
+
 ---
 
 ## Resuming a half-published release

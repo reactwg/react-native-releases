@@ -13,7 +13,8 @@ import {readFileSync, existsSync, mkdirSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 
 import {parseReportMarker} from './release-test.mjs';
-import {findBoard, targetReleaseField, targetReleaseNames} from './board.mjs';
+import {findBoard, targetReleaseField, targetReleaseNames, itemsWithoutTarget} from './board.mjs';
+import {templateResult} from './verify-template.mjs';
 import {templateBranch, proposeRow} from './branch-cut.mjs';
 
 const exec = promisify(execFile);
@@ -762,6 +763,10 @@ export function liveSources() {
         release,
         changelogPr,
         testReport,
+        templateVerified: templateResult(version) != null,
+        boardReady: await itemsWithoutTarget(/^(\d+\.\d+)\./.exec(version)?.[1] ?? '')
+          .then(missing => (missing == null ? null : missing.length === 0))
+          .catch(() => null),
       };
     },
 

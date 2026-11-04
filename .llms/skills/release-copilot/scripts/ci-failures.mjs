@@ -18,6 +18,13 @@ export const FLAKE_SIGNATURES = [
     reason: 'GitHub lost the runner mid-job, which says nothing about the change. Re-run the failed job',
   },
   {
+    // 0.89.0-rc.0: GitHub answered both the Podfile.lock push and the
+    // rn-diff-purge push with a 500 during an incident on Git operations.
+    id: 'github-500',
+    match: /remote: Internal Server Error|\[remote rejected\][^\n]*\(Internal Server Error\)/i,
+    reason: 'GitHub refused the push with a 500, a GitHub-side failure. Re-run the job once githubstatus.com is clear',
+  },
+  {
     id: 'missing-artifact',
     match: /Artifact not found for name/i,
     reason: 'artifact missing because an upstream build job failed; fix that job, not this one',

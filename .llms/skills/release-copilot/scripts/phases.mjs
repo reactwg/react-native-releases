@@ -501,7 +501,7 @@ const commonPublishSteps = [
       }),
     ],
     note:
-      'The generated draft has the dSYM links and boilerplate but an EMPTY notes section, so the notes are filled from the curated changelog section on main first. That section has to have landed: an RC or patch through its changelog PR, a .0 through the consolidation change. To publish before the PR lands, `fill-release-notes.mjs <version> --ref changelog/v<version>` reads the PR branch instead (0.89.0-rc.0 went out that way). Curation done on the PR afterwards does not reach the release by itself. Then publish: Pre-release for an RC, Latest for a stable on the newest series. Also publish any earlier release of the series still sitting as a draft (0.88.0-rc.6 was left as one), which the status message lists.',
+      'The generated draft has the dSYM links and boilerplate but an EMPTY notes section, so the notes are filled from the curated changelog section on main first. That section has to have landed: an RC or patch through its changelog PR, a .0 through the consolidation change. To publish before the PR lands, `fill-release-notes.mjs <version> --ref changelog/v<version>` reads the PR branch instead (0.89.0-rc.0 went out that way). Curation done on the PR afterwards does not reach the release by itself: once it lands, `fill-release-notes.mjs <version> --update-published --was <the ref used>` replaces the notes. It refuses if they were edited on the release. Then publish: Pre-release for an RC, Latest for a stable on the newest series. Also publish any earlier release of the series still sitting as a draft (0.88.0-rc.6 was left as one), which the status message lists.',
   },
   {
     id: 'announce',

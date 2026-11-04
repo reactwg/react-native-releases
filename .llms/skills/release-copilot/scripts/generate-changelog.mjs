@@ -143,13 +143,16 @@ export function prBody(version, {dotZero, entries, prev, report}) {
   const what = dotZero
     ? `Replaces the per-RC headings with the single \`## v${version}\` section the stable release publishes.`
     : `Adds the \`## v${version}\` section, generated against v${prev}: ${entries.length} entries.`;
+  const hinted = report.unprefixed.filter(p => p?.suggest).length;
   const todo = [
     report.prefixed.length && `Confirm the ${report.prefixed.length} prefixes the copilot added (below).`,
-    report.unprefixed.length && `Prefix the ${report.unprefixed.length} entries still without one, the ones with no \`**Scope**:\` in the diff.`,
+    report.unprefixed.length && `Prefix the ${report.unprefixed.length} entries still without one, the ones with no \`**Scope**:\` in the diff. ${hinted} come with a suggestion (below).`,
+    report.dropped?.length && `Check the ${report.dropped.length} entries it dropped as internal or repeated (below).`,
+    report.moved?.length && `Check where it filed the ${report.moved.length} Unknown entries (below).`,
     report.flagged.length && `Check the ${report.flagged.length} flags (below).`,
     'Drop internal entries and promote user-facing ones.',
   ].filter(Boolean);
-  // The unprefixed entries are visible in the diff, so the body only counts them.
+  // Unprefixed entries without a suggestion are visible in the diff, so the body only counts them.
   return [
     '## Summary',
     '',
@@ -158,7 +161,7 @@ export function prBody(version, {dotZero, entries, prev, report}) {
     'Before landing:',
     ...todo.map(t => `- ${t}`),
     '',
-    formatReport({...report, unprefixed: []}, {collapsed: true}),
+    formatReport({...report, unprefixed: report.unprefixed.filter(p => p?.suggest)}, {collapsed: true}),
     '## Changelog:',
     '',
     `[INTERNAL] - Add changelog for v${version}`,
