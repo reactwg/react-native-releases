@@ -82,13 +82,29 @@ export function judgeRun(run) {
   return {ok: true, done: true, detail: `run ${run.databaseId} tagged and published: ${run.url}`};
 }
 
-export async function waitForRun(version, {branch, sinceMinutes = 120, log = console.log} = {}) {
-  const list = JSON.parse(
-    await must('gh', ['run', 'list', '--repo', HERMES_REPO, '--workflow', WORKFLOW, '--branch', branch, '--event', 'workflow_dispatch', '--limit', '5', '--json', 'databaseId,createdAt,url,status']),
-  );
-  const recent = list.find(r => Date.now() - Date.parse(r.createdAt) < sinceMinutes * 60000);
+/** The newest dispatch on the branch from the last `sinceMinutes`, or null. */
+export function recentDispatch(list, {sinceMinutes = 120, now = Date.now()} = {}) {
+  return (list ?? []).find(r => now - Date.parse(r.createdAt) < sinceMinutes * 60000) ?? null;
+}
+
+export async function waitForRun(version, {branch, sinceMinutes = 120, appearMinutes = 5, log = console.log} = {}) {
+  // A run is not listed until a few seconds after its dispatch returns. On
+  // 260318099.0.7 the wait asked straight after the cut, found nothing and
+  // stopped the phase while the run was building.
+  let recent = null;
+  const until = Date.now() + appearMinutes * 60000;
+  for (;;) {
+    const list = JSON.parse(
+      await must('gh', ['run', 'list', '--repo', HERMES_REPO, '--workflow', WORKFLOW, '--branch', branch, '--event', 'workflow_dispatch', '--limit', '5', '--json', 'databaseId,createdAt,url,status']),
+    );
+    recent = recentDispatch(list, {sinceMinutes});
+    if (recent || Date.now() >= until) {
+      break;
+    }
+    await sleep(10000);
+  }
   if (!recent) {
-    throw new Error(`no ${WORKFLOW} dispatch on ${branch} in the last ${sinceMinutes} minutes. Did the cut step run?`);
+    throw new Error(`no ${WORKFLOW} dispatch on ${branch} in the last ${sinceMinutes} minutes, after waiting ${appearMinutes} for one to appear. Did the cut step run?`);
   }
   log(`Watching ${recent.url} for ${version}`);
   for (;;) {

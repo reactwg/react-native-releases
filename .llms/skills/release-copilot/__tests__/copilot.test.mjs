@@ -3888,3 +3888,12 @@ test('template check: only a full pass on both platforms is recorded', async () 
   assert.equal(templateResult(v).ok, true);
   rmSync(join(TEMPLATE_RESULTS, `${v}.json`));
 });
+
+test('hermes wait: only a dispatch from the last two hours counts', async () => {
+  const {recentDispatch} = await import('../scripts/hermes-release.mjs');
+  const now = Date.parse('2026-11-07T20:14:00Z');
+  const list = [{databaseId: 42409982858, createdAt: '2026-11-07T20:13:06Z'}, {databaseId: 41524889130, createdAt: '2026-11-02T21:03:54Z'}];
+  assert.equal(recentDispatch(list, {now}).databaseId, 42409982858);
+  assert.equal(recentDispatch([list[1]], {now}), null, 'a run from days ago is not this cut');
+  assert.equal(recentDispatch([], {now}), null);
+});
