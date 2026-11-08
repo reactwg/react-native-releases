@@ -3284,7 +3284,7 @@ test('hermes phase: wait, verify, pin, push and next bump all go through hermes-
   assert.equal(push.confirmToken, '0.89-stable');
   const bump = one('hermes-next-bump');
   assert.equal(tail(bump), 'next-bump 260318099.0.0-stable 260318099.0.5 260318099.0.6');
-  assert.equal(bump.skippable, true, 'the next bump does not block the pin');
+  assert.equal(bump.skippable, false, 'the next bump is part of finishing the release, so declining it stops the run');
   for (const a of [one('hermes-monitor'), one('hermes-verify-tag'), one('hermes-pin'), push, bump]) {
     assert.match(a.args[0], /hermes-release\.mjs$/);
   }

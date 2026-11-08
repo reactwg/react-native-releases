@@ -255,7 +255,7 @@ Seven steps, the last five through `scripts/hermes-release.mjs`:
 6. `hermes-push`: pushes that commit only, after checking it changes exactly the three
    pin files and sits on the branch's current tip.
 7. `hermes-next-bump`: opens the PR moving the Hermes branch to the next version.
-   Skippable, since the pin does not depend on it.
+   Required: the release is not finished until the branch names the next version.
 
 `hermesReadyToCut` matters because `RN Build Static Hermes` has **no version input**
 and reads `npm/hermes-compiler/package.json` verbatim. `hermesPublishable` checks the
@@ -366,8 +366,8 @@ captain to **retype the version or branch** rather than accept `y`.
 
 Declining normally **stops the run**, because later steps assume earlier ones
 happened. Side steps nothing later depends on are **skippable** and say so with a
-`skip:` line: the nightly, the template branch, the board, the support-table PR, a
-board Target Release and the Hermes next bump. Declining one skips it, the run carries
+`skip:` line: the nightly, the template branch, the board, the support-table PR and a
+board Target Release. Declining one skips it, the run carries
 on and lists it at the end as still to do. On the 0.89 cut the broken nightly could
 only be accepted (and fail) or declined (and stop), so it blocked the publish.
 

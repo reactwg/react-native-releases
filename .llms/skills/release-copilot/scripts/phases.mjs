@@ -952,12 +952,11 @@ export const PHASES = {
                 'without it merged, the next cut re-cuts the version just released',
               ],
               reversible: 'yes, close the PR and delete the branch',
-              skippable: true,
             }),
           ];
         },
         note:
-          'This is the tail of THIS release, not the head of the next one: the file must always name the next version to publish. IMPORT the PR once it is open, the import is what adds rn-oss and Hermes as reviewers. See reference/hermes.md.',
+          'This is the tail of THIS release, not the head of the next one: the file must always name the next version to publish. Open it as soon as the release is out, or it gets forgotten: the .0.3 release never did and the branch named a published version for weeks. Declining stops the run so it is not skipped quietly. IMPORT the PR once it is open, the import is what adds rn-oss and Hermes as reviewers. See reference/hermes.md.',
       },
     ],
   },
