@@ -3941,3 +3941,13 @@ test('templateInSync: an alpha CLI is a note for an RC and a stop for the stable
   assert.equal(stable.ok, false);
   assert.match(stable.detail, /21\.0\.0-alpha\.1 \(needs a stable release\)/);
 });
+
+test('ci: a dependency download that times out is a flake, a missing dependency is not', async () => {
+  const {readFileSync} = await import('node:fs');
+  const log = readFileSync(new URL('./fixtures/ci/kotlin-download-timeout.log', import.meta.url), 'utf8');
+  const c = classifyFailure(log);
+  assert.equal(c.id, 'dependency-download');
+  assert.equal(c.kind, 'flake');
+  assert.equal(classifyFailure('npm error getaddrinfo ENOTFOUND nodejs.org').id, 'dependency-download');
+  assert.notEqual(classifyFailure("Could not find org.jetbrains.kotlin:kotlin-stdlib:9.9.9.\nRequired by: project :app").kind, 'flake', 'a version that does not exist is a real failure');
+});

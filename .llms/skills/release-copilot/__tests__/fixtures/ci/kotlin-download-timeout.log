@@ -1,0 +1,20 @@
+* What went wrong:
+Execution failed for task ':gradle-plugin:shared:compileKotlin'.
+> Could not isolate parameters org.jetbrains.kotlin.gradle.internal.transforms.ClasspathEntrySnapshotTransform$Parameters_Decorated@5bd6fc6c of artifact transform ClasspathEntrySnapshotTransform
+   > Could not isolate value org.jetbrains.kotlin.gradle.internal.transforms.ClasspathEntrySnapshotTransform$Parameters_Decorated@5bd6fc6c of type ClasspathEntrySnapshotTransform.Parameters
+      > Could not resolve all files for configuration ':gradle-plugin:shared:kotlinBuildToolsApiClasspath'.
+         > Could not download kotlin-compiler-embeddable-2.3.21.jar (org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.21)
+            > Could not get resource 'https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-compiler-embeddable/2.3.21/kotlin-compiler-embeddable-2.3.21.jar'.
+3 actionable tasks: 3 executed
+               > Could not GET 'https://github.com/JetBrains/kotlin/releases/download/v2.3.21/kotlin-compiler-embeddable-2.3.21.jar'.
+                  > Read timed out
+
+* Try:
+> Run the 'artifactTransforms' report task to view details about registered transforms.
+> Review the documentation on Artifact Transforms at https://docs.gradle.org/9.4.1/userguide/artifact_transforms.html.
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2m 11s
