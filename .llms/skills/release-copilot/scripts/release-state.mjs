@@ -595,6 +595,12 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
       ? await sources.branchCutFacts(resolvedSeries, branch, {branchExists: Boolean(tip)}).catch(() => null)
       : null;
 
+  // Only a publish ships the template, so only a publish compares it.
+  const templateDrift =
+    shape !== 'branch-cut' && typeof sources.templateDrift === 'function'
+      ? await sources.templateDrift(branch).catch(() => null)
+      : undefined;
+
   const runs = await sources.workflowRuns(branch);
   const tipRuns = runs.filter(r => r.headSha && tip && r.headSha.startsWith(tip.slice(0, 11)));
 
@@ -860,6 +866,7 @@ export async function deriveState(sources, {series, today, shape: wantShape} = {
     distTags,
     mainTip,
     cut,
+    templateDrift,
     tagExistsForNext: proposedNext ? tags.includes(`v${proposedNext}`) : false,
     // A release is half-done when its tag is cut but npm never got the package.
     // 0.88.0-rc.4 sat like this overnight: tag public, sibling packages

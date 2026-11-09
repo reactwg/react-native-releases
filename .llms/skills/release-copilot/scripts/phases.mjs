@@ -270,6 +270,7 @@ const commonPublishSteps = [
       'hermesCurrent',
       'distTagCorrect',
       'manualTestingDone',
+      'templateInSync',
       'dryRunExplicit',
     ],
     actions: () => [],

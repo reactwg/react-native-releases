@@ -335,3 +335,20 @@ else.
 
 The runner used to discard every command's output, so a failing verify or template
 check showed only that it failed. It prints the output now, on success and on failure.
+
+---
+
+## The template does not follow React Native's version bumps
+
+**Signature:** React Native's changelog has a Kotlin, SDK, NDK or Gradle bump, and
+the template branch still names the old version.
+
+The template lives in react-native-community/template, so a bump in React Native
+never reaches it by itself. 0.89.0-rc.0 shipped its template on Kotlin 2.2.0 and
+targetSdk 36 while React Native was on 2.3.21 and 37. The template check still
+passed, because a fresh app builds with the mismatch.
+
+**Do:** the `templateInSync` gate compares the two before every publish. Bump the
+template on its `main` and pick the commit to the template's release branch, as
+template#260 (Kotlin) and template#263 (targetSdk) did for 0.89.0-rc.1.
+

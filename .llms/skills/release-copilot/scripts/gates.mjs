@@ -272,6 +272,39 @@ export const gates = {
    * report for an older tip does not count. The captain can still vouch for a
    * pass with --manual-tested, after reading the report.
    */
+  /**
+   * The template ships with every publish, from its own repo, so a React
+   * Native bump does not reach it by itself. 0.89.0-rc.0 shipped its template
+   * on Kotlin 2.2.0 and targetSdk 36 while React Native was on 2.3.21 and 37,
+   * and the template check still passed because the mismatch builds.
+   */
+  templateInSync(state, {templateDriftOk} = {}) {
+    let drift = state.templateDrift;
+    if (drift === undefined) {
+      return PASS('template not compared (no source for it)');
+    }
+    if (drift === null) {
+      return FAIL(`could not read the template's or ${state.branch}'s Android versions. Compare react-native-community/template@${state.branch} template/android/build.gradle with packages/react-native/gradle/libs.versions.toml by hand`);
+    }
+    // A prerelease CLI is expected while the series is in RCs: the CLI team
+    // publishes its major for the .0. It only blocks the stable release.
+    const stable = !String(state.proposedNext ?? '').includes('-');
+    const cliNote = drift.filter(d => d.prerelease && !stable).map(d => ` (the template still pins ${d.key} ${d.template}, which must be stable before ${state.series}.0)`).join('');
+    const blocking = drift.filter(d => !d.prerelease || stable);
+    if (!blocking.length) {
+      return PASS(`template@${state.branch} matches React Native's Android versions${cliNote}`);
+    }
+    drift = blocking;
+    const list = drift.map(d => (d.prerelease ? `${d.key} ${d.template} (needs ${d.rn})` : `${d.key} ${d.template} (React Native ${d.rn})`)).join(', ');
+    if (templateDriftOk) {
+      return PASS(`captain accepted the template drift: ${list}`);
+    }
+    return FAIL(
+      `template@${state.branch} disagrees with React Native: ${list}. ` +
+        'Bump the template on main and pick it to the template branch, or re-run with --template-drift-ok if the difference is intended.',
+    );
+  },
+
   manualTestingDone(state, {manualTested}) {
     const needs = state.schedule?.needsManualTesting;
     if (needs === false) {

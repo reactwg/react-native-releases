@@ -412,6 +412,7 @@ is in `scripts/gates.mjs` and `reference/field-notes.md` rather than repeated he
 | `hermesPublishable` | the Hermes workflow's repository guard or `repository.url` names another repo, so a dispatch would publish nothing |
 | `mainResolved` | a branch cut has no resolved SHA for main |
 | `manualTestingDone` | RC0, RC1 or the golden RC has no passing Test Report for this version at the current branch tip, unless `--manual-tested` |
+| `templateInSync` | the template branch's Android versions (Kotlin, min/compile/target SDK, build tools, NDK, Gradle wrapper) differ from React Native's, unless `--template-drift-ok`. A prerelease Community CLI in the template stops only the stable release |
 
 `scripts/ci-failures.mjs` encodes which CI failures are flakes and which are
 structural, matched against each failed job's annotations. `ciGreen` names a known flake
