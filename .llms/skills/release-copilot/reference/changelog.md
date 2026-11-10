@@ -147,19 +147,26 @@ Most entries there are release plumbing and should go:
 - `Release 0.88.0-rc.1`
 - `[LOCAL] Bump Podfile.lock`
 - internal test fixes with no user-facing effect
+- a bare Hermes or Metro bump, `Bump Hermes to 260318099.0.7` or `Bump Metro to 0.88.0`.
+  Reviewers removed both from 0.89.0-rc.1: the version is in `package.json` and the
+  dependency's own release notes say what changed. Keep a bump that says what it fixes,
+  such as `Bump Hermes V1 to 250829098.0.14 to fix missing JavaScript samples`.
 
 But some are genuinely user-facing and only landed in `Unknown` because their
-commit lacked a `Changelog:` line. A Hermes bump is the recurring example and it
-is usually the single most significant change in the release. It belongs under
-`Changed`:
-
-```markdown
-- **Hermes**: Bump Hermes to 260318099.0.3 (...)
-```
+commit lacked a `Changelog:` line. A pick is the recurring example: the commit on
+the release branch has lost its PR's `Changelog:` line, so it is filed by title.
 
 Deleting the whole bucket loses it silently. Read every entry before dropping it. The
 generator now files the user-facing ones and drops the plumbing itself, but check its
 "Moved out of Unknown" and "Dropped" lists.
+
+## A pick is credited to its original author, in its PR's own words
+
+A backport PR says `Picks #58584 to 0.89.` and a cherry-pick keeps its original
+`(#59682)` title. The generator reads that PR: its author takes the credit, since a
+backport is authored by whoever opened it (0.89.0-rc.1 first credited the Metro
+cache change to the backport's author, and the release had to be fixed by hand),
+and its `Changelog:` line replaces the commit's title, section and platform.
 
 ## Other rules
 

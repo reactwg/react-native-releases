@@ -34,7 +34,7 @@ import {
   latestTagForSeries,
 } from './combine-changelog.mjs';
 import {changelogSection} from './fill-release-notes.mjs';
-import {curateEntries, curationContext, formatReport} from './curate-changelog.mjs';
+import {curateEntries, curationContext, formatReport, originalPr, parseChangelogLine} from './curate-changelog.mjs';
 
 const RN = 'react/react-native';
 const RN_URL = `https://github.com/${RN}.git`;
@@ -121,7 +121,19 @@ export function isMachinery(entry) {
 /** Prefix and check entries against the changelog's own history in `repo`. */
 function curate(repo, changelog, entries) {
   const ctx = curationContext(repo, changelog, entries);
-  return curateEntries(entries, ctx);
+  const originals = new Map();
+  for (const e of entries) {
+    const sha = /\/commit\/([0-9a-f]{40})/.exec(e.text)?.[1];
+    const pr = sha ? originalPr(ctx.factsOf(sha)?.message) : null;
+    if (!pr) continue;
+    try {
+      const d = JSON.parse(gh(['pr', 'view', String(pr.number), '--repo', RN, '--json', 'author,body']));
+      originals.set(sha, {...pr, author: d.author?.login ?? null, changelog: parseChangelogLine(d.body)});
+    } catch {
+      // A PR that cannot be read keeps the generator's line.
+    }
+  }
+  return curateEntries(entries, {...ctx, originalOf: sha => originals.get(sha) ?? null});
 }
 
 function git(cwd, args, opts = {}) {

@@ -349,12 +349,72 @@ export function internalReason(prose, facts) {
   if (/^xplat\//i.test(prose) || /^xplat\//i.test(subject)) return 'a bot commit titled with a file path';
   if (/^Translation auto-update\b/i.test(prose)) return 'a translation sync';
   if (/^Upgrade Flow\b/i.test(prose)) return 'a Flow upgrade';
+  // Reviewers removed "Bump Hermes to 260318099.0.7" and "Bump Metro to 0.88.0"
+  // from 0.89.0-rc.1: the version is in package.json and the release notes of
+  // the dependency itself. A bump that says what it changes for users stays.
+  if (BARE_BUMP.test(prose)) return 'a bare Hermes or Metro version bump';
   if (!files.length) return null;
   if (files.every(f => f === 'CHANGELOG.md')) return 'a changelog edit';
   if (files.every(f => f.startsWith('.github/'))) return 'CI only';
   if (files.every(f => f.startsWith('private/react-native-fantom/') || f.startsWith('.github/'))) return 'Fantom only';
   if (files.every(f => TEST_FILE.test(f) || f.startsWith('packages/rn-tester/'))) return 'tests or RNTester only';
   return null;
+}
+
+const BARE_BUMP = /^(?:Bump|Update|Upgrade)\s+(?:the\s+)?(?:minimum\s+)?(?:Hermes(?:\s+V1)?|hermes-v1|hermes-compiler|Metro)(?:\s+minimum)?(?:\s+(?:version|dependency))?(?:\s+to\s+v?\^?[\w.~-]+)?\.?$/i;
+
+/**
+ * The PR a release-branch commit stands for. A backport PR says "Picks #58584
+ * to 0.89." in its body; a cherry-pick keeps the original title's "(#59682)".
+ */
+export function originalPr(message) {
+  const m = String(message ?? '');
+  const picks = /^Picks #(\d+)\b/m.exec(m);
+  if (picks) return {number: Number(picks[1]), backport: true};
+  // Only a pick: a commit straight from main already carries its own line.
+  if (!/\(cherry picked from commit [0-9a-f]{7,40}\)/.test(m)) return null;
+  const title = /\(#(\d+)\)\s*$/m.exec(m.split('\n')[0]);
+  return title ? {number: Number(title[1]), backport: false} : null;
+}
+
+const CL_SECTIONS = {added: 'Added', changed: 'Changed', fixed: 'Fixed', removed: 'Removed', deprecated: 'Deprecated', breaking: 'Breaking', security: 'Security'};
+const CL_PLATFORMS = {general: '', android: 'Android specific', ios: 'iOS specific'};
+
+/** The author's own line from a PR body: `[General][Added] - **Scope**: text`. */
+export function parseChangelogLine(body) {
+  const line = String(body ?? '')
+    .split('\n')
+    .map(l => l.trim())
+    .find(l => /^\[[A-Za-z]+\]\s*(\[[A-Za-z]+\])?\s*-\s+\S/.test(l));
+  if (!line) return null;
+  const [, a, b, text] = /^\[([A-Za-z]+)\]\s*(?:\[([A-Za-z]+)\])?\s*-\s+(.+)$/.exec(line);
+  if (a.toLowerCase() === 'internal') return {internal: true};
+  const platform = CL_PLATFORMS[a.toLowerCase()];
+  const section = CL_SECTIONS[String(b ?? '').toLowerCase()];
+  if (platform === undefined || !section) return null;
+  return {section, subsection: platform, text: text.trim()};
+}
+
+/**
+ * Credit and wording from the original PR. Reviewers fixed both by hand on
+ * 0.89.0-rc.1: the Metro cache change was credited to the backport's author
+ * instead of @janicduplessis, and two picks lost their authors' changelog
+ * lines, so the generator filed them by title.
+ */
+export function applyOriginal(entry, original) {
+  if (!original) return entry;
+  let {text, section, subsection} = entry;
+  if (original.backport && original.author) {
+    text = text.replace(/ by \[@[^\]]+\]\(https:\/\/github\.com\/[^)]+\)\)$/, ` by [@${original.author}](https://github.com/${original.author}))`);
+  }
+  const cl = original.changelog;
+  if (cl && !cl.internal) {
+    const tail = / \(\[[0-9a-f]{10}\]\(https:\/\/github\.com\/[^)]+\) by .*\)$/.exec(text)?.[0] ?? '';
+    text = `- ${cl.text}${tail}`;
+    section = cl.section;
+    subsection = cl.subsection;
+  }
+  return {...entry, text, section, subsection, internal: cl?.internal === true};
 }
 
 const SECTION_FROM_VERB = [
@@ -378,7 +438,7 @@ const dedupeKey = (section, prose) => `${section}|${prose.toLowerCase().replace(
  * Internal entries and repeats of the same change are dropped. Unknown entries
  * are filed by their verb and files. Everything decided is in the report.
  */
-export function curateEntries(entries, {model, factsOf}) {
+export function curateEntries(entries, {model, factsOf, originalOf = () => null}) {
   const out = [];
   const prefixed = [];
   const unprefixed = [];
@@ -386,11 +446,12 @@ export function curateEntries(entries, {model, factsOf}) {
   const dropped = [];
   const moved = [];
   const seen = new Set();
-  for (const e of entries) {
-    const sha = shaIn(e.text);
+  for (const raw of entries) {
+    const sha = shaIn(raw.text);
     const facts = sha ? factsOf(sha) : null;
+    const e = applyOriginal(raw, sha ? originalOf(sha) : null);
     const prose = proseOf(e.text);
-    const why = internalReason(prose, facts);
+    const why = e.internal ? "its PR's changelog line says [INTERNAL]" : internalReason(prose, facts);
     if (why) {
       dropped.push({prose, why});
       continue;
