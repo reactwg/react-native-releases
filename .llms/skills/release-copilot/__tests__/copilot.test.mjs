@@ -3898,6 +3898,37 @@ test('hermes wait: only a dispatch from the last two hours counts', async () => 
   assert.equal(recentDispatch([], {now}), null);
 });
 
+test('curation: a bare Hermes or Metro bump is dropped, one that says why stays', async () => {
+  const {internalReason} = await curation();
+  const f = {files: ['packages/react-native/package.json'], message: 'x'};
+  for (const p of ['Bump Hermes to 260318099.0.7', 'Bump Metro to 0.88.0', 'Bump Metro minimum to 0.87.2', 'Bump hermes-v1 to 250829098.0.17', 'Bump hermes-compiler dependency', 'Update Metro to ^0.84.2']) {
+    assert.equal(internalReason(p, f), 'a bare Hermes or Metro version bump', p);
+  }
+  for (const p of ['Bump the minimum Metro version to 0.87.1, so upgrading projects resolve the same Metro as freshly created ones', 'Bump Hermes V1 to 250829098.0.14 to fix missing JavaScript samples', 'Bump Kotlin to 2.3.21']) {
+    assert.equal(internalReason(p, f), null, p);
+  }
+});
+
+test('curation: a pick takes its original PR author and changelog line', async () => {
+  const {originalPr, parseChangelogLine, applyOriginal} = await curation();
+  assert.deepEqual(originalPr('[LOCAL] Use metro:runtime for asyncRequireModulePath (#59874)\n\nPicks #58584 to 0.89.'), {number: 58584, backport: true});
+  assert.deepEqual(originalPr('Fix WebSocket request initiator (#59682)\n\n(cherry picked from commit 3d6462e9d265abc695ab05dbece4842b652a4605)'), {number: 59682, backport: false});
+  assert.equal(originalPr('Fix a thing on main (#59000)'), null, 'a commit from main already has its own line');
+  assert.deepEqual(parseChangelogLine('## Changelog:\n\n[General][Added] - **React Native DevTools**: Add support for inspecting WebSocket events in the Network panel\n\n## Test Plan'), {section: 'Added', subsection: '', text: '**React Native DevTools**: Add support for inspecting WebSocket events in the Network panel'});
+  assert.deepEqual(parseChangelogLine('[GENERAL] [FIXED] - Make the cache shareable'), {section: 'Fixed', subsection: '', text: 'Make the cache shareable'});
+  assert.equal(parseChangelogLine('[Android] [Fixed] - Fix a crash').subsection, 'Android specific');
+  assert.deepEqual(parseChangelogLine('[Internal] - CI'), {internal: true});
+
+  const sha = '2f9082fe080b1828e5277adc35d66fd3d978be3c';
+  const entry = {section: 'Unknown', subsection: '', text: `- Use metro:runtime for asyncRequireModulePath ([2f9082fe08](https://github.com/react/react-native/commit/${sha}) by [@robhogan](https://github.com/robhogan))`};
+  const out = applyOriginal(entry, {number: 58584, backport: true, author: 'janicduplessis', changelog: {section: 'Fixed', subsection: '', text: "Make Metro's transform cache shareable"}});
+  assert.equal(out.section, 'Fixed');
+  assert.equal(out.text, `- Make Metro's transform cache shareable ([2f9082fe08](https://github.com/react/react-native/commit/${sha}) by [@janicduplessis](https://github.com/janicduplessis))`);
+  const pick = applyOriginal(entry, {number: 59682, backport: false, author: 'someone-else', changelog: null});
+  assert.match(pick.text, /by \[@robhogan\]/, 'a cherry-pick keeps its author, git already has the right one');
+  assert.deepEqual(applyOriginal(entry, null), entry);
+});
+
 test('template drift: the 0.89.0-rc.0 template disagreed on Kotlin and targetSdk', async () => {
   const {templateDrift} = await import('../scripts/branch-cut.mjs');
   const {readFileSync} = await import('node:fs');
