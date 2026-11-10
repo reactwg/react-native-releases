@@ -130,6 +130,7 @@ async function main() {
     --shape <rc|branch-cut|promote|patch>   override the derived shape
     --latest                                take the npm latest tag (stable only)
     --manual-tested                         the manual test pass for this release is done
+    --template-drift-ok                     the template's Android versions differ from React Native's on purpose
     --fixture <dir>                         drive from a fixture instead of live
     --checkout <path>                       react-native checkout (default ~/git/react-native)
     --hermes-checkout <path>                hermes checkout (default ~/git/hermes)
@@ -353,6 +354,7 @@ async function main() {
       ctx: {
         isLatest,
         manualTested,
+        templateDriftOk: args['template-drift-ok'] === true,
         // The workflow input defaults to true; a real release must set it false.
         workflowDryRun: false,
       },

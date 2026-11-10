@@ -25,6 +25,72 @@ async function ghMaybe(args) {
   return gh(args).catch(() => null);
 }
 
+/**
+ * Template build.gradle keys and the React Native version-catalog entries they
+ * must match. The template is a separate repo, so a bump in React Native does
+ * not reach it by itself: 0.89.0-rc.0 shipped its template on Kotlin 2.2.0 and
+ * targetSdk 36 while React Native was on 2.3.21 and 37.
+ */
+export const TEMPLATE_ANDROID_KEYS = [
+  ['kotlinVersion', 'kotlin'],
+  ['minSdkVersion', 'minSdk'],
+  ['compileSdkVersion', 'compileSdk'],
+  ['targetSdkVersion', 'targetSdk'],
+  ['buildToolsVersion', 'buildTools'],
+  ['ndkVersion', 'ndkVersion'],
+];
+
+const gradleValue = (gradle, key) => new RegExp(`^\\s*${key}\\s*=\\s*"?([^"\\s]+)"?`, 'm').exec(String(gradle ?? ''))?.[1] ?? null;
+const tomlValue = (toml, key) => new RegExp(`^${key}\\s*=\\s*"([^"]+)"`, 'm').exec(String(toml ?? ''))?.[1] ?? null;
+const wrapperValue = props => /gradle-([\d.]+)-(?:bin|all)\.zip/.exec(String(props ?? ''))?.[1] ?? null;
+
+/**
+ * Where the template disagrees with React Native. Returns [{key, template, rn}].
+ * A value missing on either side is skipped: a renamed key is not a drift.
+ */
+export function templateDrift({templateGradle, templateWrapper, rnToml, rnWrapper}) {
+  const out = [];
+  for (const [g, t] of TEMPLATE_ANDROID_KEYS) {
+    const template = gradleValue(templateGradle, g);
+    const rn = tomlValue(rnToml, t);
+    if (template && rn && template !== rn) out.push({key: g, template, rn});
+  }
+  const tw = wrapperValue(templateWrapper);
+  const rw = wrapperValue(rnWrapper);
+  if (tw && rw && tw !== rw) out.push({key: 'Gradle wrapper', template: tw, rn: rw});
+  return out;
+}
+
+/** The Community CLI the template pins, from its package.json. */
+export function templateCli(templatePackageJson) {
+  try {
+    return JSON.parse(templatePackageJson).devDependencies?.['@react-native-community/cli'] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** templateDrift for a release branch, read from both repos. null when a file cannot be read. */
+export async function fetchTemplateDrift(branch) {
+  const raw = (repo, path) => ghMaybe(['api', `repos/${repo}/contents/${path}?ref=${branch}`, '-H', 'Accept: application/vnd.github.raw']);
+  const [templateGradle, templateWrapper, rnToml, rnWrapper, templatePkg] = await Promise.all([
+    raw(TEMPLATE, 'template/android/build.gradle'),
+    raw(TEMPLATE, 'template/android/gradle/wrapper/gradle-wrapper.properties'),
+    raw(RN, 'packages/react-native/gradle/libs.versions.toml'),
+    raw(RN, 'gradle/wrapper/gradle-wrapper.properties'),
+    raw(TEMPLATE, 'template/package.json'),
+  ]);
+  if (!templateGradle || !rnToml) {
+    return null;
+  }
+  const drift = templateDrift({templateGradle, templateWrapper, rnToml, rnWrapper});
+  const cli = templateCli(templatePkg);
+  // The template shipped 0.89's RCs on the CLI's 21.0.0-alpha.1. Fine for an
+  // RC, but a stable release should not tell new apps to use an alpha.
+  if (cli && /-/.test(cli)) drift.push({key: '@react-native-community/cli', template: cli, rn: 'a stable release', prerelease: true});
+  return drift;
+}
+
 export async function templateBranch(branch) {
   const tip = await ghMaybe(['api', `repos/${TEMPLATE}/branches/${branch}`, '--jq', '.commit.sha']);
   return tip ? {exists: true, sha: tip.trim()} : {exists: false};

@@ -15,7 +15,7 @@ import {join} from 'node:path';
 import {parseReportMarker} from './release-test.mjs';
 import {findBoard, targetReleaseField, targetReleaseNames, itemsWithoutTarget} from './board.mjs';
 import {templateResult} from './verify-template.mjs';
-import {templateBranch, proposeRow} from './branch-cut.mjs';
+import {templateBranch, proposeRow, fetchTemplateDrift} from './branch-cut.mjs';
 
 const exec = promisify(execFile);
 
@@ -620,6 +620,10 @@ export function liveSources() {
      * offer them again. The nightly counts as done once publish-npm.yml was
      * dispatched on main after the branch's first CI run.
      */
+    templateDrift(branch) {
+      return fetchTemplateDrift(branch);
+    },
+
     async branchCutFacts(series, branch, {branchExists}) {
       const facts = {template: null, board: null, nightly: null, supportRow: null};
       facts.template = await templateBranch(branch).catch(() => null);
@@ -894,6 +898,14 @@ export function fixtureSources(dir) {
         return null;
       }
     },
+    // A fixture recorded before this check existed has no answer: unknown, not drift.
+    async templateDrift(branch) {
+      try {
+        return pick('templateDrift', branch);
+      } catch {
+        return undefined;
+      }
+    },
   };
 }
 
@@ -960,6 +972,7 @@ export function recordingSources(inner, dir) {
       put('releaseArtifacts', v, await inner.releaseArtifacts(v, p)),
     testReport: async v => put('testReport', v, await inner.testReport(v)),
     branchCutFacts: async (series, b, o) => put('branchCutFacts', series, await inner.branchCutFacts(series, b, o)),
+    templateDrift: async b => put('templateDrift', b, await inner.templateDrift(b)),
     flush() {
       mkdirSync(dir, {recursive: true});
       for (const [name, data] of Object.entries(captured)) {

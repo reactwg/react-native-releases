@@ -3897,3 +3897,57 @@ test('hermes wait: only a dispatch from the last two hours counts', async () => 
   assert.equal(recentDispatch([list[1]], {now}), null, 'a run from days ago is not this cut');
   assert.equal(recentDispatch([], {now}), null);
 });
+
+test('template drift: the 0.89.0-rc.0 template disagreed on Kotlin and targetSdk', async () => {
+  const {templateDrift} = await import('../scripts/branch-cut.mjs');
+  const {readFileSync} = await import('node:fs');
+  const f = name => readFileSync(new URL(`./fixtures/template-drift/${name}`, import.meta.url), 'utf8');
+  const drift = templateDrift({templateGradle: f('template-rc0.gradle'), rnToml: f('rn-rc0.toml')});
+  assert.deepEqual(drift, [
+    {key: 'kotlinVersion', template: '2.2.0', rn: '2.3.21'},
+    {key: 'targetSdkVersion', template: '36', rn: '37'},
+  ]);
+  const synced = f('template-rc0.gradle').replace('kotlinVersion = "2.2.0"', 'kotlinVersion = "2.3.21"').replace('targetSdkVersion = 36', 'targetSdkVersion = 37');
+  assert.deepEqual(templateDrift({templateGradle: synced, rnToml: f('rn-rc0.toml')}), []);
+  assert.deepEqual(
+    templateDrift({templateGradle: synced, rnToml: f('rn-rc0.toml'), templateWrapper: 'distributionUrl=https\\://services.gradle.org/distributions/gradle-9.3.0-bin.zip', rnWrapper: 'distributionUrl=https\\://services.gradle.org/distributions/gradle-9.4.1-bin.zip'}),
+    [{key: 'Gradle wrapper', template: '9.3.0', rn: '9.4.1'}],
+  );
+});
+
+test('templateInSync: drift stops the publish unless the captain accepts it', async () => {
+  const {gates: GATES} = await import('../scripts/gates.mjs');
+  const drift = [{key: 'targetSdkVersion', template: '36', rn: '37'}];
+  const st = d => ({branch: '0.89-stable', templateDrift: d});
+  assert.equal(GATES.templateInSync(st([])).ok, true);
+  const r = GATES.templateInSync(st(drift));
+  assert.equal(r.ok, false);
+  assert.match(r.detail, /targetSdkVersion 36 \(React Native 37\)/);
+  assert.match(r.detail, /--template-drift-ok/);
+  assert.equal(GATES.templateInSync(st(drift), {templateDriftOk: true}).ok, true);
+  assert.equal(GATES.templateInSync(st(null)).ok, false, 'an unreadable template is not a pass');
+  assert.equal(GATES.templateInSync(st(undefined)).ok, true, 'a source that cannot compare is not drift');
+});
+
+test('templateInSync: an alpha CLI is a note for an RC and a stop for the stable release', async () => {
+  const {gates: GATES} = await import('../scripts/gates.mjs');
+  const {templateCli} = await import('../scripts/branch-cut.mjs');
+  assert.equal(templateCli(JSON.stringify({devDependencies: {'@react-native-community/cli': '21.0.0-alpha.1'}})), '21.0.0-alpha.1');
+  const cli = [{key: '@react-native-community/cli', template: '21.0.0-alpha.1', rn: 'a stable release', prerelease: true}];
+  const rc = GATES.templateInSync({branch: '0.89-stable', series: '0.89', proposedNext: '0.89.0-rc.1', templateDrift: cli});
+  assert.equal(rc.ok, true);
+  assert.match(rc.detail, /must be stable before 0\.89\.0/);
+  const stable = GATES.templateInSync({branch: '0.89-stable', series: '0.89', proposedNext: '0.89.0', templateDrift: cli});
+  assert.equal(stable.ok, false);
+  assert.match(stable.detail, /21\.0\.0-alpha\.1 \(needs a stable release\)/);
+});
+
+test('ci: a dependency download that times out is a flake, a missing dependency is not', async () => {
+  const {readFileSync} = await import('node:fs');
+  const log = readFileSync(new URL('./fixtures/ci/kotlin-download-timeout.log', import.meta.url), 'utf8');
+  const c = classifyFailure(log);
+  assert.equal(c.id, 'dependency-download');
+  assert.equal(c.kind, 'flake');
+  assert.equal(classifyFailure('npm error getaddrinfo ENOTFOUND nodejs.org').id, 'dependency-download');
+  assert.notEqual(classifyFailure("Could not find org.jetbrains.kotlin:kotlin-stdlib:9.9.9.\nRequired by: project :app").kind, 'flake', 'a version that does not exist is a real failure');
+});

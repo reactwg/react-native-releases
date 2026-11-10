@@ -18,6 +18,14 @@ export const FLAKE_SIGNATURES = [
     reason: 'GitHub lost the runner mid-job, which says nothing about the change. Re-run the failed job',
   },
   {
+    // 0.89.0-rc.1: three Test All runs failed within minutes of each other on
+    // a Maven Central read timeout for the Kotlin compiler jar and a DNS
+    // failure for nodejs.org. A rerun an hour later passed.
+    id: 'dependency-download',
+    match: /Could not (?:GET|download|get resource) [^\n]*(?:\n[^\n]*){0,3}?(?:Read timed out|Connect timed out|connection reset)|getaddrinfo (?:ENOTFOUND|EAI_AGAIN) (?:nodejs\.org|registry\.npmjs\.org|repo\.maven\.apache\.org|repo1\.maven\.org|github\.com)/i,
+    reason: 'a dependency download timed out or failed to resolve, a network flake. Rerun the failed jobs',
+  },
+  {
     // 0.89.0-rc.0: GitHub answered both the Podfile.lock push and the
     // rn-diff-purge push with a 500 during an incident on Git operations.
     id: 'github-500',
