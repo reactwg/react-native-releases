@@ -242,7 +242,13 @@ async function checkTestPassAndroid() {
 }
 
 async function checkMaestro() {
-  const r = await run(join(homedir(), '.maestro', 'bin', 'maestro'), ['--version']);
+  // On PATH first, which is how Homebrew and any other package manager install
+  // it; the curl installer's own path is the fallback, since it only reaches
+  // PATH through a shell profile this process has not sourced.
+  const onPath = await run('maestro', ['--version']);
+  const r = onPath.ok
+    ? onPath
+    : await run(join(homedir(), '.maestro', 'bin', 'maestro'), ['--version']);
   return r.ok
     ? {status: OK, detail: `maestro ${r.out.trim().split('\n')[0]}`}
     : {status: WARN, detail: 'Maestro not installed', fix: `Install it: curl -Ls "https://get.maestro.mobile.dev" | bash, ${TEST_PASS}.`};
