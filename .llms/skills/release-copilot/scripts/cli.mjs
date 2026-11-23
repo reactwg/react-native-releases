@@ -210,6 +210,7 @@ async function main() {
         version,
         artifacts,
         publishRunUrl: typeof args.run === 'string' ? args.run : undefined,
+        prevVersion: prev,
       }),
     );
 

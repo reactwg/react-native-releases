@@ -2115,16 +2115,29 @@ test('the changelog PR is matched to the exact version, not a prefix', async () 
   assert.equal(pickChangelogPr(prs, '0.88.0-rc.6').number, 59084);
 });
 
-test('the upgrade-helper link keeps PREV_VERSION literal', async () => {
-  // The 0.88.0 message filled it with 0.88.0-rc.6. The crew posts the placeholder.
+test('the upgrade-helper link is from the version this one follows', async () => {
+  // rc.3's message carried from=PREV_VERSION and the captain had to fill it with rc.2.
   const {buildStatusMessage} = await import('../scripts/release-message.mjs');
-  const msg = buildStatusMessage(baseState({proposedNext: '0.88.0'}), {
-    version: '0.88.0',
-    prevVersion: '0.88.0-rc.6',
+  const msg = buildStatusMessage(baseState({proposedNext: '0.89.0-rc.3'}), {
+    version: '0.89.0-rc.3',
+    prevVersion: '0.89.0-rc.2',
     artifacts: {},
   });
-  assert.match(msg, /upgrade-helper\/\?from=PREV_VERSION&to=0\.88\.0/);
-  assert.ok(!/from=0\.88\.0-rc\.6/.test(msg));
+  assert.match(msg, /upgrade-helper\/\?from=0\.89\.0-rc\.2&to=0\.89\.0-rc\.3/);
+  const unknown = buildStatusMessage(baseState({proposedNext: '0.89.0-rc.3'}), {version: '0.89.0-rc.3', artifacts: {}});
+  assert.match(unknown, /from=PREV_VERSION&to=0\.89\.0-rc\.3/, 'no previous version known leaves the slot for the crew');
+});
+
+test('the crew message links the Publish to npm run on the tag, not the dispatch', async () => {
+  // rc.3's message linked the Create release run; the crew tracks the publish run the tag push starts.
+  const {crewRunUrl} = await import('../scripts/phases.mjs');
+  const tagRuns = [
+    {databaseId: 45263728317, workflowName: 'Label closed PR as merged and leave a comment'},
+    {databaseId: 45263728809, workflowName: 'Publish to npm'},
+  ];
+  assert.equal(crewRunUrl(tagRuns, /Publish to npm/i), 'https://github.com/react/react-native/actions/runs/45263728809');
+  assert.equal(crewRunUrl([], /Publish to npm/i), undefined, 'no tag run yet');
+  assert.equal(crewRunUrl([{databaseId: 45263396454, workflowName: 'Create release'}], /Create release/i), 'https://github.com/react/react-native/actions/runs/45263396454', 'the dispatch run is the fallback');
 });
 
 // ------------------------------------------------- 0.88.0 follow-ups

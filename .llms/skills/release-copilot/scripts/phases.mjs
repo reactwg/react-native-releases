@@ -31,6 +31,12 @@ const RELEASE_TEST = join(dirname(fileURLToPath(import.meta.url)), 'release-test
 
 const RN = 'react/react-native';
 
+/** The link for the crew message: the first of `runs` whose workflow matches, or undefined. */
+export function crewRunUrl(runs, workflow) {
+  const hit = runs.find(r => workflow.test(r.workflowName ?? ''));
+  return hit ? `https://github.com/${RN}/actions/runs/${hit.databaseId}` : undefined;
+}
+
 /**
  * Who posts the announcement where. Discord is open to any captain; the Slack
  * room is internal to Meta, so a captain outside Meta asks a Meta crew member.
@@ -296,16 +302,16 @@ const commonPublishSteps = [
       const src = liveSources();
       const version = state.proposedNext;
 
-      // The dispatch returns nothing, so find the run it started.
+      // The dispatch returns nothing. The run the crew tracks is Publish to npm
+      // on the tag, which Create release pushes a few minutes later: rc.3 got
+      // the dispatch run linked instead. Poll for the tag run; the dispatch run
+      // is only the fallback.
       let runUrl;
-      for (let attempt = 0; attempt < 6 && !runUrl; attempt++) {
-        await new Promise(r => setTimeout(r, attempt === 0 ? 5000 : 10000));
-        const runs = await src.workflowRuns(state.branch, 5).catch(() => []);
-        const hit = runs.find(r => /Publish to npm|Create release/i.test(r.workflowName ?? ''));
-        if (hit) {
-          runUrl = `https://github.com/${RN}/actions/runs/${hit.databaseId}`;
-        }
+      for (let attempt = 0; attempt < 30 && !runUrl; attempt++) {
+        await new Promise(r => setTimeout(r, 10000));
+        runUrl = crewRunUrl(await src.workflowRuns(`v${version}`, 5).catch(() => []), /Publish to npm/i);
       }
+      runUrl ??= crewRunUrl(await src.workflowRuns(state.branch, 5).catch(() => []), /Create release/i);
 
       const artifacts = await src
         .releaseArtifacts(version, state.current ?? undefined)
@@ -319,6 +325,7 @@ const commonPublishSteps = [
           version,
           artifacts,
           publishRunUrl: runUrl,
+          prevVersion: state.current ?? undefined,
         }),
         '',
         '--- not posted automatically, copy the block above ---',

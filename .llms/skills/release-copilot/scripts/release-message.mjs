@@ -30,9 +30,10 @@ function line(done, text) {
  * @param state      derived release state
  * @param version    the version being released, e.g. 0.88.0-rc.2
  * @param artifacts  from sources.releaseArtifacts()
- * @param publishRunUrl  the Create release / Publish to npm run, if known
+ * @param publishRunUrl  the Publish to npm run on the tag, if known
+ * @param prevVersion  the version this one follows, for the upgrade-helper link
  */
-export function buildStatusMessage(state, {version, artifacts, publishRunUrl}) {
+export function buildStatusMessage(state, {version, artifacts, publishRunUrl, prevVersion}) {
   const a = artifacts ?? {};
   // Once the tag exists the pre-release CI checks are settled, because ciGreen
   // gated the publish. Reading live CI here would report the branch tip, which
@@ -81,8 +82,8 @@ export function buildStatusMessage(state, {version, artifacts, publishRunUrl}) {
   L.push(
     line(
       a.upgradeHelper === true,
-      // PREV_VERSION is literal: that is the crew's link format, not a slot to fill.
-      `Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=PREV_VERSION&to=${version}`,
+      // From the version this one follows: rc.2 for rc.3. Without one the crew fills the slot.
+      `Verify upgrade helper → https://react-native-community.github.io/upgrade-helper/?from=${prevVersion ?? 'PREV_VERSION'}&to=${version}`,
     ),
   );
   L.push(line(a.maven === true, `Verify Maven assets → ${a.mavenUrl ?? ''}`));
